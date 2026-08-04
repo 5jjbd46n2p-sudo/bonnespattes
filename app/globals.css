@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+:root {
+  --color-sand: #f2ece1;
+  --color-sand-dark: #e9e0cf;
+  --color-ink: #2a2a26;
+  --color-muted: #6b6459;
+  --color-forest: #3f5a48;
+  --color-forest-dark: #2e4235;
+  --color-forest-light: #6b8a76;
+  --color-ochre: #c97b3d;
+  --color-ochre-dark: #a8632c;
+  --color-card: #fffdf9;
+  --color-border: #e4dcc9;
+  --color-danger: #b3492f;
+  --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "URW Palladio L", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@theme inline {
+  --color-sand: var(--color-sand);
+  --color-sand-dark: var(--color-sand-dark);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-forest: var(--color-forest);
+  --color-forest-dark: var(--color-forest-dark);
+  --color-forest-light: var(--color-forest-light);
+  --color-ochre: var(--color-ochre);
+  --color-ochre-dark: var(--color-ochre-dark);
+  --color-card: var(--color-card);
+  --color-border: var(--color-border);
+  --color-danger: var(--color-danger);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+body {
+  background: var(--color-sand);
+  color: var(--color-ink);
+}
+
+.leash-divider {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-border) 0,
+    var(--color-border) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  height: 1px;
+}
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.btn-primary,
+.btn-accent,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  background: var(--color-forest);
+  color: white;
+  border-radius: 10px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.btn-primary:hover {
+  background: var(--color-forest-dark);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-accent {
+  background: var(--color-ochre);
+  color: white;
+  border-radius: 10px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.btn-accent:hover {
+  background: var(--color-ochre-dark);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-forest-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+  background: var(--color-sand-dark);
+}
+
+.input {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  width: 100%;
+  color: var(--color-ink);
+  font-size: 16px; /* évite le zoom automatique au focus sur iOS */
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+.input:focus {
+  outline: 2px solid var(--color-forest-light);
+  outline-offset: 1px;
+}
+
+/* Garde-fou global : quel que soit l'utilitaire text-sm/xs appliqué localement
+   à un champ, on ne descend jamais sous 16px sur mobile (anti-zoom iOS). */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Molette de scroll fine sur mobile pour les zones à défilement horizontal */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}

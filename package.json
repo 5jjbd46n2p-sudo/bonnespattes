@@ -1,0 +1,30 @@
+{
+  "name": "petsitter-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "migrate": "node scripts/migrate.mjs",
+    "create-admin": "node scripts/create-admin.mjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.6.1",
+    "bcryptjs": "^3.0.3",
+    "date-fns": "^4.4.0",
+    "jsonwebtoken": "^9.0.3",
+    "next": "16.2.12",
+    "pdf-lib": "^1.17.1",
+    "pg": "^8.22.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "tailwindcss": "^4"
+  }
+}
