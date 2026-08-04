@@ -12,6 +12,8 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
   const [selectedVisitIds, setSelectedVisitIds] = useState(
     new Set((initialUnbilledVisits || []).map((v) => v.id))
   );
+  const [availableDeposits, setAvailableDeposits] = useState([]);
+  const [selectedDepositIds, setSelectedDepositIds] = useState(new Set());
   const [manualItems, setManualItems] = useState([]);
   const [tvaRate, setTvaRate] = useState(settings.default_tva_rate || 0);
   const [dueDate, setDueDate] = useState("");
@@ -19,29 +21,39 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  async function loadClientExtras(id) {
+    const [visitsData, depositsData] = await Promise.all([
+      fetch(`/api/visits?clientId=${id}&unbilled=1`).then((r) => r.json()),
+      fetch(`/api/clients/${id}/deposits?available=1`).then((r) => r.json()),
+    ]);
+    setUnbilledVisits(visitsData.visits || []);
+    setSelectedVisitIds(new Set((visitsData.visits || []).map((v) => v.id)));
+    setAvailableDeposits(depositsData.deposits || []);
+    setSelectedDepositIds(new Set((depositsData.deposits || []).map((d) => d.id)));
+  }
+
   useEffect(() => {
     if (!clientId) return;
-    fetch(`/api/visits?clientId=${clientId}&unbilled=1`)
-      .then((r) => r.json())
-      .then((data) => {
-        setUnbilledVisits(data.visits || []);
-        setSelectedVisitIds(new Set((data.visits || []).map((v) => v.id)));
-      });
+    loadClientExtras(clientId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // seulement au chargement initial (client déjà présélectionné)
 
   function onClientChange(id) {
     setClientId(id);
-    fetch(`/api/visits?clientId=${id}&unbilled=1`)
-      .then((r) => r.json())
-      .then((data) => {
-        setUnbilledVisits(data.visits || []);
-        setSelectedVisitIds(new Set((data.visits || []).map((v) => v.id)));
-      });
+    loadClientExtras(id);
   }
 
   function toggleVisit(id) {
     setSelectedVisitIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleDeposit(id) {
+    setSelectedDepositIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -82,6 +94,10 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
   const totalHT = allItems.reduce((sum, it) => sum + Number(it.quantity || 0) * Number(it.unitPrice || 0), 0);
   const totalTVA = totalHT * (Number(tvaRate) / 100);
   const totalTTC = totalHT + totalTVA;
+  const depositsApplied = availableDeposits
+    .filter((d) => selectedDepositIds.has(d.id))
+    .reduce((sum, d) => sum + Number(d.amount), 0);
+  const netAPayer = totalTTC - depositsApplied;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -105,6 +121,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
         dueDate: dueDate || null,
         notes,
         visitIds: Array.from(selectedVisitIds),
+        depositIds: Array.from(selectedDepositIds),
       }),
     });
     const data = await res.json();
@@ -157,6 +174,27 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
                       )}
                     </span>
                     <span className="font-medium">{Number(v.price).toFixed(2)} €</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {availableDeposits.length > 0 && (
+            <div>
+              <label className="text-sm font-medium block mb-2">Acomptes disponibles à déduire</label>
+              <div className="space-y-1.5">
+                {availableDeposits.map((d) => (
+                  <label key={d.id} className="flex items-center gap-2 border border-border rounded-lg p-2.5 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedDepositIds.has(d.id)}
+                      onChange={() => toggleDeposit(d.id)}
+                    />
+                    <span className="flex-1">
+                      Acompte du {formatDateFR(d.date)} ({d.method})
+                    </span>
+                    <span className="font-medium text-forest">- {Number(d.amount).toFixed(2)} €</span>
                   </label>
                 ))}
               </div>
@@ -240,6 +278,18 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
             <span>Total TTC</span>
             <span>{totalTTC.toFixed(2)} €</span>
           </div>
+          {depositsApplied > 0 && (
+            <>
+              <div className="flex justify-between text-sm text-forest">
+                <span>Acompte(s) déduit(s)</span>
+                <span>- {depositsApplied.toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between font-semibold text-base pt-1 border-t border-border mt-1">
+                <span>Net à payer</span>
+                <span>{netAPayer.toFixed(2)} €</span>
+              </div>
+            </>
+          )}
         </div>
 
         {error && <p className="text-sm text-danger">{error}</p>}

@@ -78,6 +78,20 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Acomptes versés par un client avant qu'une facture existe. Une fois utilisé
+-- sur une facture, invoice_id est renseigné et un paiement correspondant est
+-- créé automatiquement sur cette facture (voir /api/invoices POST).
+CREATE TABLE IF NOT EXISTS deposits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  amount NUMERIC NOT NULL,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  method TEXT DEFAULT 'Virement',
+  notes TEXT DEFAULT '',
+  invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS visits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
@@ -113,6 +127,8 @@ CREATE INDEX IF NOT EXISTS idx_visits_client ON visits(client_id);
 CREATE INDEX IF NOT EXISTS idx_visits_recurrence ON visits(recurrence_id);
 CREATE INDEX IF NOT EXISTS idx_pets_client ON pets(client_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id);
+CREATE INDEX IF NOT EXISTS idx_deposits_client ON deposits(client_id);
+CREATE INDEX IF NOT EXISTS idx_deposits_invoice ON deposits(invoice_id);
 
 INSERT INTO settings (business_name) SELECT 'Mon activité de pet sitting' WHERE NOT EXISTS (SELECT 1 FROM settings);
 

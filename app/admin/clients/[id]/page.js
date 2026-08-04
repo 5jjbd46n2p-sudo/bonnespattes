@@ -6,6 +6,7 @@ import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
 import ClientInfoCard from "@/components/ClientInfoCard";
 import PetManager from "@/components/PetManager";
 import ClientLoginManager from "@/components/ClientLoginManager";
+import DepositManager from "@/components/DepositManager";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,12 @@ async function getClientData(id) {
     [id]
   );
   const loginRes = await query("SELECT id, email FROM users WHERE client_id = $1", [id]);
+  const depositsRes = await query(
+    `SELECT d.*, i.number AS invoice_number
+     FROM deposits d LEFT JOIN invoices i ON i.id = d.invoice_id
+     WHERE d.client_id = $1 ORDER BY d.date DESC, d.created_at DESC`,
+    [id]
+  );
 
   return {
     client: clientRes.rows[0],
@@ -34,6 +41,7 @@ async function getClientData(id) {
     visits: visitsRes.rows,
     invoices: invoicesRes.rows,
     login: loginRes.rows[0] || null,
+    deposits: depositsRes.rows,
   };
 }
 
@@ -41,7 +49,7 @@ export default async function ClientDetailPage({ params }) {
   const { id } = await params;
   const data = await getClientData(id);
   if (!data) notFound();
-  const { client, pets, visits, invoices, login } = data;
+  const { client, pets, visits, invoices, login, deposits } = data;
 
   return (
     <div className="space-y-6">
@@ -90,6 +98,7 @@ export default async function ClientDetailPage({ params }) {
 
         <div className="space-y-6">
           <ClientLoginManager clientId={id} login={login} />
+          <DepositManager clientId={id} deposits={deposits} />
 
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">

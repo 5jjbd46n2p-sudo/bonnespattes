@@ -38,7 +38,7 @@ export async function POST(req) {
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
 
   const body = await req.json();
-  const { clientId, items = [], tvaRate = 0, dueDate, notes, visitIds = [] } = body;
+  const { clientId, items = [], tvaRate = 0, dueDate, notes, visitIds = [], depositIds = [] } = body;
 
   if (!clientId || items.length === 0) {
     return NextResponse.json({ error: "Client et au moins une ligne requis." }, { status: 400 });
@@ -79,6 +79,30 @@ export async function POST(req) {
           `UPDATE visits SET invoice_id = $1 WHERE id = ANY($2::uuid[])`,
           [invoice.id, visitIds]
         );
+      }
+
+      // Applique les acomptes sélectionnés : on les marque comme utilisés et on
+      // crée un paiement correspondant sur la nouvelle facture, pour que le
+      // solde restant dû (et le statut "Payée") se mettent à jour automatiquement.
+      let depositsTotal = 0;
+      if (depositIds.length) {
+        const depRes = await client.query(
+          `SELECT * FROM deposits WHERE id = ANY($1::uuid[]) AND client_id = $2 AND invoice_id IS NULL FOR UPDATE`,
+          [depositIds, clientId]
+        );
+        for (const dep of depRes.rows) {
+          await client.query(`UPDATE deposits SET invoice_id = $1 WHERE id = $2`, [invoice.id, dep.id]);
+          await client.query(
+            `INSERT INTO payments (invoice_id, amount, date, method) VALUES ($1,$2,$3,$4)`,
+            [invoice.id, dep.amount, dep.date, dep.method ? `Acompte (${dep.method})` : "Acompte"]
+          );
+          depositsTotal += Number(dep.amount);
+        }
+      }
+
+      if (depositsTotal > 0 && depositsTotal >= totalTTC) {
+        await client.query(`UPDATE invoices SET status = 'PAYEE' WHERE id = $1`, [invoice.id]);
+        invoice.status = "PAYEE";
       }
 
       return invoice;

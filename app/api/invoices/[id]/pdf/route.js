@@ -19,6 +19,11 @@ export async function GET(req, { params }) {
     return new Response("Non autorisé.", { status: 403 });
   }
   const itemsRes = await query("SELECT * FROM invoice_items WHERE invoice_id = $1", [id]);
+  const paymentsRes = await query(
+    "SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE invoice_id = $1",
+    [id]
+  );
+  const paidAmount = Number(paymentsRes.rows[0].total);
   const settingsRes = await query("SELECT * FROM settings LIMIT 1");
   const settings = settingsRes.rows[0];
 
@@ -116,6 +121,15 @@ export async function GET(req, { params }) {
   y -= 16;
   drawText("Total TTC", 410, y, { size: 11, bold: true });
   drawText(formatEUR(invoice.total_ttc), 490, y, { size: 11, bold: true });
+
+  if (paidAmount > 0) {
+    y -= 16;
+    drawText("Déjà réglé (dont acompte)", 410, y, { size: 9, color: muted });
+    drawText(formatEUR(paidAmount), 490, y, { size: 9, color: muted });
+    y -= 16;
+    drawText("Net à payer", 410, y, { size: 11, bold: true });
+    drawText(formatEUR(Number(invoice.total_ttc) - paidAmount), 490, y, { size: 11, bold: true });
+  }
 
   y -= 40;
   if (settings.iban) {

@@ -6,7 +6,7 @@ Application complète pour gérer ton activité de pet sitting :
 - **Fiches clients** avec animaux, notes, tarif horaire, et bouton **Waze** pour lancer l'itinéraire dès qu'une adresse est renseignée
 - **Suivi de visite** : statut (planifiée, en cours, terminée, annulée), liste de tâches à cocher (nourri, promené, litière…) + **photos**
 - **Portail client** : chaque client se connecte avec un identifiant que tu crées (et qui peut lui être envoyé automatiquement par email), et voit l'historique de suivi + les photos de son animal
-- **Comptabilité** : factures (PDF), TVA, paiements, export CSV pour ton comptable — les visites facturées reprennent automatiquement la durée en heures et le tarif horaire du client
+- **Comptabilité** : factures (PDF), TVA, paiements, **acomptes**, export CSV pour ton comptable — les visites facturées reprennent automatiquement la durée en heures et le tarif horaire du client
 
 Stack : Next.js (App Router) + Postgres (Neon) + stockage photos (Vercel Blob), déployé sur Vercel.
 
@@ -87,7 +87,8 @@ C'est avec cet email/mot de passe que tu te connecteras sur l'appli en tant qu'a
 - **Planifier une visite** : depuis la fiche client → "Planifier une visite" (date, heure, tâches). Si le client a un tarif horaire renseigné, le prix se calcule automatiquement à partir de la durée (modifiable à la main si besoin). Coche "Répéter cette visite" pour planifier en une fois plusieurs occurrences (ex. tous les jours pendant 7 visites) au lieu de les créer une par une.
 - **Pendant la visite** : ouvre la visite depuis le planning, passe le statut en "En cours" quand tu commences, coche les tâches, ajoute des photos depuis ton téléphone (le bouton ouvre directement l'appareil photo), puis marque-la "Terminée" à la fin.
 - **Itinéraire** : sur la fiche client, si une adresse est renseignée, clique sur "🧭 Ouvrir dans Waze" — ça ouvre l'appli Waze sur ton téléphone avec le trajet.
-- **Facturer** : Comptabilité → Nouvelle facture (les visites terminées non facturées sont proposées automatiquement, avec la quantité en heures et le tarif horaire déjà remplis à partir de la durée de chaque visite), ou depuis une fiche client → "Facturer".
+- **Facturer** : Comptabilité → Nouvelle facture (les visites terminées non facturées sont proposées automatiquement, avec la quantité en heures et le tarif horaire déjà remplis à partir de la durée de chaque visite), ou depuis une fiche client → "Facturer". Si le client a des acomptes disponibles, ils sont proposés automatiquement et déduits du montant à payer.
+- **Enregistrer un acompte** : depuis la fiche client → "Acomptes" → "+ Enregistrer un acompte" (montant, date, moyen de paiement). Il reste "disponible" jusqu'à ce qu'il soit appliqué à une facture.
 - **Export comptable** : Comptabilité → "Export comptable (CSV)", à donner à ton comptable ou pour ta déclaration.
 - **Réglages** : renseigne ton nom d'activité, SIRET, IBAN, taux de TVA — ces infos apparaissent sur tes factures PDF.
 
