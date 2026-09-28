@@ -70,9 +70,13 @@ export default async function AdminDashboard() {
           <p className="text-muted text-sm mb-1 capitalize">{formatDateLongFR(today)}</p>
           <h1 className="font-display text-3xl font-semibold text-forest-dark">Aujourd'hui</h1>
         </div>
-        <Link href={`/admin/visits/new?date=${today}`} className="btn-accent hidden md:inline-flex">
-          + Planifier
-        </Link>
+        {/* Masqué sur mobile (bouton « + » de la barre d'onglets) ; enveloppé dans
+            un div car .btn-accent (hors @layer) écraserait la classe hidden. */}
+        <div className="hidden md:block">
+          <Link href={`/admin/visits/new?date=${today}`} className="btn-accent">
+            + Planifier
+          </Link>
+        </div>
       </div>
 
       <NextVisitBanner visits={bannerVisits} />

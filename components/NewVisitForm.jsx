@@ -202,7 +202,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
         <fieldset
           disabled={locked}
           aria-disabled={locked}
-          className={`space-y-4 transition-opacity ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}
+          className={`min-w-0 space-y-4 transition-opacity ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}
         >
           <div>
             <label className="text-sm font-medium block mb-1">Animal</label>
