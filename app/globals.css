@@ -213,3 +213,60 @@ body {
 .pill-input--time {
   min-width: 82px;
 }
+
+/* Sélecteur de "semaine type" pour la récurrence : ronds de jours façon iOS
+   (Rappels > Se répète > Personnalisé), plus un stepper +/- pour le nombre
+   de semaines, dans le même esprit que les pilules de date/heure ci-dessus. */
+.weekday-pill {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-sand-dark);
+  color: var(--color-ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.weekday-pill:hover {
+  border-color: var(--color-forest-light);
+}
+.weekday-pill--active {
+  background: var(--color-forest-dark);
+  border-color: var(--color-forest-dark);
+  color: #fff;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-card);
+  overflow: hidden;
+}
+.stepper button {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-forest-dark);
+  background: var(--color-sand-dark);
+}
+.stepper button:active {
+  background: var(--color-forest-light);
+  color: #fff;
+}
+.stepper span {
+  min-width: 2.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+}

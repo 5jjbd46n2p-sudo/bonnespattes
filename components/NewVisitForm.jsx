@@ -3,7 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { computeVisitHours } from "@/lib/utils";
+import {
+  computeVisitHours,
+  generateWeeklyRecurrenceDates,
+  isoWeekday,
+  WEEKDAYS_FR,
+  formatDateFR,
+} from "@/lib/utils";
 
 const DEFAULT_TASKS = ["Nourrir", "Promenade", "Eau fraîche", "Litière / propreté", "Câlins & jeu"];
 
@@ -19,12 +25,31 @@ export default function NewVisitForm({ client, pets, initialDate }) {
   const [tasks, setTasks] = useState([...DEFAULT_TASKS]);
   const [newTask, setNewTask] = useState("");
   const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
-  const [recurrenceFrequency, setRecurrenceFrequency] = useState("daily");
-  const [occurrences, setOccurrences] = useState(7);
+  const [recurrenceDays, setRecurrenceDays] = useState([]);
+  const [recurrenceWeeks, setRecurrenceWeeks] = useState(4);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const hours = computeVisitHours(startTime, endTime);
+
+  function toggleRecurrence(checked) {
+    setRecurrenceEnabled(checked);
+    // Pré-coche le jour de la date choisie pour démarrer la "semaine type",
+    // le reste se personnalise en cliquant sur les autres jours.
+    if (checked && recurrenceDays.length === 0) {
+      setRecurrenceDays([isoWeekday(date)]);
+    }
+  }
+
+  function toggleDay(day) {
+    setRecurrenceDays((days) =>
+      days.includes(day) ? days.filter((d) => d !== day) : [...days, day].sort((a, b) => a - b)
+    );
+  }
+
+  const recurrenceDates = recurrenceEnabled
+    ? generateWeeklyRecurrenceDates(date, recurrenceDays, Number(recurrenceWeeks) || 1)
+    : [];
 
   // Calcule automatiquement le prix prévu à partir du tarif horaire du client
   // et de la durée de la visite (tant que l'utilisateur ne l'a pas modifié à la main).
@@ -52,6 +77,10 @@ export default function NewVisitForm({ client, pets, initialDate }) {
       setError("Ajoute d'abord un animal à ce client.");
       return;
     }
+    if (recurrenceEnabled && recurrenceDays.length === 0) {
+      setError("Choisis au moins un jour pour la semaine type.");
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/visits", {
       method: "POST",
@@ -65,9 +94,10 @@ export default function NewVisitForm({ client, pets, initialDate }) {
         price: price ? Number(price) : 0,
         notes,
         tasks,
-        recurrence: recurrenceEnabled
-          ? { frequency: recurrenceFrequency, occurrences: Number(occurrences) || 1 }
-          : null,
+        recurrence:
+          recurrenceEnabled && recurrenceDays.length > 0
+            ? { weekdays: recurrenceDays, weeks: Number(recurrenceWeeks) || 1 }
+            : null,
       }),
     });
     const data = await res.json();
@@ -172,40 +202,66 @@ export default function NewVisitForm({ client, pets, initialDate }) {
             <input
               type="checkbox"
               checked={recurrenceEnabled}
-              onChange={(e) => setRecurrenceEnabled(e.target.checked)}
+              onChange={(e) => toggleRecurrence(e.target.checked)}
             />
-            <span className="text-sm font-medium">Répéter cette visite (planification récurrente)</span>
+            <span className="text-sm font-medium">Répéter cette visite (semaine type)</span>
           </label>
+
           {recurrenceEnabled && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            <div className="mt-3 space-y-3">
               <div>
-                <label className="text-sm font-medium block mb-1">Fréquence</label>
-                <select
-                  className="input"
-                  value={recurrenceFrequency}
-                  onChange={(e) => setRecurrenceFrequency(e.target.value)}
-                >
-                  <option value="daily">Tous les jours</option>
-                  <option value="weekly">Toutes les semaines</option>
-                </select>
+                <p className="text-sm font-medium mb-1.5">Jours de la semaine type</p>
+                <div className="flex gap-1.5">
+                  {WEEKDAYS_FR.map((d) => {
+                    const active = recurrenceDays.includes(d.value);
+                    return (
+                      <button
+                        key={d.value}
+                        type="button"
+                        onClick={() => toggleDay(d.value)}
+                        aria-pressed={active}
+                        title={d.label}
+                        className={`weekday-pill ${active ? "weekday-pill--active" : ""}`}
+                      >
+                        {d.short}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Nombre de visites</label>
-                <input
-                  type="number"
-                  min="2"
-                  max="60"
-                  className="input"
-                  value={occurrences}
-                  onChange={(e) => setOccurrences(e.target.value)}
-                />
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium">Nombre de semaines</span>
+                <div className="stepper">
+                  <button
+                    type="button"
+                    onClick={() => setRecurrenceWeeks((w) => Math.max(1, Number(w) - 1))}
+                    aria-label="Moins de semaines"
+                  >
+                    –
+                  </button>
+                  <span>{recurrenceWeeks}</span>
+                  <button
+                    type="button"
+                    onClick={() => setRecurrenceWeeks((w) => Math.min(26, Number(w) + 1))}
+                    aria-label="Plus de semaines"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
+
+              <p className="text-xs text-muted">
+                {recurrenceDays.length === 0
+                  ? "Choisis au moins un jour pour construire la semaine type."
+                  : `${recurrenceDates.length} visite${
+                      recurrenceDates.length > 1 ? "s" : ""
+                    } seront planifiées, du ${formatDateFR(recurrenceDates[0])} au ${formatDateFR(
+                      recurrenceDates[recurrenceDates.length - 1]
+                    )}, avec les mêmes horaires et tâches.`}
+              </p>
             </div>
           )}
-          <p className="text-xs text-muted mt-1.5">
-            Ex. « Tous les jours » + 7 visites planifie automatiquement toute la semaine, avec les mêmes
-            horaires et tâches.
-          </p>
         </div>
 
         <div>
@@ -249,8 +305,8 @@ export default function NewVisitForm({ client, pets, initialDate }) {
         <button disabled={loading || pets.length === 0} className="btn-primary">
           {loading
             ? "Création..."
-            : recurrenceEnabled && Number(occurrences) > 1
-            ? `Planifier les ${occurrences} visites`
+            : recurrenceEnabled && recurrenceDates.length > 1
+            ? `Planifier les ${recurrenceDates.length} visites`
             : "Planifier la visite"}
         </button>
       </form>

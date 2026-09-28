@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { query, tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { addDaysISO } from "@/lib/utils";
+import { generateWeeklyRecurrenceDates } from "@/lib/utils";
 
 export async function GET(req) {
   const admin = await requireAdmin();
@@ -66,19 +66,20 @@ export async function POST(req) {
     return NextResponse.json({ error: "Animal, client et date requis." }, { status: 400 });
   }
 
-  // Récurrence : planifie en une fois plusieurs occurrences (ex. tous les jours
-  // pendant 7 visites) au lieu de créer la visite manuellement à chaque fois.
-  const occurrences =
-    recurrence && Number(recurrence.occurrences) > 1
-      ? Math.min(Math.floor(Number(recurrence.occurrences)), 60)
-      : 1;
-  const stepDays = recurrence?.frequency === "weekly" ? 7 : 1;
-  const recurrenceId = occurrences > 1 ? randomUUID() : null;
+  // Récurrence "semaine type" : l'utilisateur choisit les jours de la semaine
+  // (ex. lundi/mercredi/vendredi) et un nombre de semaines, plutôt que de créer
+  // chaque visite une par une.
+  let visitDates = [date];
+  if (recurrence && Array.isArray(recurrence.weekdays) && recurrence.weekdays.length > 0) {
+    const weeks = Math.min(Math.max(Math.floor(Number(recurrence.weeks) || 1), 1), 26);
+    const generated = generateWeeklyRecurrenceDates(date, recurrence.weekdays, weeks).slice(0, 180);
+    if (generated.length > 0) visitDates = generated;
+  }
+  const recurrenceId = visitDates.length > 1 ? randomUUID() : null;
 
   const visits = await tx(async (client) => {
     const created = [];
-    for (let n = 0; n < occurrences; n++) {
-      const visitDate = n === 0 ? date : addDaysISO(date, n * stepDays);
+    for (const visitDate of visitDates) {
       const visitRes = await client.query(
         `INSERT INTO visits (pet_id, client_id, date, start_time, end_time, notes, price, recurrence_id)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
