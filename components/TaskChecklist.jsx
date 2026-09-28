@@ -43,7 +43,7 @@ export default function TaskChecklist({ visitId, tasks }) {
           <label
             key={t.id}
             className={`flex items-center gap-3 border border-border rounded-lg p-3 cursor-pointer ${
-              t.done ? "bg-emerald-50" : "bg-white"
+              t.done ? "bg-emerald-50" : "bg-card"
             }`}
           >
             <input type="checkbox" checked={t.done} onChange={() => toggle(t)} className="w-4 h-4" />

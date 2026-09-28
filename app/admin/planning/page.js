@@ -1,29 +1,15 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
-import { formatDateLongFR, wazeUrl, todayISO } from "@/lib/utils";
-import { VisitStatusBadge } from "@/components/StatusBadge";
-import VisitQuickActions from "@/components/VisitQuickActions";
-import QuickAddVisit from "@/components/QuickAddVisit";
+import { formatDateLongFR, todayISO, localISO, toCardVisit } from "@/lib/utils";
+import { VISIT_STATUS, VISIT_STATUS_ORDER } from "@/components/StatusBadge";
+import VisitCard from "@/components/VisitCard";
 
 export const dynamic = "force-dynamic";
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-const STATUS_ORDER = ["PLANIFIE", "EN_COURS", "FAIT", "ANNULE"];
-const STATUS_DOT = {
-  PLANIFIE: "bg-amber-500",
-  EN_COURS: "bg-blue-500",
-  FAIT: "bg-emerald-500",
-  ANNULE: "bg-stone-400",
-};
-const STATUS_BORDER = {
-  PLANIFIE: "border-l-amber-400",
-  EN_COURS: "border-l-blue-400",
-  FAIT: "border-l-emerald-400",
-  ANNULE: "border-l-stone-300",
-};
 
 function toISO(d) {
-  return d.toISOString().slice(0, 10);
+  return localISO(d);
 }
 
 function startOfWeek(d) {
@@ -56,11 +42,11 @@ function chunk(arr, size) {
 export default async function PlanningPage({ searchParams }) {
   const sp = await searchParams;
   const today = todayISO();
-  const selected = sp.date || today;
+  const selected = /^\d{4}-\d{2}-\d{2}$/.test(sp.date || "") ? sp.date : today;
   const selectedDate = new Date(selected + "T00:00:00");
   const view = sp.view === "week" ? "week" : "month";
 
-  const monthKey = sp.month || ymKey(selectedDate);
+  const monthKey = /^\d{4}-\d{2}$/.test(sp.month || "") ? sp.month : ymKey(selectedDate);
   const monthDate = parseYM(monthKey);
 
   // Construit la liste des jours à afficher dans la grille : un mois complet
@@ -109,8 +95,6 @@ export default async function PlanningPage({ searchParams }) {
     [selected]
   );
 
-  const clientsRes = await query("SELECT id, first_name, last_name FROM clients ORDER BY last_name");
-
   const prevMonthKey = ymKey(addMonths(monthDate, -1));
   const nextMonthKey = ymKey(addMonths(monthDate, 1));
   const monthLabel = monthDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
@@ -129,7 +113,9 @@ export default async function PlanningPage({ searchParams }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="font-display text-3xl font-semibold text-forest-dark">Planning</h1>
-        <QuickAddVisit clients={clientsRes.rows} selectedDate={selected} />
+        <Link href={`/admin/visits/new?date=${selected}`} className="btn-accent shrink-0">
+          + Planifier
+        </Link>
       </div>
 
       <div className="card p-3 sm:p-4">
@@ -210,7 +196,7 @@ export default async function PlanningPage({ searchParams }) {
                 const isCurrentMonth = view === "week" || date.getMonth() === monthDate.getMonth();
                 const dayStatuses = statusByDate[iso] || {};
                 const total = Object.values(dayStatuses).reduce((s, n) => s + n, 0);
-                const activeDots = STATUS_ORDER.filter((s) => dayStatuses[s] > 0);
+                const activeDots = VISIT_STATUS_ORDER.filter((s) => dayStatuses[s] > 0);
                 const cellMonth = ymKey(date);
 
                 return (
@@ -237,7 +223,7 @@ export default async function PlanningPage({ searchParams }) {
                     </span>
                     <span className="flex items-center gap-0.5 h-2 mt-0.5">
                       {activeDots.map((s) => (
-                        <span key={s} className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[s]}`} />
+                        <span key={s} className={`w-1.5 h-1.5 rounded-full ${VISIT_STATUS[s].dot}`} />
                       ))}
                     </span>
                   </Link>
@@ -252,44 +238,20 @@ export default async function PlanningPage({ searchParams }) {
       <div>
         <h2 className="font-display text-xl font-semibold mb-3 capitalize">{formatDateLongFR(selected)}</h2>
         {visitsRes.rows.length === 0 ? (
-          <div className="card p-8 text-center text-muted">Aucune visite ce jour-là.</div>
+          <div className="card p-8 text-center text-muted">
+            Aucune visite ce jour-là.{" "}
+            <Link href={`/admin/visits/new?date=${selected}`} className="text-forest underline">
+              Planifier une visite
+            </Link>
+          </div>
         ) : (
           <div className="space-y-3">
             {visitsRes.rows.map((v) => (
-              <div
-                key={v.id}
-                className={`card border-l-4 ${STATUS_BORDER[v.status] || "border-l-stone-300"} p-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-6`}
-              >
-                <div className="w-20 shrink-0 font-semibold text-forest-dark">
-                  {v.start_time ? v.start_time.slice(0, 5) : "—"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Link href={`/admin/visits/${v.id}`} className="font-semibold hover:underline">
-                      {v.pet_name} — {v.first_name} {v.last_name}
-                    </Link>
-                    <VisitStatusBadge status={v.status} />
-                  </div>
-                  <div className="text-sm text-muted mt-0.5 flex items-center gap-3 flex-wrap">
-                    <span>
-                      ✅ {v.task_done_count}/{v.task_count} tâches
-                    </span>
-                    <span>📷 {v.photo_count}</span>
-                    {v.address && (
-                      <a
-                        href={wazeUrl(v.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-forest underline decoration-dotted underline-offset-4"
-                      >
-                        🧭 Waze
-                      </a>
-                    )}
-                  </div>
-                </div>
-                <VisitQuickActions visitId={v.id} status={v.status} />
-              </div>
+              <VisitCard key={`${v.id}-${v.status}-${v.photo_count}`} visit={toCardVisit(v)} />
             ))}
+            <p className="text-xs text-muted md:hidden text-center pt-1">
+              Astuce : glisse une visite vers la droite pour la démarrer, vers la gauche pour la terminer.
+            </p>
           </div>
         )}
       </div>

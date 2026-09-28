@@ -1,10 +1,33 @@
-const VISIT_STYLES = {
-  PLANIFIE: "bg-amber-100 text-amber-800",
-  EN_COURS: "bg-blue-100 text-blue-800",
-  FAIT: "bg-emerald-100 text-emerald-800",
-  ANNULE: "bg-stone-200 text-stone-600",
+// Source unique des couleurs de statut : badges, pastilles du calendrier et
+// liseré des cartes de visite utilisent tous ces mêmes réglages, pour qu'un
+// statut ait exactement la même couleur partout dans l'application.
+export const VISIT_STATUS = {
+  PLANIFIE: {
+    label: "Planifiée",
+    badge: "bg-amber-100 text-amber-800",
+    dot: "bg-amber-500",
+    border: "border-l-amber-400",
+  },
+  EN_COURS: {
+    label: "En cours",
+    badge: "bg-blue-100 text-blue-800",
+    dot: "bg-blue-500",
+    border: "border-l-blue-400",
+  },
+  FAIT: {
+    label: "Terminée",
+    badge: "bg-emerald-100 text-emerald-800",
+    dot: "bg-emerald-500",
+    border: "border-l-emerald-400",
+  },
+  ANNULE: {
+    label: "Annulée",
+    badge: "bg-stone-200 text-stone-600",
+    dot: "bg-stone-400",
+    border: "border-l-stone-300",
+  },
 };
-const VISIT_LABELS = { PLANIFIE: "Planifiée", EN_COURS: "En cours", FAIT: "Terminée", ANNULE: "Annulée" };
+export const VISIT_STATUS_ORDER = ["PLANIFIE", "EN_COURS", "FAIT", "ANNULE"];
 
 const INVOICE_STYLES = {
   BROUILLON: "bg-stone-200 text-stone-700",
@@ -20,9 +43,11 @@ const INVOICE_LABELS = {
 };
 
 export function VisitStatusBadge({ status }) {
+  const meta = VISIT_STATUS[status];
   return (
-    <span className={`badge ${VISIT_STYLES[status] || "bg-stone-100 text-stone-700"}`}>
-      {VISIT_LABELS[status] || status}
+    <span className={`badge ${meta?.badge || "bg-stone-100 text-stone-700"}`}>
+      {meta && <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} aria-hidden="true" />}
+      {meta?.label || status}
     </span>
   );
 }

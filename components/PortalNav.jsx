@@ -12,7 +12,7 @@ export default function PortalNav({ clientName }) {
   }
 
   return (
-    <header className="bg-forest-dark text-white">
+    <header className="bg-nav text-white">
       <div className="max-w-3xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
         <span className="font-display font-semibold flex items-center gap-2">🐾 Aux Bonnes Pattes</span>
         <div className="flex items-center gap-3 text-sm">
