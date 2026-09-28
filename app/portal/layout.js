@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireClient } from "@/lib/auth";
 import { query } from "@/lib/db";
@@ -13,6 +14,15 @@ export default async function PortalLayout({ children }) {
     <div className="min-h-screen flex flex-col">
       <PortalNav clientName={client ? `${client.first_name} ${client.last_name}` : ""} />
       <main className="flex-1 px-4 py-6 md:px-8 md:py-10 max-w-3xl mx-auto w-full">{children}</main>
+      <footer className="text-center text-xs text-muted py-4">
+        <Link href="/mentions-legales" className="underline hover:text-ink">
+          Mentions légales
+        </Link>
+        {" · "}
+        <Link href="/confidentialite" className="underline hover:text-ink">
+          Confidentialité
+        </Link>
+      </footer>
     </div>
   );
 }

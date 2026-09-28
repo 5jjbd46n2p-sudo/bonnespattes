@@ -21,6 +21,8 @@ export async function PATCH(req) {
     iban: "iban",
     defaultTvaRate: "default_tva_rate",
     invoicePrefix: "invoice_prefix",
+    legalForm: "legal_form",
+    contactEmail: "contact_email",
   };
   const sets = [];
   const values = [];

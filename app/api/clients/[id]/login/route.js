@@ -47,10 +47,11 @@ export async function POST(req, { params }) {
 
     return NextResponse.json({ ok: true, emailWarning });
   } catch (e) {
+    console.error(e);
     if (String(e.message).includes("duplicate key")) {
       return NextResponse.json({ error: "Cet email est déjà utilisé par un autre compte." }, { status: 400 });
     }
-    return NextResponse.json({ error: "Erreur serveur : " + e.message }, { status: 500 });
+    return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
   }
 }
 

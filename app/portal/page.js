@@ -44,13 +44,18 @@ export default async function PortalPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">
-          Suivi de {petsRes.rows.map((p) => p.name).join(" & ") || "vos animaux"}
-        </h1>
-        <p className="text-muted text-sm mt-1">
-          Retrouvez ici le détail de chaque visite : tâches réalisées et photos.
-        </p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="font-display text-3xl font-semibold text-forest-dark">
+            Suivi de {petsRes.rows.map((p) => p.name).join(" & ") || "vos animaux"}
+          </h1>
+          <p className="text-muted text-sm mt-1">
+            Retrouvez ici le détail de chaque visite : tâches réalisées et photos.
+          </p>
+        </div>
+        <a href="/api/portal/export" className="btn-ghost text-xs !py-1.5 !px-3 shrink-0">
+          ⬇ Télécharger mes données
+        </a>
       </div>
 
       <div className="space-y-4">

@@ -142,3 +142,40 @@ DATABASE_URL="ta-chaine-de-connexion-neon" npm run migrate
 
 C'est sans risque à rejouer plusieurs fois : elle ne fait qu'ajouter ce qui manque,
 sans toucher à tes données existantes.
+
+---
+
+## Sécurité & conformité RGPD
+
+L'application inclut plusieurs protections techniques :
+
+- **Mots de passe** hachés (bcrypt, jamais stockés en clair) et **comptes verrouillés temporairement**
+  (15 min) après plusieurs mots de passe erronés consécutifs, pour limiter les attaques par force brute.
+- **JWT_SECRET obligatoire** : sans cette variable d'environnement, impossible de se connecter (aucun
+  secret par défaut n'est utilisé).
+- **En-têtes de sécurité HTTP** (CSP, anti-clickjacking, HSTS, etc.) appliqués à toutes les pages.
+- **Upload de photos contrôlé** : seuls les formats image sont acceptés, taille limitée à 15 Mo.
+- **Droit à l'effacement** : un bouton "Supprimer ce client et toutes ses données" (fiche client) supprime
+  définitivement ses informations, animaux, visites, photos et accès au portail.
+- **Droit à la portabilité** : chaque client peut télécharger toutes ses données depuis son espace
+  (bouton "Télécharger mes données").
+- Aucun cookie de mesure d'audience ni traceur tiers : seul un cookie de connexion strictement
+  nécessaire est utilisé, donc pas de bandeau de consentement requis.
+
+### ⚠️ À compléter après déploiement
+
+Deux pages publiques — **Mentions légales** (`/mentions-legales`) et **Politique de confidentialité**
+(`/confidentialite`) — sont générées automatiquement à partir des informations saisies dans
+**Réglages**. Pour qu'elles soient complètes (obligation légale pour tout site en France), va dans
+**Réglages → "Mentions légales & RGPD"** et renseigne :
+
+- le **statut juridique** de ton activité (ex. "Auto-entrepreneur") ;
+- ton **email de contact** pour les demandes RGPD (droit d'accès, de rectification, d'effacement...).
+
+Les champs "Nom de l'activité", "Adresse" et "SIRET" (juste au-dessus dans les mêmes Réglages) sont
+aussi repris sur ces deux pages — vérifie qu'ils sont bien remplis.
+
+Ces pages restent un socle solide mais généraliste : pour une activité qui grandit ou des cas
+particuliers (sous-traitance, salariés...), une relecture par un professionnel du droit reste
+recommandée. Pense aussi à conserver tes factures 10 ans (obligation légale comptable), même après la
+suppression d'un client.

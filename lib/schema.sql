@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS settings (
   default_tva_rate NUMERIC DEFAULT 0,
   invoice_prefix TEXT DEFAULT 'F',
   next_invoice_seq INTEGER DEFAULT 1,
+  -- Champs utilisés pour les pages publiques "Mentions légales" et
+  -- "Politique de confidentialité" (conformité LCEN / RGPD).
+  legal_form TEXT DEFAULT '',
+  contact_email TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -32,6 +36,10 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('ADMIN','CLIENT')),
   client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  -- Anti-brute-force : verrouillage temporaire du compte après plusieurs
+  -- mots de passe erronés consécutifs (voir /api/auth/login).
+  failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+  locked_until TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -137,3 +145,9 @@ INSERT INTO settings (business_name) SELECT 'Mon activité de pet sitting' WHERE
 ALTER TABLE visits ADD COLUMN IF NOT EXISTS recurrence_id UUID;
 ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_status_check;
 ALTER TABLE visits ADD CONSTRAINT visits_status_check CHECK (status IN ('PLANIFIE','EN_COURS','FAIT','ANNULE'));
+
+-- Migrations idempotentes pour le durcissement sécurité / RGPD :
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS legal_form TEXT DEFAULT '';
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS contact_email TEXT DEFAULT '';

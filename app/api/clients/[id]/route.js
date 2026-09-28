@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { del } from "@vercel/blob";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
@@ -78,6 +79,22 @@ export async function DELETE(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+
+  // Droit à l'effacement (RGPD) : on supprime aussi les photos stockées chez
+  // le fournisseur de stockage (Vercel Blob), qui ne sont pas nettoyées par
+  // la suppression en cascade en base — celle-ci ne supprime que les lignes SQL.
+  const photosRes = await query(
+    `SELECT ph.url FROM photos ph JOIN visits v ON v.id = ph.visit_id WHERE v.client_id = $1`,
+    [id]
+  );
+  for (const photo of photosRes.rows) {
+    try {
+      await del(photo.url);
+    } catch (e) {
+      console.warn("Suppression blob échouée (ignorée) :", e.message);
+    }
+  }
+
   await query("DELETE FROM clients WHERE id = $1", [id]);
   return NextResponse.json({ ok: true });
 }

@@ -2,7 +2,14 @@ import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
 function csvEscape(v) {
-  const s = String(v ?? "");
+  let s = String(v ?? "");
+  // Protection contre l'injection de formule (CSV injection) : si Excel/Sheets
+  // ouvre ce fichier, un champ commençant par =, +, -, @ ou une tabulation
+  // pourrait être interprété comme une formule. On neutralise en préfixant
+  // d'une apostrophe, sans changer la valeur affichée à la lecture.
+  if (/^[=+\-@\t]/.test(s)) {
+    s = `'${s}`;
+  }
   if (s.includes(";") || s.includes('"') || s.includes("\n")) {
     return `"${s.replace(/"/g, '""')}"`;
   }

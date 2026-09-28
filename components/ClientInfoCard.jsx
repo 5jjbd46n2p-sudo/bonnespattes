@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import WazeLink from "@/components/WazeLink";
 
-export default function ClientInfoCard({ client }) {
+export default function ClientInfoCard({ client, invoiceCount = 0 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -17,6 +17,7 @@ export default function ClientInfoCard({ client }) {
     hourlyRate: client.hourly_rate || 0,
   });
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function save() {
     setLoading(true);
@@ -27,6 +28,32 @@ export default function ClientInfoCard({ client }) {
     });
     setLoading(false);
     setEditing(false);
+    router.refresh();
+  }
+
+  // Exercice du droit à l'effacement (RGPD) : supprime définitivement le
+  // client et toutes ses données liées (animaux, visites, photos, accès
+  // portail). Avertit explicitement si des factures existent, car elles sont
+  // normalement soumises à une obligation légale de conservation comptable.
+  async function removeClient() {
+    const invoiceWarning =
+      invoiceCount > 0
+        ? `\n\n⚠️ Ce client a ${invoiceCount} facture${invoiceCount > 1 ? "s" : ""} enregistrée${
+            invoiceCount > 1 ? "s" : ""
+          }. La loi impose normalement de conserver les documents comptables plusieurs années : exporte-les (Comptabilité → Export CSV, ou le PDF de chaque facture) avant de continuer si tu dois les garder.`
+        : "";
+    const confirmed = confirm(
+      `Supprimer définitivement ${client.first_name} ${client.last_name} et toutes ses données (animaux, historique de visites, photos, accès au portail) ? Cette action est irréversible.${invoiceWarning}`
+    );
+    if (!confirmed) return;
+    setDeleting(true);
+    const res = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
+    setDeleting(false);
+    if (!res.ok) {
+      alert("La suppression a échoué. Réessaie plus tard.");
+      return;
+    }
+    router.push("/admin/clients");
     router.refresh();
   }
 
@@ -62,6 +89,16 @@ export default function ClientInfoCard({ client }) {
             <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
           </div>
         )}
+
+        <div className="mt-4 pt-4 border-t border-border">
+          <button
+            onClick={removeClient}
+            disabled={deleting}
+            className="text-xs text-danger hover:underline"
+          >
+            {deleting ? "Suppression..." : "🗑 Supprimer ce client et toutes ses données"}
+          </button>
+        </div>
       </div>
     );
   }

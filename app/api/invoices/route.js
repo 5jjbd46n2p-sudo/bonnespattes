@@ -111,6 +111,6 @@ export async function POST(req) {
     return NextResponse.json({ invoice: result });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: "Erreur serveur : " + e.message }, { status: 500 });
+    return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
   }
 }

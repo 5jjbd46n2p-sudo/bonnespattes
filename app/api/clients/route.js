@@ -101,6 +101,6 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-    return NextResponse.json({ error: "Erreur serveur : " + e.message }, { status: 500 });
+    return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
   }
 }

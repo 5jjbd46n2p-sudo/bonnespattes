@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -81,6 +82,15 @@ export default function LoginPage() {
         </form>
         <p className="text-center text-xs text-muted mt-6">
           Espace réservé aux clients et à l'administrateur d'Aux Bonnes Pattes.
+        </p>
+        <p className="text-center text-xs text-muted mt-2">
+          <Link href="/mentions-legales" className="underline hover:text-ink">
+            Mentions légales
+          </Link>
+          {" · "}
+          <Link href="/confidentialite" className="underline hover:text-ink">
+            Confidentialité
+          </Link>
         </p>
       </div>
     </div>

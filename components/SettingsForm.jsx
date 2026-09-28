@@ -13,6 +13,8 @@ export default function SettingsForm({ settings }) {
     iban: settings.iban || "",
     defaultTvaRate: settings.default_tva_rate || 0,
     invoicePrefix: settings.invoice_prefix || "F",
+    legalForm: settings.legal_form || "",
+    contactEmail: settings.contact_email || "",
   });
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -64,11 +66,74 @@ export default function SettingsForm({ settings }) {
   );
 }
 
-function Field({ label, value, onChange, type = "text" }) {
+export function LegalSettingsForm({ settings }) {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    legalForm: settings.legal_form || "",
+    contactEmail: settings.contact_email || "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function save(e) {
+    e.preventDefault();
+    setLoading(true);
+    await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    setLoading(false);
+    setSaved(true);
+    router.refresh();
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <form onSubmit={save} className="card p-5 space-y-4">
+      <div>
+        <h2 className="font-semibold text-forest-dark">Mentions légales &amp; RGPD</h2>
+        <p className="text-xs text-muted mt-1">
+          Utilisées pour générer automatiquement les pages publiques{" "}
+          <span className="whitespace-nowrap">« Mentions légales »</span> et{" "}
+          <span className="whitespace-nowrap">« Politique de confidentialité »</span> du site (avec le nom,
+          l'adresse et le SIRET renseignés ci-dessus).
+        </p>
+      </div>
+      <Field
+        label="Statut juridique"
+        value={form.legalForm}
+        onChange={(v) => setForm({ ...form, legalForm: v })}
+        placeholder="Ex. Auto-entrepreneur / Entreprise individuelle"
+      />
+      <Field
+        label="Email de contact pour les demandes RGPD"
+        type="email"
+        value={form.contactEmail}
+        onChange={(v) => setForm({ ...form, contactEmail: v })}
+        placeholder="contact@tondomaine.fr"
+      />
+      <div className="flex items-center gap-3">
+        <button disabled={loading} className="btn-primary text-sm">
+          {loading ? "Enregistrement..." : "Enregistrer"}
+        </button>
+        {saved && <span className="text-sm text-forest">✓ Enregistré</span>}
+      </div>
+    </form>
+  );
+}
+
+function Field({ label, value, onChange, type = "text", placeholder }) {
   return (
     <div>
       <label className="text-sm font-medium block mb-1">{label}</label>
-      <input type={type} className="input" value={value} onChange={(e) => onChange(e.target.value)} />
+      <input
+        type={type}
+        className="input"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }
