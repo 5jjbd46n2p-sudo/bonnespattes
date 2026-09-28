@@ -65,6 +65,14 @@ export async function POST(req) {
   if (!petId || !clientId || !date) {
     return NextResponse.json({ error: "Animal, client et date requis." }, { status: 400 });
   }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return NextResponse.json({ error: "Date invalide." }, { status: 400 });
+  }
+  // L'animal doit bien appartenir au client choisi (cohérence des données).
+  const petCheck = await query("SELECT 1 FROM pets WHERE id = $1 AND client_id = $2", [petId, clientId]);
+  if (petCheck.rows.length === 0) {
+    return NextResponse.json({ error: "Cet animal n'appartient pas à ce client." }, { status: 400 });
+  }
 
   // Récurrence "semaine type" : l'utilisateur choisit les jours de la semaine
   // (ex. lundi/mercredi/vendredi) et un nombre de semaines, plutôt que de créer

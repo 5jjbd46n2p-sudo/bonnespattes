@@ -34,6 +34,8 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
 
   useEffect(() => {
     if (!clientId) return;
+    // Chargement asynchrone : l'état n'est mis à jour qu'après la réponse du serveur.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadClientExtras(clientId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // seulement au chargement initial (client déjà présélectionné)

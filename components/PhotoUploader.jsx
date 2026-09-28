@@ -67,7 +67,7 @@ export default function PhotoUploader({ visitId, photos }) {
               </a>
               <button
                 onClick={() => removePhoto(p.id)}
-                className="absolute top-1.5 right-1.5 bg-white/90 text-danger rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1.5 right-1.5 bg-card/90 text-danger rounded-full w-7 h-7 text-xs md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               >
                 ✕
               </button>

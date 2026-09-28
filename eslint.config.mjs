@@ -11,6 +11,13 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // Interface en français : les apostrophes et guillemets sont légitimes
+    // dans le texte JSX, seuls > et } restent signalés (fautes de frappe).
+    rules: {
+      "react/no-unescaped-entities": ["error", { forbid: [">", "}"] }],
+    },
+  },
 ]);
 
 export default eslintConfig;

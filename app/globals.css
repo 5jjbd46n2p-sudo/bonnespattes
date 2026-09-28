@@ -13,6 +13,9 @@
   --color-card: #fffdf9;
   --color-border: #e4dcc9;
   --color-danger: #b3492f;
+  --color-input: #ffffff;
+  --color-nav: #2e4235;
+  --color-tabbar: rgba(255, 253, 249, 0.92);
   --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "URW Palladio L", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -30,8 +33,110 @@
   --color-card: var(--color-card);
   --color-border: var(--color-border);
   --color-danger: var(--color-danger);
+  --color-input: var(--color-input);
+  --color-nav: var(--color-nav);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
+}
+
+/* ---------------------------------------------------------------------------
+   Mode sombre : "Auto" (aucun data-theme) suit le système ; Réglages permet de
+   forcer data-theme="light" ou "dark". Le même jeu de couleurs est déclaré
+   pour les deux cas (le CSS ne permet pas de mutualiser un bloc entre une
+   media query et un sélecteur).
+   ------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --color-sand: #141916;
+  --color-sand-dark: #252c27;
+  --color-ink: #ece7dc;
+  --color-muted: #a49d90;
+  --color-forest: #5b8a6c;
+  --color-forest-dark: #b9d4c1;
+  --color-forest-light: #7fa48b;
+  --color-ochre: #c97b3d;
+  --color-ochre-dark: #e3a46f;
+  --color-card: #1d231f;
+  --color-border: #343c36;
+  --color-danger: #e5836a;
+  --color-input: #171c19;
+  --color-nav: #0e1310;
+  --color-tabbar: rgba(29, 35, 31, 0.92);
+
+  /* Teintes pastel de Tailwind (badges, encadrés) adaptées au fond sombre */
+  --color-amber-50: rgba(245, 158, 11, 0.1);
+  --color-amber-100: rgba(245, 158, 11, 0.2);
+  --color-amber-200: rgba(245, 158, 11, 0.35);
+  --color-amber-400: #d99a2b;
+  --color-amber-800: #fcd34d;
+  --color-blue-100: rgba(59, 130, 246, 0.22);
+  --color-blue-400: #5b8def;
+  --color-blue-800: #a5c8fd;
+  --color-emerald-50: rgba(16, 185, 129, 0.1);
+  --color-emerald-100: rgba(16, 185, 129, 0.2);
+  --color-emerald-400: #34d399;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #86efc4;
+  --color-red-50: rgba(239, 68, 68, 0.12);
+  --color-red-100: rgba(239, 68, 68, 0.22);
+  --color-red-200: rgba(239, 68, 68, 0.38);
+  --color-red-800: #fca5a5;
+  --color-stone-100: #2a302c;
+  --color-stone-200: #333a35;
+  --color-stone-300: #4a524c;
+  --color-stone-400: #6f7671;
+  --color-stone-600: #b8b2a7;
+  --color-stone-700: #d0cabf;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-sand: #141916;
+  --color-sand-dark: #252c27;
+  --color-ink: #ece7dc;
+  --color-muted: #a49d90;
+  --color-forest: #5b8a6c;
+  --color-forest-dark: #b9d4c1;
+  --color-forest-light: #7fa48b;
+  --color-ochre: #c97b3d;
+  --color-ochre-dark: #e3a46f;
+  --color-card: #1d231f;
+  --color-border: #343c36;
+  --color-danger: #e5836a;
+  --color-input: #171c19;
+  --color-nav: #0e1310;
+  --color-tabbar: rgba(29, 35, 31, 0.92);
+
+  /* Teintes pastel de Tailwind (badges, encadrés) adaptées au fond sombre */
+  --color-amber-50: rgba(245, 158, 11, 0.1);
+  --color-amber-100: rgba(245, 158, 11, 0.2);
+  --color-amber-200: rgba(245, 158, 11, 0.35);
+  --color-amber-400: #d99a2b;
+  --color-amber-800: #fcd34d;
+  --color-blue-100: rgba(59, 130, 246, 0.22);
+  --color-blue-400: #5b8def;
+  --color-blue-800: #a5c8fd;
+  --color-emerald-50: rgba(16, 185, 129, 0.1);
+  --color-emerald-100: rgba(16, 185, 129, 0.2);
+  --color-emerald-400: #34d399;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #86efc4;
+  --color-red-50: rgba(239, 68, 68, 0.12);
+  --color-red-100: rgba(239, 68, 68, 0.22);
+  --color-red-200: rgba(239, 68, 68, 0.38);
+  --color-red-800: #fca5a5;
+  --color-stone-100: #2a302c;
+  --color-stone-200: #333a35;
+  --color-stone-300: #4a524c;
+  --color-stone-400: #6f7671;
+  --color-stone-600: #b8b2a7;
+  --color-stone-700: #d0cabf;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
@@ -108,7 +213,7 @@ body {
 }
 
 .input {
-  background: white;
+  background: var(--color-input);
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
@@ -236,8 +341,8 @@ body {
   border-color: var(--color-forest-light);
 }
 .weekday-pill--active {
-  background: var(--color-forest-dark);
-  border-color: var(--color-forest-dark);
+  background: var(--color-forest);
+  border-color: var(--color-forest);
   color: #fff;
 }
 
@@ -269,4 +374,29 @@ body {
   text-align: center;
   font-size: 0.95rem;
   font-weight: 600;
+}
+
+/* Barre d'onglets mobile (façon iOS : fond translucide + flou) */
+.tabbar {
+  background: var(--color-tabbar);
+  border-top: 1px solid var(--color-border);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+}
+
+/* En mode sombre, forest-dark devient un vert clair (lisible en texte) : on
+   garde donc des fonds de bouton sombres au survol. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-primary:hover {
+    background: #4c7a5c;
+  }
+  :root:not([data-theme="light"]) .btn-accent:hover {
+    background: #b06a32;
+  }
+}
+:root[data-theme="dark"] .btn-primary:hover {
+  background: #4c7a5c;
+}
+:root[data-theme="dark"] .btn-accent:hover {
+  background: #b06a32;
 }
