@@ -7,10 +7,10 @@ import { computeVisitHours } from "@/lib/utils";
 
 const DEFAULT_TASKS = ["Nourrir", "Promenade", "Eau fraîche", "Litière / propreté", "Câlins & jeu"];
 
-export default function NewVisitForm({ client, pets }) {
+export default function NewVisitForm({ client, pets, initialDate }) {
   const router = useRouter();
   const [petId, setPetId] = useState(pets[0]?.id || "");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(initialDate || new Date().toISOString().slice(0, 10));
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [price, setPrice] = useState(client.hourly_rate || "");

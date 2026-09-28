@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function QuickAddVisit({ clients }) {
+export default function QuickAddVisit({ clients, selectedDate }) {
   const router = useRouter();
   const [clientId, setClientId] = useState("");
 
   function go() {
     if (!clientId) return;
-    router.push(`/admin/clients/${clientId}/visits/new`);
+    const query = selectedDate ? `?date=${selectedDate}` : "";
+    router.push(`/admin/clients/${clientId}/visits/new${query}`);
   }
 
   return (
