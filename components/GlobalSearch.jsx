@@ -10,12 +10,13 @@ import { createPortal } from "react-dom";
  * - variant "sidebar" : faux champ dans la barre latérale (ordinateur), + raccourci ⌘K / Ctrl+K
  * - variant "icon"    : bouton loupe dans l'en-tête mobile
  */
+const EMPTY_RESULTS = { term: "", clients: [], pets: [] };
+
 export default function GlobalSearch({ variant = "icon" }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const [results, setResults] = useState({ clients: [], pets: [] });
-  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(EMPTY_RESULTS);
   const inputRef = useRef(null);
 
   // Raccourci clavier (uniquement sur la version ordinateur, pour ne pas
@@ -48,32 +49,36 @@ export default function GlobalSearch({ variant = "icon" }) {
     };
   }, [open]);
 
-  // Recherche avec un petit délai pour ne pas interroger le serveur à chaque lettre
+  // Recherche avec un petit délai pour ne pas interroger le serveur à chaque
+  // lettre. Les résultats sont mémorisés avec le terme cherché : tant qu'ils ne
+  // correspondent pas au terme saisi, on est "en cours de recherche".
+  const term = q.trim();
   useEffect(() => {
-    const term = q.trim();
-    if (term.length < 2) {
-      setResults({ clients: [], pets: [] });
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+    if (term.length < 2) return;
     const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal: controller.signal });
         const data = await res.json();
-        if (res.ok) setResults({ clients: data.clients || [], pets: data.pets || [] });
+        setResults(
+          res.ok
+            ? { term, clients: data.clients || [], pets: data.pets || [] }
+            : { term, clients: [], pets: [] }
+        );
       } catch {
-        // requête annulée ou réseau indisponible : on garde les résultats précédents
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        // Réseau indisponible : on affiche "Aucun résultat" plutôt qu'une
+        // recherche sans fin (une requête annulée, elle, est simplement ignorée).
+        if (!controller.signal.aborted) setResults({ term, clients: [], pets: [] });
       }
     }, 200);
     return () => {
       clearTimeout(t);
       controller.abort();
     };
-  }, [q]);
+  }, [term]);
+
+  const loading = term.length >= 2 && results.term !== term;
+  const shown = term.length >= 2 ? results : EMPTY_RESULTS;
 
   function go(href) {
     setOpen(false);
@@ -82,14 +87,14 @@ export default function GlobalSearch({ variant = "icon" }) {
   }
 
   const items = [
-    ...results.clients.map((c) => ({
+    ...shown.clients.map((c) => ({
       key: `c-${c.id}`,
       href: `/admin/clients/${c.id}`,
       icon: "👤",
       title: `${c.first_name} ${c.last_name}`,
       sub: c.address || c.phone || "",
     })),
-    ...results.pets.map((p) => ({
+    ...shown.pets.map((p) => ({
       key: `p-${p.id}`,
       href: `/admin/clients/${p.client_id}`,
       icon: "🐾",
@@ -149,7 +154,7 @@ export default function GlobalSearch({ variant = "icon" }) {
               </button>
             </div>
             <div className="max-h-[60vh] overflow-y-auto">
-              {q.trim().length < 2 ? (
+              {term.length < 2 ? (
                 <p className="px-4 py-6 text-sm text-muted text-center">Tape au moins 2 lettres.</p>
               ) : loading && items.length === 0 ? (
                 <p className="px-4 py-6 text-sm text-muted text-center">Recherche…</p>

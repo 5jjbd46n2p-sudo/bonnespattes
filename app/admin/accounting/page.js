@@ -53,6 +53,8 @@ export default async function AccountingPage({ searchParams }) {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="font-display text-3xl font-semibold text-forest-dark">Comptabilité</h1>
         <div className="flex gap-2">
+          {/* Téléchargement d'un fichier (route API) : un <a> classique, pas un <Link> */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/api/invoices/export" className="btn-ghost text-sm">
             ⬇ Export comptable (CSV)
           </a>

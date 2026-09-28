@@ -19,7 +19,7 @@ function normalize(s) {
   return (s || "")
     .toString()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
 

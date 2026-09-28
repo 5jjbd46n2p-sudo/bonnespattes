@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const OPTIONS = [
   { value: "auto", label: "Auto", icon: "🌓" },
@@ -11,21 +11,28 @@ const OPTIONS = [
 // Choix du thème : "Auto" suit le réglage du téléphone/ordinateur, sinon clair
 // ou sombre forcé. Mémorisé dans un cookie (lu par le serveur pour afficher
 // directement le bon thème, sans flash au chargement).
+// Le thème courant est lu directement sur <html data-theme> : toutes les
+// instances du sélecteur (barre latérale + Réglages) restent synchronisées.
+function readTheme() {
+  const t = document.documentElement.dataset.theme;
+  return t === "dark" || t === "light" ? t : "auto";
+}
+
+function subscribe(onChange) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  return () => observer.disconnect();
+}
+
+function applyTheme(value) {
+  const root = document.documentElement;
+  if (value === "auto") delete root.dataset.theme;
+  else root.dataset.theme = value;
+  document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax`;
+}
+
 export default function ThemeToggle({ compact = false }) {
-  const [theme, setTheme] = useState("auto");
-
-  useEffect(() => {
-    const current = document.documentElement.dataset.theme;
-    setTheme(current === "dark" || current === "light" ? current : "auto");
-  }, []);
-
-  function choose(value) {
-    setTheme(value);
-    const root = document.documentElement;
-    if (value === "auto") delete root.dataset.theme;
-    else root.dataset.theme = value;
-    document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax`;
-  }
+  const theme = useSyncExternalStore(subscribe, readTheme, () => "auto");
 
   return (
     <div
@@ -43,7 +50,7 @@ export default function ThemeToggle({ compact = false }) {
             type="button"
             role="radio"
             aria-checked={active}
-            onClick={() => choose(o.value)}
+            onClick={() => applyTheme(o.value)}
             title={o.label}
             className={`rounded-full font-medium transition-colors ${compact ? "px-2.5 py-1" : "px-3.5 py-1.5"} ${
               active
