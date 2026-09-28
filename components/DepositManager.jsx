@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatEUR, formatDateFR } from "@/lib/utils";
+import { X } from "lucide-react";
 
 export default function DepositManager({ clientId, deposits }) {
   const router = useRouter();
@@ -56,7 +57,7 @@ export default function DepositManager({ clientId, deposits }) {
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-forest-dark">Acomptes</h2>
+        <h2 className="font-bold text-forest-dark">Acomptes</h2>
         <button onClick={() => setShowForm((s) => !s)} className="text-sm text-forest underline">
           {showForm ? "Annuler" : "+ Enregistrer un acompte"}
         </button>
@@ -64,8 +65,8 @@ export default function DepositManager({ clientId, deposits }) {
 
       {availableTotal > 0 && (
         <p className="text-sm mb-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          💰 Disponible : <span className="font-semibold">{formatEUR(availableTotal)}</span>
-          <span className="text-muted"> — sera proposé automatiquement à la prochaine facture.</span>
+          Disponible : <span className="font-semibold">{formatEUR(availableTotal)}</span>
+          <span className="text-muted">, déduit automatiquement de la prochaine facture.</span>
         </p>
       )}
 
@@ -97,7 +98,7 @@ export default function DepositManager({ clientId, deposits }) {
           />
           {error && <p className="text-sm text-danger">{error}</p>}
           <button disabled={loading} className="btn-primary text-sm w-full">
-            {loading ? "Enregistrement..." : "Enregistrer l'acompte"}
+            {loading ? "Enregistrement…" : "Enregistrer l'acompte"}
           </button>
         </form>
       )}
@@ -123,8 +124,8 @@ export default function DepositManager({ clientId, deposits }) {
               <div className="flex items-center gap-2 shrink-0">
                 <span className="font-medium">{formatEUR(d.amount)}</span>
                 {!d.invoice_id && (
-                  <button onClick={() => removeDeposit(d.id)} className="text-xs text-danger hover:underline">
-                    ✕
+                  <button onClick={() => removeDeposit(d.id)} className="text-muted hover:text-danger p-1" aria-label="Supprimer l'acompte">
+                    <X className="w-4 h-4" strokeWidth={2.2} />
                   </button>
                 )}
               </div>

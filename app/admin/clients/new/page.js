@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { RefreshCw } from "lucide-react";
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -84,12 +85,12 @@ export default function NewClientPage() {
         <Link href="/admin/clients" className="text-sm text-muted hover:underline">
           ← Retour aux clients
         </Link>
-        <h1 className="font-display text-3xl font-semibold text-forest-dark mt-2">Nouveau client</h1>
+        <h1 className="font-display text-3xl font-bold text-forest-dark mt-2">Nouveau client</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <section className="card p-5 space-y-4">
-          <h2 className="font-semibold text-forest-dark">Informations du client</h2>
+          <h2 className="font-bold text-forest-dark">Informations du client</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Prénom" required value={form.firstName} onChange={(v) => setForm({ ...form, firstName: v })} />
             <Field label="Nom" required value={form.lastName} onChange={(v) => setForm({ ...form, lastName: v })} />
@@ -121,7 +122,7 @@ export default function NewClientPage() {
 
         <section className="card p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-forest-dark">Animaux</h2>
+            <h2 className="font-bold text-forest-dark">Animaux</h2>
             <button type="button" onClick={addPet} className="btn-ghost text-sm !py-1 !px-3">
               + Ajouter un animal
             </button>
@@ -173,8 +174,10 @@ export default function NewClientPage() {
                     type="button"
                     onClick={() => setLoginPassword(generatePassword())}
                     className="btn-ghost !px-3 text-sm shrink-0"
+                    aria-label="Générer un autre mot de passe"
+                    title="Générer un autre mot de passe"
                   >
-                    🔄
+                    <RefreshCw className="w-4 h-4" strokeWidth={1.9} />
                   </button>
                 </div>
                 <p className="text-xs text-muted mt-1">
@@ -198,7 +201,7 @@ export default function NewClientPage() {
         )}
 
         <button type="submit" disabled={loading} className="btn-primary">
-          {loading ? "Création..." : "Créer le client"}
+          {loading ? "Création…" : "Créer le client"}
         </button>
       </form>
     </div>

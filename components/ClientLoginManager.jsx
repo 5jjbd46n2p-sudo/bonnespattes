@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 
 export default function ClientLoginManager({ clientId, login }) {
   const router = useRouter();
@@ -55,21 +56,21 @@ export default function ClientLoginManager({ clientId, login }) {
 
   return (
     <div className="card p-5">
-      <h2 className="font-semibold text-forest-dark mb-3">Accès au portail client</h2>
+      <h2 className="font-bold text-forest-dark mb-3">Accès au portail client</h2>
 
       {savedPassword && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3 text-sm">
           <p className="font-semibold">Identifiants à transmettre au client :</p>
           <p>Email : {email}</p>
           <p>Mot de passe : {savedPassword}</p>
-          {emailSent && <p className="text-forest mt-1">✓ Email envoyé automatiquement au client.</p>}
+          {emailSent && <p className="text-forest mt-1">Email envoyé au client.</p>}
           {emailWarning && (
             <p className="text-danger mt-1">
-              ⚠️ Email non envoyé ({emailWarning}) — transmets ces identifiants toi-même.
+              Email non envoyé ({emailWarning}). Transmets ces identifiants toi-même.
             </p>
           )}
           <p className="text-xs text-muted mt-1">
-            Ce mot de passe ne sera plus affiché ensuite — note-le maintenant.
+            Ce mot de passe ne sera plus affiché ensuite : note-le maintenant.
           </p>
         </div>
       )}
@@ -112,14 +113,16 @@ export default function ClientLoginManager({ clientId, login }) {
               type="button"
               onClick={() => setPassword(generatePassword())}
               className="btn-ghost !px-3 text-sm shrink-0"
+              aria-label="Générer un mot de passe"
+              title="Générer un mot de passe"
             >
-              🔄
+              <RefreshCw className="w-4 h-4" strokeWidth={1.9} />
             </button>
           </div>
           {error && <p className="text-sm text-danger">{error}</p>}
           <div className="flex gap-2">
             <button disabled={loading} className="btn-primary text-sm">
-              {loading ? "Enregistrement..." : login ? "Réinitialiser le mot de passe" : "Créer l'accès"}
+              {loading ? "Enregistrement…" : login ? "Réinitialiser le mot de passe" : "Créer l'accès"}
             </button>
             {login && (
               <button type="button" onClick={() => setEditing(false)} className="btn-ghost text-sm">

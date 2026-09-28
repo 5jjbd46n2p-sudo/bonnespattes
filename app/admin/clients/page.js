@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
+import { MapPin, Phone, Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +20,10 @@ export default async function ClientsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">Clients</h1>
-        <Link href="/admin/clients/new" className="btn-accent">
-          + Nouveau client
+        <h1 className="font-display text-3xl font-bold text-forest-dark">Clients</h1>
+        <Link href="/admin/clients/new" className="btn-accent gap-1.5">
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
+          Nouveau client
         </Link>
       </div>
 
@@ -29,7 +31,7 @@ export default async function ClientsPage() {
         <div className="card p-10 text-center text-muted">
           Aucun client pour l'instant.{" "}
           <Link href="/admin/clients/new" className="text-forest underline">
-            Créer votre premier client
+            Créer ton premier client
           </Link>
         </div>
       ) : (
@@ -38,7 +40,7 @@ export default async function ClientsPage() {
             <Link
               key={c.id}
               href={`/admin/clients/${c.id}`}
-              className="card p-5 hover:shadow-md hover:-translate-y-0.5 transition-transform block"
+              className="card p-5 hover:border-forest-light transition-colors block"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -55,8 +57,18 @@ export default async function ClientsPage() {
                   <span className="badge bg-stone-200 text-stone-600">Pas d'accès</span>
                 )}
               </div>
-              {c.address && <p className="text-sm text-muted mt-3 truncate">📍 {c.address}</p>}
-              {c.phone && <p className="text-sm text-muted mt-1">📞 {c.phone}</p>}
+              {c.address && (
+                <p className="text-sm text-muted mt-3 flex items-center gap-1.5 min-w-0">
+                  <MapPin className="w-4 h-4 shrink-0" strokeWidth={1.9} />
+                  <span className="truncate">{c.address}</span>
+                </p>
+              )}
+              {c.phone && (
+                <p className="text-sm text-muted mt-1 flex items-center gap-1.5">
+                  <Phone className="w-4 h-4" strokeWidth={1.9} />
+                  {c.phone}
+                </p>
+              )}
             </Link>
           ))}
         </div>

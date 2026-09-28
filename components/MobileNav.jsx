@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import GlobalSearch from "@/components/GlobalSearch";
+import Logo from "@/components/Logo";
+import { CalendarDays, House, Plus, ReceiptEuro, Settings, Users } from "lucide-react";
 
 // Onglets de la barre du bas (façon iOS) — le bouton central sert à planifier.
 const tabs = [
-  { href: "/admin", label: "Aujourd'hui", icon: "🏠", exact: true },
-  { href: "/admin/planning", label: "Planning", icon: "🗓️" },
-  { href: "/admin/visits/new", label: "Planifier", icon: "+", primary: true },
-  { href: "/admin/clients", label: "Clients", icon: "🐾" },
-  { href: "/admin/accounting", label: "Compta", icon: "💶" },
+  { href: "/admin", label: "Aujourd'hui", icon: House, exact: true },
+  { href: "/admin/planning", label: "Planning", icon: CalendarDays },
+  { href: "/admin/visits/new", label: "Planifier", icon: Plus, primary: true },
+  { href: "/admin/clients", label: "Clients", icon: Users },
+  { href: "/admin/accounting", label: "Compta", icon: ReceiptEuro },
 ];
 
 export default function MobileNav() {
@@ -22,19 +24,19 @@ export default function MobileNav() {
       {/* En-tête compact : marque + recherche + réglages */}
       <header className="md:hidden sticky top-0 z-20 bg-nav text-white pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between px-3 h-12">
-          <Link href="/admin" className="font-display font-semibold flex items-center gap-2 pl-1">
-            🐾 Aux Bonnes Pattes
+          <Link href="/admin" className="pl-1">
+            <Logo light markClassName="w-7 h-7" />
           </Link>
           <div className="flex items-center">
             <GlobalSearch variant="icon" />
             <Link
               href="/admin/settings"
               aria-label="Réglages"
-              className={`w-10 h-10 flex items-center justify-center rounded-full text-lg ${
-                settingsActive ? "bg-white/20" : "hover:bg-white/10"
+              className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                settingsActive ? "bg-white/15" : "hover:bg-white/10"
               }`}
             >
-              ⚙️
+              <Settings className="w-5 h-5" strokeWidth={1.9} />
             </Link>
           </div>
         </div>
@@ -48,15 +50,16 @@ export default function MobileNav() {
         <ul className="grid grid-cols-5 h-16">
           {tabs.map((t) => {
             const active = t.exact ? pathname === t.href : pathname.startsWith(t.href);
+            const Icon = t.icon;
             if (t.primary) {
               return (
                 <li key={t.href} className="flex items-center justify-center">
                   <Link
                     href={t.href}
                     aria-label="Planifier une visite"
-                    className="w-12 h-12 -mt-5 rounded-full bg-ochre text-white text-3xl leading-none flex items-center justify-center shadow-lg ring-4 ring-[var(--color-sand)] active:scale-95 transition-transform"
+                    className="w-12 h-12 rounded-2xl bg-ochre text-on-accent flex items-center justify-center shadow-md active:scale-95 transition-transform"
                   >
-                    {t.icon}
+                    <Icon className="w-6 h-6" strokeWidth={2.5} />
                   </Link>
                 </li>
               );
@@ -66,11 +69,11 @@ export default function MobileNav() {
                 <Link
                   href={t.href}
                   aria-current={active ? "page" : undefined}
-                  className={`h-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors ${
-                    active ? "text-forest-dark" : "text-muted"
+                  className={`h-full flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
+                    active ? "text-forest" : "text-muted"
                   }`}
                 >
-                  <span className={`text-xl leading-none ${active ? "" : "grayscale opacity-70"}`}>{t.icon}</span>
+                  <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.2 : 1.8} />
                   {t.label}
                 </Link>
               </li>

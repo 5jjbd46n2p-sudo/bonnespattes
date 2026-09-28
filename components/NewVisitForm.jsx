@@ -11,6 +11,7 @@ import {
   formatDateFR,
   todayISO,
 } from "@/lib/utils";
+import { ChevronRight, X } from "lucide-react";
 
 const DEFAULT_TASKS = ["Nourrir", "Promenade", "Eau fraîche", "Litière / propreté", "Câlins & jeu"];
 
@@ -159,7 +160,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             ← Retour à la fiche client
           </Link>
         )}
-        <h1 className="font-display text-3xl font-semibold text-forest-dark mt-2">Planifier une visite</h1>
+        <h1 className="font-display text-3xl font-bold text-forest-dark mt-2">Planifier une visite</h1>
         {!pickMode && (
           <p className="text-muted text-sm mt-1">
             Pour {fixedClient.first_name} {fixedClient.last_name}
@@ -208,15 +209,15 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             <label className="text-sm font-medium block mb-1">Animal</label>
             {selectedClient && clientPets.length === 0 ? (
               <p className="text-sm text-danger">
-                Aucun animal enregistré pour ce client —{" "}
+                Aucun animal enregistré pour ce client.{" "}
                 <Link href={`/admin/clients/${selectedClient.id}`} className="underline">
-                  ajoute-en un depuis sa fiche
+                  ajoute-le depuis sa fiche
                 </Link>{" "}
                 avant de planifier.
               </p>
             ) : (
               <select className="input" value={petId} onChange={(e) => setPetId(e.target.value)}>
-                {clientPets.length === 0 && <option value="">—</option>}
+                {clientPets.length === 0 && <option value="">Aucun animal</option>}
                 {clientPets.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -263,7 +264,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
 
           <div>
             <label className="text-sm font-medium block mb-1">
-              Prix prévu (€) {hours ? <span className="text-muted font-normal">— {hours} h</span> : null}
+              Prix prévu (€) {hours ? <span className="text-muted font-normal">· {hours} h</span> : null}
             </label>
             <input
               type="number"
@@ -274,7 +275,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             />
             {hourlyRate > 0 && (
               <p className="text-xs text-muted mt-1">
-                Calculé automatiquement depuis le tarif horaire ({hourlyRate} €/h) — modifiable.
+                Calculé depuis le tarif horaire ({hourlyRate} €/h), modifiable.
                 {manualPrice !== null && (
                   <>
                     {" "}
@@ -360,8 +361,13 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
               {tasks.map((t, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <span className="text-sm flex-1 bg-sand-dark/50 rounded px-2 py-1">{t}</span>
-                  <button type="button" onClick={() => removeTask(i)} className="text-xs text-danger">
-                    ✕
+                  <button
+                    type="button"
+                    onClick={() => removeTask(i)}
+                    className="text-muted hover:text-danger p-1"
+                    aria-label={`Retirer la tâche ${t}`}
+                  >
+                    <X className="w-4 h-4" strokeWidth={2.2} />
                   </button>
                 </div>
               ))}
@@ -369,7 +375,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             <div className="flex gap-2">
               <input
                 className="input"
-                placeholder="Ajouter une tâche..."
+                placeholder="Ajouter une tâche…"
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => {
@@ -392,14 +398,14 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
         </fieldset>
 
         {locked && (
-          <p className="text-sm text-muted text-center">👆 Choisis d'abord un client pour continuer.</p>
+          <p className="text-sm text-muted text-center">Choisis d&apos;abord un client pour continuer.</p>
         )}
 
         {error && <p className="text-sm text-danger">{error}</p>}
 
         <button disabled={loading || locked || clientPets.length === 0} className="btn-primary w-full sm:w-auto">
           {loading
-            ? "Création..."
+            ? "Création…"
             : recurrenceEnabled && recurrenceDates.length > 1
             ? `Planifier les ${recurrenceDates.length} visites`
             : "Planifier la visite"}
@@ -444,7 +450,7 @@ function ClientPicker({ clients, onSelect }) {
         <input
           ref={inputRef}
           className="input !min-h-[40px]"
-          placeholder="🔍 Rechercher un client…"
+          placeholder="Rechercher un client"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
@@ -470,9 +476,9 @@ function ClientPicker({ clients, onSelect }) {
                   <span className="font-medium block truncate">
                     {c.first_name} {c.last_name}
                   </span>
-                  {c.address && <span className="text-xs text-muted block truncate">📍 {c.address}</span>}
+                  {c.address && <span className="text-xs text-muted block truncate">{c.address}</span>}
                 </span>
-                <span className="text-muted">›</span>
+                <ChevronRight className="w-4 h-4 text-muted shrink-0" />
               </button>
             </li>
           ))

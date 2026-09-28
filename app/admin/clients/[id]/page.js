@@ -68,7 +68,7 @@ export default async function ClientDetailPage({ params }) {
           <PetManager clientId={id} pets={pets} />
 
           <div className="card p-5">
-            <h2 className="font-semibold text-forest-dark mb-3">Historique des visites</h2>
+            <h2 className="font-bold text-forest-dark mb-3">Historique des visites</h2>
             {visits.length === 0 ? (
               <p className="text-sm text-muted">Aucune visite enregistrée pour l'instant.</p>
             ) : (
@@ -81,10 +81,15 @@ export default async function ClientDetailPage({ params }) {
                   >
                     <div>
                       <p className="font-medium text-sm">
-                        {formatDateFR(v.date)} {v.start_time ? `· ${v.start_time.slice(0, 5)}` : ""} — {v.pet_name}
+                        {v.pet_name}
+                        <span className="font-normal text-muted">
+                          {" · "}
+                          {formatDateFR(v.date)}
+                          {v.start_time ? ` à ${v.start_time.slice(0, 5)}` : ""}
+                        </span>
                       </p>
                       <p className="text-xs text-muted mt-0.5">
-                        ✅ {v.task_done_count}/{v.task_count} tâches · 📷 {v.photo_count} photo
+                        {v.task_done_count}/{v.task_count} tâches · {v.photo_count} photo
                         {v.photo_count > 1 ? "s" : ""}
                       </p>
                     </div>
@@ -102,7 +107,7 @@ export default async function ClientDetailPage({ params }) {
 
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-forest-dark">Factures</h2>
+              <h2 className="font-bold text-forest-dark">Factures</h2>
               <Link href={`/admin/accounting/invoices/new?clientId=${id}`} className="text-sm text-forest underline">
                 + Facturer
               </Link>

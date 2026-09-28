@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Repeat } from "lucide-react";
 
 export default function VisitEditPanel({ visit }) {
   const router = useRouter();
@@ -44,9 +45,12 @@ export default function VisitEditPanel({ visit }) {
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-forest-dark">Détails de la visite</h2>
+        <h2 className="font-bold text-forest-dark">Détails de la visite</h2>
         {visit.recurrence_id && (
-          <span className="badge bg-sand-dark/60 text-forest-dark text-xs">🔁 Visite récurrente</span>
+          <span className="badge bg-sand-dark text-forest">
+            <Repeat className="w-3.5 h-3.5" strokeWidth={2} />
+            Visite récurrente
+          </span>
         )}
       </div>
       <div>
@@ -107,9 +111,9 @@ export default function VisitEditPanel({ visit }) {
       )}
       <div className="flex items-center gap-3">
         <button onClick={save} disabled={loading} className="btn-primary text-sm">
-          {loading ? "Enregistrement..." : "Enregistrer"}
+          {loading ? "Enregistrement…" : "Enregistrer"}
         </button>
-        {saved && <span className="text-sm text-forest">✓ Enregistré</span>}
+        {saved && <span className="text-sm text-forest">Enregistré</span>}
         <button onClick={remove} className="text-xs text-danger hover:underline ml-auto">
           Supprimer la visite
         </button>

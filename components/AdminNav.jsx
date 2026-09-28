@@ -4,13 +4,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import GlobalSearch from "@/components/GlobalSearch";
 import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
+import { CalendarDays, House, Plus, ReceiptEuro, Settings, Users } from "lucide-react";
 
 const links = [
-  { href: "/admin", label: "Aujourd'hui", icon: "🏠", exact: true },
-  { href: "/admin/planning", label: "Planning", icon: "🗓️" },
-  { href: "/admin/clients", label: "Clients", icon: "🐾" },
-  { href: "/admin/accounting", label: "Comptabilité", icon: "💶" },
-  { href: "/admin/settings", label: "Réglages", icon: "⚙️" },
+  { href: "/admin", label: "Aujourd'hui", icon: House, exact: true },
+  { href: "/admin/planning", label: "Planning", icon: CalendarDays },
+  { href: "/admin/clients", label: "Clients", icon: Users },
+  { href: "/admin/accounting", label: "Comptabilité", icon: ReceiptEuro },
+  { href: "/admin/settings", label: "Réglages", icon: Settings },
 ];
 
 export default function AdminNav({ email }) {
@@ -25,34 +27,33 @@ export default function AdminNav({ email }) {
 
   return (
     <aside className="w-60 shrink-0 bg-nav text-white hidden md:flex flex-col sticky top-0 h-screen">
-      <div className="px-6 py-6 flex items-center gap-2 border-b border-white/10">
-        <span className="text-2xl">🐾</span>
-        <span className="font-display font-semibold text-lg leading-tight">
-          Aux Bonnes
-          <br />
-          Pattes
-        </span>
+      <div className="px-5 py-5 border-b border-white/10">
+        <Link href="/admin">
+          <Logo light />
+        </Link>
       </div>
       <div className="px-3 pt-4">
         <GlobalSearch variant="sidebar" />
       </div>
       <div className="px-3 pt-3">
-        <Link href="/admin/visits/new" className="btn-accent w-full text-sm">
-          + Planifier une visite
+        <Link href="/admin/visits/new" className="btn-accent w-full text-sm gap-1.5">
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
+          Planifier une visite
         </Link>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {links.map((l) => {
           const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
+          const Icon = l.icon;
           return (
             <Link
               key={l.href}
               href={l.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                active ? "bg-white/15 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
+                active ? "bg-white/12 text-white" : "text-white/70 hover:bg-white/8 hover:text-white"
               }`}
             >
-              <span>{l.icon}</span>
+              <Icon className="w-[18px] h-[18px]" strokeWidth={1.9} />
               {l.label}
             </Link>
           );

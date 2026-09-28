@@ -4,7 +4,7 @@ import { query } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Mentions légales — Aux Bonnes Pattes",
+  title: "Mentions légales · Aux Bonnes Pattes",
 };
 
 function Missing() {
@@ -22,11 +22,11 @@ export default async function MentionsLegalesPage() {
           <Link href="/login" className="text-sm text-muted hover:underline">
             ← Retour
           </Link>
-          <h1 className="font-display text-3xl font-semibold text-forest-dark mt-2">Mentions légales</h1>
+          <h1 className="font-display text-3xl font-bold text-forest-dark mt-2">Mentions légales</h1>
         </div>
 
         <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Éditeur du site</h2>
+          <h2 className="font-bold text-forest-dark text-base mb-1">Éditeur du site</h2>
           <p>
             Nom / raison sociale : {s.business_name || <Missing />}
             <br />
@@ -44,26 +44,26 @@ export default async function MentionsLegalesPage() {
         </section>
 
         <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Hébergement</h2>
+          <h2 className="font-bold text-forest-dark text-base mb-1">Hébergement</h2>
           <p>
             Ce site est hébergé par <strong>Vercel Inc.</strong>, 340 S Lemon Ave #4133, Walnut, CA 91789,
-            États-Unis —{" "}
+            États-Unis (
             <a href="https://vercel.com/legal" target="_blank" rel="noopener noreferrer" className="text-forest underline">
               vercel.com/legal
             </a>
-            .
+            ).
           </p>
           <p>
-            La base de données est hébergée par <strong>Neon</strong> (Neon, Inc.) —{" "}
+            La base de données est hébergée par <strong>Neon</strong> (Neon, Inc.,{" "}
             <a href="https://neon.tech/legal" target="_blank" rel="noopener noreferrer" className="text-forest underline">
               neon.tech/legal
             </a>
-            . Les photos de visite sont stockées via <strong>Vercel Blob</strong>, fourni par le même hébergeur.
+            ). Les photos de visite sont stockées via <strong>Vercel Blob</strong>, fourni par le même hébergeur.
           </p>
         </section>
 
         <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Propriété intellectuelle</h2>
+          <h2 className="font-bold text-forest-dark text-base mb-1">Propriété intellectuelle</h2>
           <p>
             L'ensemble des contenus de ce site (textes, mise en page) est réservé à l'usage exclusif de son
             éditeur, sauf mention contraire.
@@ -71,7 +71,7 @@ export default async function MentionsLegalesPage() {
         </section>
 
         <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Contact</h2>
+          <h2 className="font-bold text-forest-dark text-base mb-1">Contact</h2>
           <p>
             Pour toute question relative au site ou à son contenu :{" "}
             {s.contact_email ? (

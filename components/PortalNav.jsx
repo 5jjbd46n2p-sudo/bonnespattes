@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 export default function PortalNav({ clientName }) {
   const router = useRouter();
@@ -12,9 +13,9 @@ export default function PortalNav({ clientName }) {
   }
 
   return (
-    <header className="bg-nav text-white">
+    <header className="bg-nav text-white pt-[env(safe-area-inset-top)]">
       <div className="max-w-3xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-        <span className="font-display font-semibold flex items-center gap-2">🐾 Aux Bonnes Pattes</span>
+        <Logo light />
         <div className="flex items-center gap-3 text-sm">
           <span className="text-white/80 hidden sm:inline">{clientName}</span>
           <button onClick={logout} className="underline text-white/80 hover:text-white">

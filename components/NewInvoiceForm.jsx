@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDateFR, computeVisitHours } from "@/lib/utils";
+import { X } from "lucide-react";
 
 export default function NewInvoiceForm({ clients, settings, preselectedClientId, initialUnbilledVisits }) {
   const router = useRouter();
@@ -86,7 +87,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
       const quantity = hours && total ? hours : 1;
       const unitPrice = hours && total ? total / hours : total;
       return {
-        description: `Visite du ${formatDateFR(v.date)} — ${v.pet_name}${hours ? ` (${hours} h)` : ""}`,
+        description: `Visite du ${formatDateFR(v.date)}, ${v.pet_name}${hours ? ` (${hours} h)` : ""}`,
         quantity,
         unitPrice,
       };
@@ -142,7 +143,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
         <Link href="/admin/accounting" className="text-sm text-muted hover:underline">
           ← Retour à la comptabilité
         </Link>
-        <h1 className="font-display text-3xl font-semibold text-forest-dark mt-2">Nouvelle facture</h1>
+        <h1 className="font-display text-3xl font-bold text-forest-dark mt-2">Nouvelle facture</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -170,7 +171,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
                       onChange={() => toggleVisit(v.id)}
                     />
                     <span className="flex-1">
-                      {formatDateFR(v.date)} — {v.pet_name}
+                      {formatDateFR(v.date)} · {v.pet_name}
                       {computeVisitHours(v.start_time, v.end_time) && (
                         <span className="text-muted"> ({computeVisitHours(v.start_time, v.end_time)} h)</span>
                       )}
@@ -227,7 +228,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
                   className="sm:col-span-1 sm:order-last shrink-0 px-2 text-danger text-sm"
                   aria-label="Supprimer la ligne"
                 >
-                  ✕
+                  <X className="w-4 h-4" strokeWidth={2.2} />
                 </button>
               </div>
               <div className="flex gap-2 sm:contents">
@@ -297,7 +298,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
         {error && <p className="text-sm text-danger">{error}</p>}
 
         <button disabled={loading} className="btn-primary">
-          {loading ? "Création..." : "Créer la facture"}
+          {loading ? "Création…" : "Créer la facture"}
         </button>
       </form>
     </div>

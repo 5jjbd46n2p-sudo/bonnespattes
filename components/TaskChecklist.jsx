@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 
 export default function TaskChecklist({ visitId, tasks }) {
   const router = useRouter();
@@ -54,9 +55,10 @@ export default function TaskChecklist({ visitId, tasks }) {
                 e.preventDefault();
                 removeTask(t.id);
               }}
-              className="text-xs text-danger"
+              className="text-muted hover:text-danger p-1"
+              aria-label="Supprimer la tâche"
             >
-              ✕
+              <X className="w-4 h-4" strokeWidth={2.2} />
             </button>
           </label>
         ))}
@@ -65,7 +67,7 @@ export default function TaskChecklist({ visitId, tasks }) {
       <form onSubmit={addTask} className="flex gap-2">
         <input
           className="input"
-          placeholder="Ajouter une tâche..."
+          placeholder="Ajouter une tâche…"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
         />

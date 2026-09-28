@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import WazeLink from "@/components/WazeLink";
+import { Euro, Mail, MapPin, Phone } from "lucide-react";
 
 export default function ClientInfoCard({ client, invoiceCount = 0 }) {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
   async function removeClient() {
     const invoiceWarning =
       invoiceCount > 0
-        ? `\n\n⚠️ Ce client a ${invoiceCount} facture${invoiceCount > 1 ? "s" : ""} enregistrée${
+        ? `\n\nAttention : ce client a ${invoiceCount} facture${invoiceCount > 1 ? "s" : ""} enregistrée${
             invoiceCount > 1 ? "s" : ""
           }. La loi impose normalement de conserver les documents comptables plusieurs années : exporte-les (Comptabilité → Export CSV, ou le PDF de chaque facture) avant de continuer si tu dois les garder.`
         : "";
@@ -62,13 +63,28 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
       <div className="card p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-display text-2xl font-semibold text-forest-dark">
+            <h2 className="font-display text-2xl font-bold text-forest-dark">
               {client.first_name} {client.last_name}
             </h2>
             <div className="mt-2 space-y-1 text-sm text-muted">
-              {client.phone && <p>📞 {client.phone}</p>}
-              {client.email && <p>✉️ {client.email}</p>}
-              {client.hourly_rate > 0 && <p>💶 Tarif indicatif : {client.hourly_rate} €/h</p>}
+              {client.phone && (
+                <p className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" strokeWidth={1.9} />
+                  <a href={`tel:${client.phone}`} className="hover:underline">{client.phone}</a>
+                </p>
+              )}
+              {client.email && (
+                <p className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" strokeWidth={1.9} />
+                  {client.email}
+                </p>
+              )}
+              {client.hourly_rate > 0 && (
+                <p className="flex items-center gap-2">
+                  <Euro className="w-4 h-4" strokeWidth={1.9} />
+                  Tarif : {client.hourly_rate} €/h
+                </p>
+              )}
             </div>
           </div>
           <button onClick={() => setEditing(true)} className="btn-ghost text-sm !py-1.5 !px-3 shrink-0">
@@ -78,14 +94,17 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
 
         {client.address && (
           <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-sm">📍 {client.address}</p>
+            <p className="text-sm flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-muted" strokeWidth={1.9} />
+              {client.address}
+            </p>
             <WazeLink address={client.address} className="mt-1.5" />
           </div>
         )}
 
         {client.notes && (
           <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Notes</p>
+            <p className="text-sm font-semibold text-muted mb-1">Notes</p>
             <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
           </div>
         )}
@@ -96,7 +115,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
             disabled={deleting}
             className="text-xs text-danger hover:underline"
           >
-            {deleting ? "Suppression..." : "🗑 Supprimer ce client et toutes ses données"}
+            {deleting ? "Suppression…" : "Supprimer ce client et toutes ses données"}
           </button>
         </div>
       </div>
@@ -124,7 +143,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
       </div>
       <div className="flex gap-2">
         <button onClick={save} disabled={loading} className="btn-primary text-sm">
-          {loading ? "Enregistrement..." : "Enregistrer"}
+          {loading ? "Enregistrement…" : "Enregistrer"}
         </button>
         <button onClick={() => setEditing(false)} className="btn-ghost text-sm">
           Annuler

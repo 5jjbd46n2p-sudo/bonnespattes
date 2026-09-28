@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --color-sand: #f2ece1;
-  --color-sand-dark: #e9e0cf;
-  --color-ink: #2a2a26;
-  --color-muted: #6b6459;
-  --color-forest: #3f5a48;
-  --color-forest-dark: #2e4235;
-  --color-forest-light: #6b8a76;
-  --color-ochre: #c97b3d;
-  --color-ochre-dark: #a8632c;
-  --color-card: #fffdf9;
-  --color-border: #e4dcc9;
-  --color-danger: #b3492f;
+  /* Identité "Aux Bonnes Pattes" : bleu marine (confiance, sérieux) et
+     abricot (chaleur) réservé aux actions principales. Les noms historiques
+     des variables (forest, ochre, sand) sont conservés pour ne pas toucher
+     toutes les classes : forest = marine, ochre = abricot, sand = fond. */
+  --color-sand: #f4f6f9;
+  --color-sand-dark: #e8edf3;
+  --color-ink: #16263a;
+  --color-muted: #5b6a7c;
+  --color-forest: #1f4e79;
+  --color-forest-dark: #13304d;
+  --color-forest-light: #8fb0cf;
+  --color-ochre: #f2a14a;
+  --color-ochre-dark: #e08a2e;
+  --color-card: #ffffff;
+  --color-border: #dfe5ec;
+  --color-danger: #c2412d;
   --color-input: #ffffff;
-  --color-nav: #2e4235;
-  --color-tabbar: rgba(255, 253, 249, 0.92);
-  --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "URW Palladio L", serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --color-nav: #13304d;
+  --color-tabbar: rgba(255, 255, 255, 0.94);
+  --color-on-accent: #13304d;
+  --font-display: "Figtree Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Figtree Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @theme inline {
@@ -35,6 +40,7 @@
   --color-danger: var(--color-danger);
   --color-input: var(--color-input);
   --color-nav: var(--color-nav);
+  --color-on-accent: var(--color-on-accent);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
 }
@@ -48,21 +54,21 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
   color-scheme: dark;
-  --color-sand: #141916;
-  --color-sand-dark: #252c27;
-  --color-ink: #ece7dc;
-  --color-muted: #a49d90;
-  --color-forest: #5b8a6c;
-  --color-forest-dark: #b9d4c1;
-  --color-forest-light: #7fa48b;
-  --color-ochre: #c97b3d;
-  --color-ochre-dark: #e3a46f;
-  --color-card: #1d231f;
-  --color-border: #343c36;
-  --color-danger: #e5836a;
-  --color-input: #171c19;
-  --color-nav: #0e1310;
-  --color-tabbar: rgba(29, 35, 31, 0.92);
+  --color-sand: #0c131b;
+  --color-sand-dark: #1a2532;
+  --color-ink: #e6edf5;
+  --color-muted: #96a5b7;
+  --color-forest: #4a86c5;
+  --color-forest-dark: #dbe7f3;
+  --color-forest-light: #6f96bd;
+  --color-ochre: #f2a14a;
+  --color-ochre-dark: #f6b670;
+  --color-card: #121c27;
+  --color-border: #243344;
+  --color-danger: #f08a74;
+  --color-input: #0f1822;
+  --color-nav: #09111a;
+  --color-tabbar: rgba(18, 28, 39, 0.94);
 
   /* Teintes pastel de Tailwind (badges, encadrés) adaptées au fond sombre */
   --color-amber-50: rgba(245, 158, 11, 0.1);
@@ -83,31 +89,31 @@
   --color-red-100: rgba(239, 68, 68, 0.22);
   --color-red-200: rgba(239, 68, 68, 0.38);
   --color-red-800: #fca5a5;
-  --color-stone-100: #2a302c;
-  --color-stone-200: #333a35;
-  --color-stone-300: #4a524c;
-  --color-stone-400: #6f7671;
-  --color-stone-600: #b8b2a7;
-  --color-stone-700: #d0cabf;
+  --color-stone-100: #1d2835;
+  --color-stone-200: #263444;
+  --color-stone-300: #3a4a5c;
+  --color-stone-400: #607184;
+  --color-stone-600: #b3c0cf;
+  --color-stone-700: #cfd8e3;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-sand: #141916;
-  --color-sand-dark: #252c27;
-  --color-ink: #ece7dc;
-  --color-muted: #a49d90;
-  --color-forest: #5b8a6c;
-  --color-forest-dark: #b9d4c1;
-  --color-forest-light: #7fa48b;
-  --color-ochre: #c97b3d;
-  --color-ochre-dark: #e3a46f;
-  --color-card: #1d231f;
-  --color-border: #343c36;
-  --color-danger: #e5836a;
-  --color-input: #171c19;
-  --color-nav: #0e1310;
-  --color-tabbar: rgba(29, 35, 31, 0.92);
+  --color-sand: #0c131b;
+  --color-sand-dark: #1a2532;
+  --color-ink: #e6edf5;
+  --color-muted: #96a5b7;
+  --color-forest: #4a86c5;
+  --color-forest-dark: #dbe7f3;
+  --color-forest-light: #6f96bd;
+  --color-ochre: #f2a14a;
+  --color-ochre-dark: #f6b670;
+  --color-card: #121c27;
+  --color-border: #243344;
+  --color-danger: #f08a74;
+  --color-input: #0f1822;
+  --color-nav: #09111a;
+  --color-tabbar: rgba(18, 28, 39, 0.94);
 
   /* Teintes pastel de Tailwind (badges, encadrés) adaptées au fond sombre */
   --color-amber-50: rgba(245, 158, 11, 0.1);
@@ -128,12 +134,12 @@
   --color-red-100: rgba(239, 68, 68, 0.22);
   --color-red-200: rgba(239, 68, 68, 0.38);
   --color-red-800: #fca5a5;
-  --color-stone-100: #2a302c;
-  --color-stone-200: #333a35;
-  --color-stone-300: #4a524c;
-  --color-stone-400: #6f7671;
-  --color-stone-600: #b8b2a7;
-  --color-stone-700: #d0cabf;
+  --color-stone-100: #1d2835;
+  --color-stone-200: #263444;
+  --color-stone-300: #3a4a5c;
+  --color-stone-400: #607184;
+  --color-stone-600: #b3c0cf;
+  --color-stone-700: #cfd8e3;
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -142,23 +148,20 @@
 body {
   background: var(--color-sand);
   color: var(--color-ink);
+  font-feature-settings: "ss01";
 }
 
-.leash-divider {
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--color-border) 0,
-    var(--color-border) 6px,
-    transparent 6px,
-    transparent 12px
-  );
-  height: 1px;
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
 }
 
 .card {
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(19, 48, 77, 0.04);
 }
 
 .btn-primary,
@@ -180,7 +183,7 @@ body {
   transition: background 0.15s ease;
 }
 .btn-primary:hover {
-  background: var(--color-forest-dark);
+  background: #183f63;
 }
 .btn-primary:disabled {
   opacity: 0.6;
@@ -189,7 +192,7 @@ body {
 
 .btn-accent {
   background: var(--color-ochre);
-  color: white;
+  color: var(--color-on-accent);
   border-radius: 10px;
   padding: 0.6rem 1.1rem;
   font-weight: 600;
@@ -200,8 +203,8 @@ body {
 }
 
 .btn-ghost {
-  background: transparent;
-  color: var(--color-forest-dark);
+  background: var(--color-card);
+  color: var(--color-ink);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 0.55rem 1rem;
@@ -247,12 +250,10 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.55rem;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
   border-radius: 999px;
 }
 
@@ -262,7 +263,7 @@ body {
    sélecteur natif (roue iOS) — seul l'habillage change. */
 .ios-field-group {
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--color-card);
 }
@@ -384,19 +385,24 @@ body {
   backdrop-filter: saturate(180%) blur(16px);
 }
 
-/* En mode sombre, forest-dark devient un vert clair (lisible en texte) : on
-   garde donc des fonds de bouton sombres au survol. */
+/* Boutons : les couleurs de survol suivent le thème */
+.btn-primary,
+.btn-accent,
+.btn-ghost {
+  border-radius: 10px;
+}
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .btn-primary:hover {
-    background: #4c7a5c;
-  }
-  :root:not([data-theme="light"]) .btn-accent:hover {
-    background: #b06a32;
+    background: #3a75b3;
   }
 }
 :root[data-theme="dark"] .btn-primary:hover {
-  background: #4c7a5c;
+  background: #3a75b3;
 }
-:root[data-theme="dark"] .btn-accent:hover {
-  background: #b06a32;
+
+/* Liens et boutons : contour de focus visible et cohérent au clavier */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-forest-light);
+  outline-offset: 2px;
 }

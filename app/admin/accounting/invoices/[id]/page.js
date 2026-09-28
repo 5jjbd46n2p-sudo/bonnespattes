@@ -5,6 +5,7 @@ import { formatDateFR, formatEUR } from "@/lib/utils";
 import { InvoiceStatusBadge } from "@/components/StatusBadge";
 import InvoiceStatusControl from "@/components/InvoiceStatusControl";
 import PaymentRecorder from "@/components/PaymentRecorder";
+import { Download } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -36,14 +37,15 @@ export default async function InvoiceDetailPage({ params }) {
         </Link>
         <div className="flex items-center gap-2">
           <a href={`/api/invoices/${id}/pdf`} target="_blank" rel="noopener noreferrer" className="btn-ghost text-sm">
-            ⬇ Télécharger le PDF
+            <Download className="w-4 h-4" strokeWidth={1.9} />
+            Télécharger le PDF
           </a>
         </div>
       </div>
 
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-forest-dark">{invoice.number}</h1>
+          <h1 className="font-display text-3xl font-bold text-forest-dark">{invoice.number}</h1>
           <p className="text-muted text-sm mt-1">
             {invoice.first_name} {invoice.last_name} · Émise le {formatDateFR(invoice.issue_date)}
             {invoice.due_date && ` · Échéance le ${formatDateFR(invoice.due_date)}`}

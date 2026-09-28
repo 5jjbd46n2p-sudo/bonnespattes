@@ -2,6 +2,7 @@ import Link from "next/link";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { InvoiceStatusBadge } from "@/components/StatusBadge";
+import { Download } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -51,12 +52,13 @@ export default async function AccountingPage({ searchParams }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">Comptabilité</h1>
+        <h1 className="font-display text-3xl font-bold text-forest-dark">Comptabilité</h1>
         <div className="flex gap-2">
           {/* Téléchargement d'un fichier (route API) : un <a> classique, pas un <Link> */}
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/api/invoices/export" className="btn-ghost text-sm">
-            ⬇ Export comptable (CSV)
+          <a href="/api/invoices/export" className="btn-ghost text-sm gap-1.5">
+            <Download className="w-4 h-4" strokeWidth={1.9} />
+            Export comptable (CSV)
           </a>
           <Link href="/admin/accounting/invoices/new" className="btn-accent text-sm">
             + Nouvelle facture
@@ -67,19 +69,19 @@ export default async function AccountingPage({ searchParams }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card p-4">
           <p className="text-xs font-semibold text-muted uppercase">Total facturé</p>
-          <p className="font-display text-2xl font-semibold text-forest-dark mt-1">{formatEUR(summary.total_ttc)}</p>
+          <p className="font-display text-2xl font-bold text-forest-dark mt-1">{formatEUR(summary.total_ttc)}</p>
         </div>
         <div className="card p-4">
           <p className="text-xs font-semibold text-muted uppercase">Encaissé</p>
-          <p className="font-display text-2xl font-semibold text-forest-dark mt-1">{formatEUR(summary.total_paid)}</p>
+          <p className="font-display text-2xl font-bold text-forest-dark mt-1">{formatEUR(summary.total_paid)}</p>
         </div>
         <div className="card p-4">
           <p className="text-xs font-semibold text-muted uppercase">En attente</p>
-          <p className="font-display text-2xl font-semibold text-ochre-dark mt-1">{formatEUR(summary.total_unpaid)}</p>
+          <p className="font-display text-2xl font-bold text-ochre-dark mt-1">{formatEUR(summary.total_unpaid)}</p>
         </div>
         <div className="card p-4">
           <p className="text-xs font-semibold text-muted uppercase">Visites à facturer</p>
-          <p className="font-display text-2xl font-semibold text-forest-dark mt-1">{unbilledRes.rows[0].count}</p>
+          <p className="font-display text-2xl font-bold text-forest-dark mt-1">{unbilledRes.rows[0].count}</p>
           <p className="text-xs text-muted">{formatEUR(unbilledRes.rows[0].total)}</p>
         </div>
       </div>

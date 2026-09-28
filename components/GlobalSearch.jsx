@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { ChevronRight, PawPrint, Search, User } from "lucide-react";
 
 /**
  * Recherche globale (clients, animaux, adresses) accessible partout dans
@@ -90,14 +91,14 @@ export default function GlobalSearch({ variant = "icon" }) {
     ...shown.clients.map((c) => ({
       key: `c-${c.id}`,
       href: `/admin/clients/${c.id}`,
-      icon: "👤",
+      icon: User,
       title: `${c.first_name} ${c.last_name}`,
       sub: c.address || c.phone || "",
     })),
     ...shown.pets.map((p) => ({
       key: `p-${p.id}`,
       href: `/admin/clients/${p.client_id}`,
-      icon: "🐾",
+      icon: PawPrint,
       title: p.name,
       sub: `${p.species ? p.species + " · " : ""}chez ${p.first_name} ${p.last_name}`,
     })),
@@ -111,8 +112,8 @@ export default function GlobalSearch({ variant = "icon" }) {
           onClick={() => setOpen(true)}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-white/75"
         >
-          <span>🔍</span>
-          <span className="flex-1 text-left">Rechercher…</span>
+          <Search className="w-4 h-4" strokeWidth={2} />
+          <span className="flex-1 text-left">Rechercher</span>
           <kbd className="text-[10px] font-semibold border border-white/25 rounded px-1.5 py-0.5">⌘K</kbd>
         </button>
       ) : (
@@ -120,9 +121,9 @@ export default function GlobalSearch({ variant = "icon" }) {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Rechercher"
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-lg"
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10"
         >
-          🔍
+          <Search className="w-5 h-5" strokeWidth={1.9} />
         </button>
       )}
 
@@ -137,11 +138,11 @@ export default function GlobalSearch({ variant = "icon" }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 p-3 border-b border-border">
-              <span className="pl-1">🔍</span>
+              <Search className="w-5 h-5 ml-1 text-muted shrink-0" strokeWidth={1.9} />
               <input
                 ref={inputRef}
                 className="flex-1 bg-transparent outline-none text-base py-1.5"
-                placeholder="Client, animal, adresse, téléphone…"
+                placeholder="Nom, animal, adresse, téléphone"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={(e) => {
@@ -169,12 +170,14 @@ export default function GlobalSearch({ variant = "icon" }) {
                         onClick={() => go(it.href)}
                         className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-sand-dark/60 active:bg-sand-dark"
                       >
-                        <span className="text-lg">{it.icon}</span>
+                        <span className="w-9 h-9 rounded-full bg-sand-dark text-forest flex items-center justify-center shrink-0">
+                          <it.icon className="w-[18px] h-[18px]" strokeWidth={1.9} />
+                        </span>
                         <span className="min-w-0 flex-1">
                           <span className="block font-medium truncate">{it.title}</span>
                           {it.sub && <span className="block text-xs text-muted truncate">{it.sub}</span>}
                         </span>
-                        <span className="text-muted">›</span>
+                        <ChevronRight className="w-4 h-4 text-muted" />
                       </button>
                     </li>
                   ))}

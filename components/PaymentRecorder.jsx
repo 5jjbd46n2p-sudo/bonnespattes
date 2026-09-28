@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatEUR, formatDateFR } from "@/lib/utils";
+import { CircleCheck } from "lucide-react";
 
 export default function PaymentRecorder({ invoiceId, payments, balance }) {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function PaymentRecorder({ invoiceId, payments, balance }) {
 
   return (
     <div className="card p-5">
-      <h2 className="font-semibold text-forest-dark mb-3">Paiements</h2>
+      <h2 className="font-bold text-forest-dark mb-3">Paiements</h2>
       {payments.length > 0 && (
         <div className="space-y-1.5 mb-4">
           {payments.map((p) => (
@@ -71,11 +72,14 @@ export default function PaymentRecorder({ invoiceId, payments, balance }) {
           </select>
           {error && <p className="text-sm text-danger">{error}</p>}
           <button disabled={loading} className="btn-primary text-sm w-full">
-            {loading ? "Enregistrement..." : "Enregistrer le paiement"}
+            {loading ? "Enregistrement…" : "Enregistrer le paiement"}
           </button>
         </form>
       ) : (
-        <p className="text-sm text-emerald-700 font-medium">✓ Facture soldée</p>
+        <p className="text-sm text-emerald-700 font-medium inline-flex items-center gap-1.5">
+          <CircleCheck className="w-4 h-4" strokeWidth={2} />
+          Facture soldée
+        </p>
       )}
     </div>
   );

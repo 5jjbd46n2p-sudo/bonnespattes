@@ -35,7 +35,7 @@ export default function SettingsForm({ settings }) {
 
   return (
     <form onSubmit={save} className="card p-5 space-y-4">
-      <h2 className="font-semibold text-forest-dark">Informations affichées sur vos factures</h2>
+      <h2 className="font-bold text-forest-dark">Informations affichées sur tes factures</h2>
       <Field label="Nom de l'activité" value={form.businessName} onChange={(v) => setForm({ ...form, businessName: v })} />
       <Field label="Adresse" value={form.businessAddress} onChange={(v) => setForm({ ...form, businessAddress: v })} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -58,9 +58,9 @@ export default function SettingsForm({ settings }) {
       </div>
       <div className="flex items-center gap-3">
         <button disabled={loading} className="btn-primary text-sm">
-          {loading ? "Enregistrement..." : "Enregistrer"}
+          {loading ? "Enregistrement…" : "Enregistrer"}
         </button>
-        {saved && <span className="text-sm text-forest">✓ Enregistré</span>}
+        {saved && <span className="text-sm text-forest">Enregistré</span>}
       </div>
     </form>
   );
@@ -92,7 +92,7 @@ export function LegalSettingsForm({ settings }) {
   return (
     <form onSubmit={save} className="card p-5 space-y-4">
       <div>
-        <h2 className="font-semibold text-forest-dark">Mentions légales &amp; RGPD</h2>
+        <h2 className="font-bold text-forest-dark">Mentions légales &amp; RGPD</h2>
         <p className="text-xs text-muted mt-1">
           Utilisées pour générer automatiquement les pages publiques{" "}
           <span className="whitespace-nowrap">« Mentions légales »</span> et{" "}
@@ -115,9 +115,9 @@ export function LegalSettingsForm({ settings }) {
       />
       <div className="flex items-center gap-3">
         <button disabled={loading} className="btn-primary text-sm">
-          {loading ? "Enregistrement..." : "Enregistrer"}
+          {loading ? "Enregistrement…" : "Enregistrer"}
         </button>
-        {saved && <span className="text-sm text-forest">✓ Enregistré</span>}
+        {saved && <span className="text-sm text-forest">Enregistré</span>}
       </div>
     </form>
   );

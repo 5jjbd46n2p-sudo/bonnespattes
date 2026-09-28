@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Navigation } from "lucide-react";
 import { wazeUrl } from "@/lib/utils";
 
 function toMinutes(t) {
@@ -44,46 +45,49 @@ export default function NextVisitBanner({ visits }) {
   const visit = inProgress || upcoming[0];
   if (!visit) return null;
 
+  // Bandeau toujours aux couleurs de la marque ; seule la pastille d'état change.
   let headline;
-  let tone = "bg-forest text-white";
+  let chip = "bg-white/15 text-white";
   if (inProgress) {
-    headline = "🐾 Visite en cours";
-    tone = "bg-blue-600 text-white";
+    headline = "Visite en cours";
+    chip = "bg-amber-400 text-amber-950";
   } else {
     const start = toMinutes(visit.start_time);
-    if (start === null) headline = "Prochaine visite (sans horaire)";
+    if (start === null) headline = "Prochaine visite, sans horaire";
     else if (start - nowMin > 0) headline = `Prochaine visite dans ${formatDuration(start - nowMin)}`;
-    else if (start - nowMin === 0) headline = "Prochaine visite : maintenant";
+    else if (start - nowMin === 0) headline = "Prochaine visite maintenant";
     else {
       headline = `En retard de ${formatDuration(nowMin - start)}`;
-      tone = "bg-orange-700 text-white";
+      chip = "bg-red-500 text-white";
     }
   }
 
   return (
-    <div className={`rounded-2xl p-4 sm:p-5 ${tone} shadow-sm`}>
-      <p className="text-xs uppercase tracking-wide font-semibold opacity-80">{headline}</p>
-      <p className="font-display text-xl sm:text-2xl font-semibold mt-1">
-        {visit.pet_name} — chez {visit.first_name} {visit.last_name}
+    <div className="rounded-xl p-4 sm:p-5 bg-nav text-white">
+      <span className={`inline-block text-xs font-semibold rounded-full px-2.5 py-1 ${chip}`}>{headline}</span>
+      <p className="font-display text-xl sm:text-2xl font-bold mt-2.5">
+        {visit.pet_name}
+        <span className="font-medium text-white/70"> chez {visit.first_name} {visit.last_name}</span>
       </p>
-      <p className="text-sm opacity-85 mt-0.5">
-        {visit.start_time ? `${visit.start_time.slice(0, 5)}${visit.end_time ? ` – ${visit.end_time.slice(0, 5)}` : ""}` : "Horaire libre"}
+      <p className="text-sm text-white/70 mt-0.5">
+        {visit.start_time ? `${visit.start_time.slice(0, 5)}${visit.end_time ? ` - ${visit.end_time.slice(0, 5)}` : ""}` : "Horaire libre"}
         {visit.address ? ` · ${visit.address}` : ""}
       </p>
-      <div className="flex gap-2 mt-3 flex-wrap">
+      <div className="flex gap-2 mt-4 flex-wrap">
         {visit.address && (
           <a
             href={wazeUrl(visit.address)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center min-h-[40px] px-4 rounded-full bg-white/20 hover:bg-white/30 text-sm font-semibold"
+            className="btn-accent !min-h-[40px] !py-1.5 text-sm gap-1.5"
           >
-            🧭 Y aller avec Waze
+            <Navigation className="w-4 h-4" strokeWidth={2} />
+            Itinéraire
           </a>
         )}
         <Link
           href={`/admin/visits/${visit.id}`}
-          className="inline-flex items-center min-h-[40px] px-4 rounded-full bg-white/20 hover:bg-white/30 text-sm font-semibold"
+          className="inline-flex items-center min-h-[40px] px-4 rounded-[10px] bg-white/10 hover:bg-white/15 text-sm font-semibold"
         >
           Ouvrir la visite
         </Link>

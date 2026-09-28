@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
+import "@fontsource-variable/figtree";
 import "./globals.css";
 
 export const metadata = {
-  title: "Aux Bonnes Pattes — Suivi pet sitting",
-  description: "Gestion des visites, clients et comptabilité pour votre activité de pet sitting.",
+  title: "Aux Bonnes Pattes · Garde d'animaux à domicile",
+  description: "Visites à domicile pour chiens, chats et NAC. Suivi de chaque passage avec photos et compte rendu.",
 };
 
 export const viewport = {
@@ -14,8 +15,8 @@ export const viewport = {
   // collée en bas, au-dessus de la barre d'accueil).
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#2e4235" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e1310" },
+    { media: "(prefers-color-scheme: light)", color: "#13304d" },
+    { media: "(prefers-color-scheme: dark)", color: "#09111a" },
   ],
 };
 

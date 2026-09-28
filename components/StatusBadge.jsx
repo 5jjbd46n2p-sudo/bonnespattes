@@ -4,15 +4,15 @@
 export const VISIT_STATUS = {
   PLANIFIE: {
     label: "Planifiée",
-    badge: "bg-amber-100 text-amber-800",
-    dot: "bg-amber-500",
-    border: "border-l-amber-400",
-  },
-  EN_COURS: {
-    label: "En cours",
     badge: "bg-blue-100 text-blue-800",
     dot: "bg-blue-500",
     border: "border-l-blue-400",
+  },
+  EN_COURS: {
+    label: "En cours",
+    badge: "bg-amber-100 text-amber-800",
+    dot: "bg-amber-500",
+    border: "border-l-amber-400",
   },
   FAIT: {
     label: "Terminée",

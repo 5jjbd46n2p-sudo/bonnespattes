@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { wazeUrl } from "@/lib/utils";
 import { VisitStatusBadge, VISIT_STATUS } from "@/components/StatusBadge";
+import { Camera, Check, ListChecks, Navigation, Play } from "lucide-react";
 
 const SWIPE_THRESHOLD = 90; // px à parcourir pour valider l'action du glissement
 const SWIPE_MAX = 160;
@@ -125,20 +126,20 @@ export default function VisitCard({ visit }) {
 
   const meta = VISIT_STATUS[status];
   const time = visit.start_time
-    ? `${visit.start_time.slice(0, 5)}${visit.end_time ? `–${visit.end_time.slice(0, 5)}` : ""}`
-    : "—";
+    ? `${visit.start_time.slice(0, 5)}${visit.end_time ? ` - ${visit.end_time.slice(0, 5)}` : ""}`
+    : "Horaire libre";
   const pastThreshold = Math.abs(dx) >= SWIPE_THRESHOLD;
 
   return (
-    <div className="relative rounded-[14px] overflow-hidden">
+    <div className="relative rounded-xl overflow-hidden">
       {dx !== 0 && (
         <div
           aria-hidden="true"
           className={`absolute inset-0 flex items-center px-5 text-white font-semibold text-sm ${
-            dx > 0 ? "justify-start bg-blue-500" : "justify-end bg-emerald-500"
+            dx > 0 ? "justify-start bg-amber-500" : "justify-end bg-emerald-600"
           } ${pastThreshold ? "" : "opacity-70"}`}
         >
-          {dx > 0 ? (canStart ? "▶ Démarrer" : "") : canFinish ? "✓ Terminer" : ""}
+          {dx > 0 ? (canStart ? "Démarrer" : "") : canFinish ? "Terminer" : ""}
         </div>
       )}
 
@@ -158,46 +159,48 @@ export default function VisitCard({ visit }) {
         onClickCapture={onClickCapture}
       >
         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
-          <div className="flex md:block items-center gap-3 md:w-24 shrink-0">
-            <span className="font-semibold text-forest-dark tabular-nums">{time}</span>
-          </div>
-
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Link href={`/admin/visits/${visit.id}`} className="font-semibold hover:underline">
-                {visit.pet_name} — {visit.first_name} {visit.last_name}
-              </Link>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-muted tabular-nums">{time}</span>
               <VisitStatusBadge status={status} />
             </div>
-            <div className="text-sm text-muted mt-0.5 flex items-center gap-3 flex-wrap">
-              <span>
-                ✅ {visit.task_done_count}/{visit.task_count} tâches
+            <Link href={`/admin/visits/${visit.id}`} className="block mt-1 font-semibold text-[1.05rem] hover:underline">
+              {visit.pet_name}
+              <span className="font-normal text-muted"> chez {visit.first_name} {visit.last_name}</span>
+            </Link>
+            <div className="text-sm text-muted mt-1.5 flex items-center gap-4 flex-wrap">
+              <span className="inline-flex items-center gap-1.5">
+                <ListChecks className="w-4 h-4" strokeWidth={1.9} />
+                {visit.task_done_count}/{visit.task_count} tâches
               </span>
-              <span>
-                📷 {photoCount} photo{photoCount > 1 ? "s" : ""}
+              <span className="inline-flex items-center gap-1.5">
+                <Camera className="w-4 h-4" strokeWidth={1.9} />
+                {photoCount} photo{photoCount > 1 ? "s" : ""}
               </span>
               {visit.address && (
                 <a
                   href={wazeUrl(visit.address)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-forest underline decoration-dotted underline-offset-4"
+                  className="inline-flex items-center gap-1.5 text-forest font-medium hover:underline"
                 >
-                  🧭 Waze
+                  <Navigation className="w-4 h-4" strokeWidth={1.9} />
+                  Itinéraire
                 </a>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0">
             {canStart && (
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => changeStatus("EN_COURS")}
-                className="btn-ghost !py-1.5 !px-3 text-sm"
+                className="btn-ghost !min-h-[40px] !py-1.5 !px-3 text-sm gap-1.5"
               >
-                ▶ Démarrer
+                <Play className="w-3.5 h-3.5" strokeWidth={2.4} />
+                Démarrer
               </button>
             )}
             {canFinish && (
@@ -205,17 +208,18 @@ export default function VisitCard({ visit }) {
                 type="button"
                 disabled={busy}
                 onClick={() => changeStatus("FAIT")}
-                className="btn-primary !py-1.5 !px-3 text-sm"
+                className="btn-primary !min-h-[40px] !py-1.5 !px-3 text-sm gap-1.5"
               >
-                ✓ Terminer
+                <Check className="w-4 h-4" strokeWidth={2.4} />
+                Terminer
               </button>
             )}
             {canPhoto && (
               <label
-                className={`btn-ghost !py-1.5 !px-3 text-sm cursor-pointer ${uploading ? "opacity-60" : ""}`}
+                className={`btn-ghost !min-h-[40px] !py-1.5 !px-3 text-sm cursor-pointer ${uploading ? "opacity-60" : ""}`}
                 title="Ajouter une photo"
               >
-                {uploading ? "Envoi…" : "📷"}
+                {uploading ? "Envoi…" : <Camera className="w-[18px] h-[18px]" strokeWidth={1.9} />}
                 <span className="sr-only">Ajouter une photo</span>
                 <input
                   ref={fileRef}
@@ -229,9 +233,11 @@ export default function VisitCard({ visit }) {
                 />
               </label>
             )}
-            <Link href={`/admin/visits/${visit.id}`} className="btn-ghost !py-1.5 !px-3 text-sm">
-              Détail
-            </Link>
+            {!canStart && !canFinish && (
+              <Link href={`/admin/visits/${visit.id}`} className="btn-ghost !min-h-[40px] !py-1.5 !px-3 text-sm">
+                Voir le détail
+              </Link>
+            )}
           </div>
         </div>
         {error && <p className="text-sm text-danger mt-2">{error}</p>}

@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { formatDateLongFR, todayISO, localISO, toCardVisit } from "@/lib/utils";
 import { VISIT_STATUS, VISIT_STATUS_ORDER } from "@/components/StatusBadge";
 import VisitCard from "@/components/VisitCard";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -112,9 +113,10 @@ export default async function PlanningPage({ searchParams }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">Planning</h1>
-        <Link href={`/admin/visits/new?date=${selected}`} className="btn-accent shrink-0">
-          + Planifier
+        <h1 className="font-display text-3xl font-bold text-forest-dark">Planning</h1>
+        <Link href={`/admin/visits/new?date=${selected}`} className="btn-accent shrink-0 gap-1.5">
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
+          Planifier
         </Link>
       </div>
 
@@ -130,16 +132,16 @@ export default async function PlanningPage({ searchParams }) {
             className="w-9 h-9 flex items-center justify-center rounded-full text-lg text-muted hover:bg-sand-dark/60 transition-colors"
             aria-label="Précédent"
           >
-            ‹
+            <ChevronLeft className="w-5 h-5" />
           </Link>
           <div className="flex items-center gap-3">
-            <h2 className="font-display text-lg sm:text-xl font-semibold capitalize">
+            <h2 className="font-display text-lg sm:text-xl font-bold first-letter:uppercase">
               {view === "week"
                 ? `Semaine du ${weekStartForNav.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}`
                 : monthLabel}
             </h2>
-            <Link href={hrefFor({ month: ymKey(new Date(today + "T00:00:00")), date: today })} className="text-xs text-forest underline shrink-0">
-              Aujourd'hui
+            <Link href={hrefFor({ month: ymKey(new Date(today + "T00:00:00")), date: today })} className="text-xs font-semibold text-forest border border-border rounded-full px-2.5 py-1 shrink-0 hover:bg-sand-dark/60">
+              Aujourd&apos;hui
             </Link>
           </div>
           <Link
@@ -151,16 +153,16 @@ export default async function PlanningPage({ searchParams }) {
             className="w-9 h-9 flex items-center justify-center rounded-full text-lg text-muted hover:bg-sand-dark/60 transition-colors"
             aria-label="Suivant"
           >
-            ›
+            <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
 
         <div className="flex justify-center mb-3">
-          <div className="inline-flex rounded-full border border-border p-0.5 bg-sand-dark/30 text-sm">
+          <div className="inline-flex rounded-full border border-border p-0.5 bg-sand-dark/60 text-sm">
             <Link
               href={hrefFor({ v: "month" })}
               className={`px-4 py-1 rounded-full font-medium transition-colors ${
-                view === "month" ? "bg-forest text-white" : "text-muted"
+                view === "month" ? "bg-card text-ink shadow-sm" : "text-muted"
               }`}
             >
               Mois
@@ -168,7 +170,7 @@ export default async function PlanningPage({ searchParams }) {
             <Link
               href={hrefFor({ v: "week" })}
               className={`px-4 py-1 rounded-full font-medium transition-colors ${
-                view === "week" ? "bg-forest text-white" : "text-muted"
+                view === "week" ? "bg-card text-ink shadow-sm" : "text-muted"
               }`}
             >
               Semaine
@@ -179,7 +181,7 @@ export default async function PlanningPage({ searchParams }) {
         {/* En-têtes des jours de la semaine */}
         <div className="grid grid-cols-7 mb-1">
           {WEEKDAY_LABELS.map((label) => (
-            <div key={label} className="text-center text-[10px] font-semibold uppercase tracking-wide text-muted">
+            <div key={label} className="text-center text-xs font-medium text-muted">
               {label}
             </div>
           ))}
@@ -213,7 +215,7 @@ export default async function PlanningPage({ searchParams }) {
                         isSelected
                           ? "bg-forest text-white"
                           : isToday
-                          ? "text-ochre-dark font-bold ring-1 ring-ochre/50"
+                          ? "text-forest font-bold ring-1 ring-forest/40"
                           : isCurrentMonth
                           ? "text-ink"
                           : "text-muted/40"
@@ -236,7 +238,7 @@ export default async function PlanningPage({ searchParams }) {
 
       {/* Agenda du jour sélectionné, comme le volet du bas dans l'app Calendrier */}
       <div>
-        <h2 className="font-display text-xl font-semibold mb-3 capitalize">{formatDateLongFR(selected)}</h2>
+        <h2 className="font-display text-xl font-bold mb-3 first-letter:uppercase">{formatDateLongFR(selected)}</h2>
         {visitsRes.rows.length === 0 ? (
           <div className="card p-8 text-center text-muted">
             Aucune visite ce jour-là.{" "}
@@ -249,9 +251,6 @@ export default async function PlanningPage({ searchParams }) {
             {visitsRes.rows.map((v) => (
               <VisitCard key={`${v.id}-${v.status}-${v.photo_count}`} visit={toCardVisit(v)} />
             ))}
-            <p className="text-xs text-muted md:hidden text-center pt-1">
-              Astuce : glisse une visite vers la droite pour la démarrer, vers la gauche pour la terminer.
-            </p>
           </div>
         )}
       </div>

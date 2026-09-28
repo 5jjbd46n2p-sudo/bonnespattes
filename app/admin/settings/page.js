@@ -9,10 +9,10 @@ export default async function SettingsPage() {
   const { rows } = await query("SELECT * FROM settings LIMIT 1");
   return (
     <div className="max-w-xl space-y-6">
-      <h1 className="font-display text-3xl font-semibold text-forest-dark">Réglages</h1>
+      <h1 className="font-display text-3xl font-bold text-forest-dark">Réglages</h1>
 
       <div className="card p-5">
-        <h2 className="font-display text-lg font-semibold mb-1">Apparence</h2>
+        <h2 className="font-display text-lg font-bold mb-1">Apparence</h2>
         <p className="text-sm text-muted mb-3">
           « Auto » suit le mode clair/sombre de ton téléphone ou de ton ordinateur.
         </p>
@@ -24,7 +24,7 @@ export default async function SettingsPage() {
 
       <div className="card p-5 flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg font-semibold">Compte</h2>
+          <h2 className="font-display text-lg font-bold">Compte</h2>
           <p className="text-sm text-muted">Déconnexion de cet appareil.</p>
         </div>
         <LogoutButton />

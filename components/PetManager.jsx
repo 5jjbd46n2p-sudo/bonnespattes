@@ -33,7 +33,7 @@ export default function PetManager({ clientId, pets }) {
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-forest-dark">Animaux</h2>
+        <h2 className="font-bold text-forest-dark">Animaux</h2>
         <button onClick={() => setAdding((a) => !a)} className="btn-ghost text-sm !py-1 !px-3">
           {adding ? "Annuler" : "+ Ajouter"}
         </button>
@@ -69,7 +69,7 @@ export default function PetManager({ clientId, pets }) {
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
           />
           <button disabled={loading} className="btn-primary text-sm">
-            {loading ? "Ajout..." : "Ajouter l'animal"}
+            {loading ? "Ajout…" : "Ajouter l'animal"}
           </button>
         </form>
       )}

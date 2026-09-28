@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Camera, X } from "lucide-react";
 
 export default function PhotoUploader({ visitId, photos }) {
   const router = useRouter();
@@ -37,8 +38,13 @@ export default function PhotoUploader({ visitId, photos }) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm text-muted">{photos.length} photo{photos.length > 1 ? "s" : ""}</p>
-        <label className="btn-accent text-sm !py-1.5 !px-3 cursor-pointer">
-          {uploading ? "Envoi..." : "📷 Ajouter une photo"}
+        <label className="btn-accent text-sm !py-1.5 !px-3 cursor-pointer gap-1.5">
+          {uploading ? "Envoi…" : (
+            <>
+              <Camera className="w-4 h-4" strokeWidth={1.9} />
+              Ajouter une photo
+            </>
+          )}
           <input
             ref={inputRef}
             type="file"
@@ -68,8 +74,9 @@ export default function PhotoUploader({ visitId, photos }) {
               <button
                 onClick={() => removePhoto(p.id)}
                 className="absolute top-1.5 right-1.5 bg-card/90 text-danger rounded-full w-7 h-7 text-xs md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                aria-label="Supprimer la photo"
               >
-                ✕
+                <X className="w-4 h-4 mx-auto" strokeWidth={2.2} />
               </button>
             </div>
           ))}
