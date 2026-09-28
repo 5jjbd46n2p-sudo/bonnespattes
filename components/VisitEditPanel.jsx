@@ -58,18 +58,37 @@ export default function VisitEditPanel({ visit }) {
           <option value="ANNULE">Annulée</option>
         </select>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <div>
-          <label className="text-sm font-medium block mb-1">Date</label>
-          <input type="date" className="input" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-        </div>
-        <div>
-          <label className="text-sm font-medium block mb-1">Début</label>
-          <input type="time" className="input" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />
-        </div>
-        <div>
-          <label className="text-sm font-medium block mb-1">Fin</label>
-          <input type="time" className="input" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} />
+      <div>
+        <label className="text-sm font-medium block mb-1.5">Date et horaires</label>
+        <div className="ios-field-group">
+          <div className="ios-field-row">
+            <span className="ios-field-label">Début</span>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                className="pill-input pill-input--date"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+              />
+              <input
+                type="time"
+                className="pill-input pill-input--time"
+                value={form.startTime}
+                onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="ios-field-row">
+            <span className="ios-field-label">Fin</span>
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                className="pill-input pill-input--time"
+                value={form.endTime}
+                onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div>

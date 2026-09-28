@@ -112,18 +112,37 @@ export default function NewVisitForm({ client, pets, initialDate }) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="text-sm font-medium block mb-1">Date</label>
-            <input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm font-medium block mb-1">Début</label>
-            <input type="time" className="input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm font-medium block mb-1">Fin</label>
-            <input type="time" className="input" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+        <div>
+          <label className="text-sm font-medium block mb-1.5">Date et horaires</label>
+          <div className="ios-field-group">
+            <div className="ios-field-row">
+              <span className="ios-field-label">Début</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  className="pill-input pill-input--date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+                <input
+                  type="time"
+                  className="pill-input pill-input--time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="ios-field-row">
+              <span className="ios-field-label">Fin</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="time"
+                  className="pill-input pill-input--time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
