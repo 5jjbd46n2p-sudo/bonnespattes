@@ -11,6 +11,7 @@ const EMPTY = {
   ageInfo: "",
   sterilized: false,
   identified: false,
+  identificationNumber: "",
   diet: "",
   healthConditions: "",
   notes: "",
@@ -23,6 +24,7 @@ const fromPet = (p) => ({
   ageInfo: p.age_info || "",
   sterilized: !!p.sterilized,
   identified: !!p.identified,
+  identificationNumber: p.identification_number || "",
   diet: p.diet || "",
   healthConditions: p.health_conditions || "",
   notes: p.notes || "",
@@ -52,6 +54,20 @@ function PetFields({ value, onChange }) {
           Identifié(e) (puce ou tatouage)
         </label>
       </div>
+      <label className="block">
+        <span className="label block mb-1">Numéro de puce ou de tatouage</span>
+        <input
+          className="input"
+          value={value.identificationNumber}
+          maxLength={30}
+          inputMode="text"
+          onChange={(e) => onChange({ ...value, identificationNumber: e.target.value, identified: value.identified || e.target.value.trim() !== "" })}
+          placeholder="Ex. 250268500123456"
+        />
+        <span className="block text-[13px] text-pierre mt-1">
+          Facultatif, mais conseillé : il permet de retrouver l'animal en cas de perte.
+        </span>
+      </label>
       <label className="block">
         <span className="label block mb-1">Régime, rythme et quantité alimentaire</span>
         <textarea className="input" rows={2} value={value.diet} onChange={set("diet")} placeholder="Ex. croquettes, 2 repas par jour, 80 g le matin et le soir" />
@@ -197,6 +213,7 @@ export default function PetManager({ clientId, pets }) {
                       {[p.sterilized && "Stérilisé(e)", p.identified && "Identifié(e)"].filter(Boolean).join(" · ")}
                     </p>
                   )}
+                  <Detail label="N° de puce / tatouage">{p.identification_number}</Detail>
                   <Detail label="Âge / naissance">{p.age_info}</Detail>
                   <Detail label="Alimentation">{p.diet}</Detail>
                   <Detail label="Pathologie">{p.health_conditions}</Detail>

@@ -8,8 +8,8 @@ export async function PATCH(req, { params }) {
   const { id } = await params;
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
-  const { name, species, breed, notes, sterilized, identified, ageInfo, diet, healthConditions } = body;
-  for (const v of [name, species, breed, notes, ageInfo, diet, healthConditions]) {
+  const { name, species, breed, notes, sterilized, identified, ageInfo, diet, healthConditions, identificationNumber } = body;
+  for (const v of [name, species, breed, notes, ageInfo, diet, healthConditions, identificationNumber]) {
     if (v !== undefined && v !== null && typeof v !== "string") {
       return NextResponse.json({ error: "Valeur invalide." }, { status: 400 });
     }
@@ -22,13 +22,18 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "Valeur invalide." }, { status: 400 });
     }
   }
+  const idNum = typeof identificationNumber === "string" ? identificationNumber.trim() : identificationNumber;
+  if (typeof idNum === "string" && !/^[A-Za-z0-9 .-]{0,30}$/.test(idNum)) {
+    return NextResponse.json({ error: "Numéro de puce ou de tatouage invalide (chiffres, lettres, tirets ; 30 caractères maximum)." }, { status: 400 });
+  }
   const { rows } = await query(
     `UPDATE pets SET name = COALESCE($1,name), species = COALESCE($2,species),
      breed = COALESCE($3,breed), notes = COALESCE($4,notes),
-     sterilized = COALESCE($5,sterilized), identified = COALESCE($6,identified),
-     age_info = COALESCE($7,age_info), diet = COALESCE($8,diet), health_conditions = COALESCE($9,health_conditions)
+     sterilized = COALESCE($5,sterilized), identified = COALESCE($6,identified) OR (COALESCE($11,'') <> ''),
+     age_info = COALESCE($7,age_info), diet = COALESCE($8,diet), health_conditions = COALESCE($9,health_conditions),
+     identification_number = COALESCE($11,identification_number)
      WHERE id = $10 RETURNING *`,
-    [name?.trim(), species?.trim(), breed?.trim(), notes, sterilized, identified, ageInfo, diet, healthConditions, id]
+    [name?.trim(), species?.trim(), breed?.trim(), notes, sterilized, identified, ageInfo, diet, healthConditions, id, idNum]
   );
   if (!rows[0]) return NextResponse.json({ error: "Animal introuvable." }, { status: 404 });
   return NextResponse.json({ pet: rows[0] });

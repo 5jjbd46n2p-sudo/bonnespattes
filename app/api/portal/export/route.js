@@ -14,7 +14,7 @@ export async function GET() {
     [clientId]
   );
   const petsRes = await query(
-    "SELECT name, species, breed, notes, sterilized, identified, age_info, diet, health_conditions, created_at FROM pets WHERE client_id = $1",
+    "SELECT name, species, breed, notes, sterilized, identified, identification_number, age_info, diet, health_conditions, created_at FROM pets WHERE client_id = $1",
     [clientId]
   );
   const visitsRes = await query(

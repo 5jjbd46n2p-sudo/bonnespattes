@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { requireClient } from "@/lib/auth";
 import CopyLink from "@/components/landing/CopyLink";
+import PortalPetIdentification from "@/components/PortalPetIdentification";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
@@ -169,6 +170,8 @@ export default async function PortalPage() {
           })}
         </ul>
       )}
+
+      {petsRes.rows.length > 0 && <PortalPetIdentification pets={petsRes.rows.map((p) => ({ id: p.id, name: p.name, identification_number: p.identification_number || "" }))} />}
 
       {referralCode && (
         <section className="card p-5 space-y-3" aria-labelledby="parrainage">
