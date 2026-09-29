@@ -58,9 +58,9 @@ export default function PhotoUploader({ visitId, photos }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {photos.map((p) => (
             <div key={p.id} className="relative group">
-              <a href={p.url} target="_blank" rel="noopener noreferrer">
+              <a href={`/api/photos/${p.id}/file`} target="_blank" rel="noopener noreferrer">
                 <img
-                  src={p.url}
+                  src={`/api/photos/${p.id}/file`}
                   alt="Photo de la visite"
                   className="w-full h-32 object-cover rounded-lg border border-border"
                 />

@@ -98,9 +98,9 @@ export default async function PortalPage() {
                 {photos.length > 0 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
                     {photos.map((p) => (
-                      <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer">
+                      <a key={p.id} href={`/api/photos/${p.id}/file`} target="_blank" rel="noopener noreferrer">
                         <img
-                          src={p.url}
+                          src={`/api/photos/${p.id}/file`}
                           alt="Photo de la visite"
                           className="w-full h-24 object-cover rounded-lg border border-border"
                         />

@@ -37,7 +37,7 @@ export async function POST(req, { params }) {
 
   try {
     const blob = await put(`visits/${id}/${Date.now()}.${ext}`, file, {
-      access: "public",
+      access: "private",
       addRandomSuffix: true,
       contentType: file.type,
     });
@@ -51,7 +51,7 @@ export async function POST(req, { params }) {
     return NextResponse.json(
       {
         error:
-          "Échec de l'envoi de la photo. Vérifie que le stockage Vercel Blob est bien connecté (BLOB_READ_WRITE_TOKEN).",
+          "Échec de l'envoi de la photo. Vérifie que le stockage Vercel Blob (privé) est bien connecté au projet, puis redéploie.",
       },
       { status: 500 }
     );
