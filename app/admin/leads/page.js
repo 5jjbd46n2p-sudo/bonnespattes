@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
 import LeadActions from "./LeadActions";
+import { quoteLines, estimateText } from "@/lib/quote";
 import { CaretDown, Phone, EnvelopeSimple } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,13 @@ export default async function LeadsPage({ searchParams }) {
   const raw = Array.isArray(sp?.status) ? sp.status[0] : sp?.status;
   const status = TABS.some((t) => t.key === raw) ? raw : "NOUVEAU";
 
+  let settings = {};
   let counts = {};
   let leads = [];
   let unavailable = false;
   try {
+    const st = await query("SELECT rate_30, rate_45, rate_60 FROM settings LIMIT 1").catch(() => ({ rows: [] }));
+    settings = st.rows[0] || {};
     const c = await query("SELECT status, COUNT(*)::int AS n FROM leads GROUP BY status");
     for (const r of c.rows) counts[r.status] = r.n;
     const res = await query(
@@ -70,11 +74,16 @@ export default async function LeadsPage({ searchParams }) {
                   <details className="group">
                     <summary className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                       <div className="min-w-0">
-                        <p className="font-bold truncate">{l.name}</p>
+                        <p className="font-bold truncate">
+                          {l.name}
+                          {l.kind === "DEVIS" && (
+                            <span className="ml-2 align-middle text-xs font-bold px-2 py-0.5 rounded-full bg-sable text-rouille border border-trait">Devis</span>
+                          )}
+                        </p>
                         <p className="text-sm text-pierre truncate tabular-nums">
                           {new Date(l.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
                           {l.commune ? ` · ${l.commune}` : ""}
-                          {l.service ? ` · ${SERVICES[l.service] || l.service}` : ""}
+                          {l.kind !== "DEVIS" && l.service ? ` · ${SERVICES[l.service] || l.service}` : ""}
                         </p>
                       </div>
                       <CaretDown size={20} className="shrink-0 text-pierre group-open:rotate-180" aria-hidden="true" />
@@ -92,6 +101,15 @@ export default async function LeadsPage({ searchParams }) {
                           </a>
                         )}
                       </p>
+                      {l.kind === "DEVIS" && l.quote && (
+                        <div className="bg-sable rounded-lg p-3 space-y-1">
+                          {quoteLines(l.quote).map(([k, v]) => (
+                            <p key={k}><span className="label">{k} : </span>{v}</p>
+                          ))}
+                          <p className="font-bold pt-1">{estimateText(l.quote, settings)}</p>
+                          <p className="text-sm text-pierre">Indicatif : à vous de confirmer le devis et le déplacement.</p>
+                        </div>
+                      )}
                       {l.animals && <p><span className="label">Animaux : </span>{l.animals}</p>}
                       {l.message && <p className="whitespace-pre-line">{l.message}</p>}
                       {l.referrer_client_id && (

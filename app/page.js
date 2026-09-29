@@ -255,7 +255,7 @@ export default async function Home({ searchParams }) {
               Demander un rendez-vous
             </h2>
             <p className="text-pierre mt-2 mb-6 leading-relaxed">
-              Parlez-moi de vous et de vos compagnons. La première rencontre est gratuite et sans engagement.
+              Parlez-moi de vous et de vos compagnons, ou demandez un devis pour une garde plus longue ou régulière. La première rencontre est gratuite et sans engagement.
             </p>
             <LeadForm initialCode={referrer.code} referrerName={referrer.name} />
           </div>
