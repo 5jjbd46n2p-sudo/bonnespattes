@@ -4,6 +4,7 @@ import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { sendLeadEmails } from "@/lib/email";
 import { normalizeReferralCode } from "@/lib/referral";
+import { validateQuote } from "@/lib/quote";
 
 const STATUSES = ["NOUVEAU", "CONTACTE", "CLIENT", "SANS_SUITE"];
 const SERVICES = ["VISITE", "PROMENADE", "LES_DEUX"];
@@ -70,6 +71,17 @@ export async function POST(req) {
     return NextResponse.json({ error: "Service invalide." }, { status: 400 });
   }
 
+  const kind = body.kind === undefined || body.kind === null || body.kind === "" ? "CONTACT" : body.kind;
+  if (kind !== "CONTACT" && kind !== "DEVIS") {
+    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+  }
+  let quote = null;
+  if (kind === "DEVIS") {
+    const v = validateQuote(body.quote);
+    if (v.error) return NextResponse.json({ error: v.error }, { status: 400 });
+    quote = v.quote;
+  }
+
   try {
     const hash = ipHash(req);
     const recent = await query(
@@ -96,16 +108,17 @@ export async function POST(req) {
     }
 
     const ins = await query(
-      `INSERT INTO leads (name, email, phone, commune, animals, service, message, referral_code, referrer_client_id, ip_hash)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
-      [name, email, phone || null, commune || null, animals || null, service, message || null, referralCode, referrer?.id || null, hash]
+      `INSERT INTO leads (name, email, phone, commune, animals, service, message, referral_code, referrer_client_id, ip_hash, kind, quote)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+      [name, email, phone || null, commune || null, animals || null, quote ? null : service, message || null, referralCode, referrer?.id || null, hash, kind, quote ? JSON.stringify(quote) : null]
     );
 
     // Un échec d'email ne fait jamais échouer la demande.
     try {
-      const s = await query("SELECT contact_email FROM settings LIMIT 1");
+      const s = await query("SELECT contact_email, rate_30, rate_45, rate_60 FROM settings LIMIT 1");
       await sendLeadEmails({
-        lead: { name, email, phone, commune, animals, service, message },
+        lead: { name, email, phone, commune, animals, service, message, kind, quote },
+        settings: s.rows[0] || {},
         contactEmail: s.rows[0]?.contact_email || "",
         referrerName: referrer?.first_name || "",
       });
@@ -123,18 +136,23 @@ export async function POST(req) {
 export async function GET(req) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
-  const status = new URL(req.url).searchParams.get("status");
+  const params = new URL(req.url).searchParams;
+  const status = params.get("status");
   if (status && !STATUSES.includes(status)) {
     return NextResponse.json({ error: "Statut invalide." }, { status: 400 });
   }
+  const kindFilter = params.get("kind");
+  if (kindFilter && kindFilter !== "CONTACT" && kindFilter !== "DEVIS") {
+    return NextResponse.json({ error: "Type invalide." }, { status: 400 });
+  }
   const { rows } = await query(
     `SELECT l.id, l.name, l.email, l.phone, l.commune, l.animals, l.service, l.message, l.referral_code,
-            l.referrer_client_id, l.status, l.client_id, l.created_at,
+            l.referrer_client_id, l.kind, l.quote, l.status, l.client_id, l.created_at,
             NULLIF(trim(coalesce(r.first_name,'') || ' ' || coalesce(r.last_name,'')), '') AS referrer_name
      FROM leads l LEFT JOIN clients r ON r.id = l.referrer_client_id
-     WHERE ($1::text IS NULL OR l.status = $1)
+     WHERE ($1::text IS NULL OR l.status = $1) AND ($2::text IS NULL OR l.kind = $2)
      ORDER BY l.created_at DESC LIMIT 500`,
-    [status || null]
+    [status || null, kindFilter || null]
   );
   const cnt = await query("SELECT COUNT(*)::int AS n FROM leads WHERE status = 'NOUVEAU'");
   return NextResponse.json({ leads: rows, newCount: cnt.rows[0].n });

@@ -222,3 +222,7 @@ BEGIN
     UPDATE clients SET referral_code = code WHERE id = r.id AND referral_code IS NULL;
   END LOOP;
 END $$;
+
+-- Demandes de devis (garde longue ou régulière) :
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'CONTACT' CHECK (kind IN ('CONTACT','DEVIS'));
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS quote JSONB;
