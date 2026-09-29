@@ -5,6 +5,7 @@ import { query } from "@/lib/db";
 import { formatEUR } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import Photo from "@/components/landing/Photo";
+import { loadSitePhotos, sitePhotoSrc, SITE_PHOTO_SLOTS } from "@/lib/sitePhotos";
 import Gallery from "@/components/landing/Gallery";
 import LeadForm from "@/components/landing/LeadForm";
 import {
@@ -35,7 +36,7 @@ export const metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: "/",
-    images: [{ url: "/photos/hero.jpg", alt: "Aux Bonnes Pattes, pet sitting à Viarmes" }],
+    images: [{ url: "/api/site-photos/hero", alt: "Aux Bonnes Pattes, pet sitting à Viarmes" }],
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
@@ -87,7 +88,8 @@ export default async function Home({ searchParams }) {
 
   const sp = await searchParams;
   const rawCode = Array.isArray(sp?.parrain) ? sp.parrain[0] : sp?.parrain;
-  const [s, referrer] = await Promise.all([loadSettings(), loadReferrer(rawCode)]);
+  const [s, referrer, photoVersions] = await Promise.all([loadSettings(), loadReferrer(rawCode), loadSitePhotos()]);
+  const galleryPhotos = SITE_PHOTO_SLOTS.filter((x) => x.slot.startsWith("gallery-") && photoVersions[x.slot]).map((x) => ({ src: sitePhotoSrc(x.slot, photoVersions[x.slot]), alt: x.alt }));
   const area = s.service_area || "Viarmes et environs (15 km, au-delà sur devis)";
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
 
@@ -145,8 +147,8 @@ export default async function Home({ searchParams }) {
               </div>
             </div>
             <Photo
-              src="/photos/hero.jpg"
-              alt="Aurore en balade avec un chien, à la lumière de l'automne"
+              src={photoVersions.hero ? sitePhotoSrc("hero", photoVersions.hero) : null}
+              alt="Aurore, pet sitter à Viarmes, avec un animal"
               eager
               className="aspect-[4/3] md:aspect-[4/5]"
             />
@@ -246,7 +248,7 @@ export default async function Home({ searchParams }) {
           </div>
         </section>
 
-        <Gallery />
+        <Gallery photos={galleryPhotos} />
 
         {/* Contact */}
         <section id="contact" aria-labelledby="contact-titre" className="px-4 py-12 md:py-16 bg-sable scroll-mt-4">

@@ -2,6 +2,7 @@ import { query } from "@/lib/db";
 import SettingsForm, { LegalSettingsForm, PricingSettingsForm, PublicSettingsForm, ContractSettingsForm } from "@/components/SettingsForm";
 import ThemeToggle from "@/components/ThemeToggle";
 import LogoutButton from "@/components/LogoutButton";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,16 @@ export default async function SettingsPage() {
           « Auto » suit le mode clair/sombre de ton téléphone ou de ton ordinateur.
         </p>
         <ThemeToggle />
+      </div>
+
+      <div className="card p-5 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="font-display text-xl font-semibold">Photos de la page d'accueil</h2>
+          <p className="text-sm text-pierre">Ajoute ou change les photos depuis ta galerie.</p>
+        </div>
+        <Link href="/admin/site-photos" className="btn-primary text-sm">
+          Gérer les photos
+        </Link>
       </div>
 
       <SettingsForm settings={rows[0]} />

@@ -258,3 +258,10 @@ CREATE TABLE IF NOT EXISTS contract_signatures (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_contract_signatures_client ON contract_signatures(client_id);
+
+-- Photos de la page d'accueil (ajoutées depuis l'admin) :
+CREATE TABLE IF NOT EXISTS site_photos (
+  slot TEXT PRIMARY KEY,
+  url TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
