@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Play, Check, CheckSquare, Camera, NavigationArrow } from "@phosphor-icons/react";
 import { wazeUrl } from "@/lib/utils";
-import { VisitStatusBadge } from "@/components/StatusBadge";
+import { VisitBillingBadge } from "@/components/StatusBadge";
 
 const SWIPE_THRESHOLD = 90; // px à parcourir pour valider l'action du glissement
 const SWIPE_MAX = 160;
@@ -181,7 +181,13 @@ export default function VisitCard({ visit }) {
               <Link href={`/admin/visits/${visit.id}`} className="font-bold hover:underline">
                 {visit.pet_name} — {visit.first_name} {visit.last_name}
               </Link>
-              <VisitStatusBadge status={status} />
+              <VisitBillingBadge
+                visit={{ status, is_free: visit.is_free, invoice_status: visit.invoice_status }}
+                invoiceStatus={visit.invoice_status}
+              />
+              {visit.is_free && visit.free_reason && (
+                <span className="text-[13px] text-pierre">{visit.free_reason}</span>
+              )}
             </div>
             <div className="text-sm text-pierre mt-1 flex items-center gap-4 flex-wrap">
               <span className="inline-flex items-center gap-1.5 tabular-nums">

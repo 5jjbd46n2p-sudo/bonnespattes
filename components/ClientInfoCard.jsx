@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Phone, Envelope, CurrencyEur, MapPin, Trash } from "@phosphor-icons/react";
+import { Phone, Envelope, CurrencyEur, MapPin, Trash, NavigationArrow } from "@phosphor-icons/react";
 import WazeLink from "@/components/WazeLink";
 
 export default function ClientInfoCard({ client, invoiceCount = 0 }) {
@@ -19,6 +19,28 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
   });
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [travel, setTravel] = useState({
+    km: client.distance_km ?? null,
+    min: client.travel_minutes ?? null,
+  });
+  const [calcLoading, setCalcLoading] = useState(false);
+  const [calcError, setCalcError] = useState("");
+
+  async function calculateTravel() {
+    setCalcLoading(true);
+    setCalcError("");
+    try {
+      const res = await fetch(`/api/clients/${client.id}/travel`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Impossible de calculer la distance.");
+      setTravel({ km: data.distanceKm, min: data.travelMinutes });
+      router.refresh();
+    } catch (e) {
+      setCalcError(e.message || "Impossible de calculer la distance.");
+    } finally {
+      setCalcLoading(false);
+    }
+  }
 
   async function save() {
     setLoading(true);
@@ -101,6 +123,25 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
               {client.address}
             </p>
             <WazeLink address={client.address} className="mt-1.5" />
+            <p className="text-sm text-pierre mt-2 flex items-center gap-2 flex-wrap tabular-nums">
+              <NavigationArrow size={20} className="shrink-0" aria-hidden="true" />
+              {travel.km !== null && travel.km !== undefined ? (
+                <span>
+                  Trajet : {Number(travel.km)} km{travel.min ? `, ${travel.min} min` : ""} (aller simple)
+                </span>
+              ) : (
+                <span>Distance non calculée</span>
+              )}
+              <button
+                type="button"
+                onClick={calculateTravel}
+                disabled={calcLoading}
+                className="font-bold text-rouille hover:text-rouille-fonce underline underline-offset-4"
+              >
+                {calcLoading ? "Calcul…" : travel.km !== null && travel.km !== undefined ? "Recalculer" : "Calculer"}
+              </button>
+            </p>
+            {calcError && <p className="text-sm text-brique mt-1">{calcError}</p>}
           </div>
         )}
 

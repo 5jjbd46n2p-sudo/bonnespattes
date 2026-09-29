@@ -45,7 +45,21 @@ export async function PATCH(req, { params }) {
     date: "date",
     startTime: "start_time",
     endTime: "end_time",
+    isFree: "is_free",
+    freeReason: "free_reason",
+    travelFee: "travel_fee",
   };
+  for (const key of ["price", "travelFee"]) {
+    if (body[key] !== undefined) {
+      const n = Number(body[key]);
+      if (body[key] === "" || body[key] === null || !Number.isFinite(n) || n < 0) {
+        return NextResponse.json({ error: "Montant invalide (nombre positif attendu)." }, { status: 400 });
+      }
+      body[key] = n;
+    }
+  }
+  if (body.isFree !== undefined) body.isFree = Boolean(body.isFree);
+  if (body.freeReason !== undefined) body.freeReason = String(body.freeReason ?? "").slice(0, 300);
   const sets = [];
   const values = [];
   let i = 1;

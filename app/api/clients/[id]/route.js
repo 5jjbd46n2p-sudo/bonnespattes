@@ -54,7 +54,20 @@ export async function PATCH(req, { params }) {
     address: "address",
     notes: "notes",
     hourlyRate: "hourly_rate",
+    distanceKm: "distance_km",
+    travelMinutes: "travel_minutes",
   };
+  for (const key of ["distanceKm", "travelMinutes"]) {
+    if (body[key] !== undefined && body[key] !== null && body[key] !== "") {
+      const n = Number(body[key]);
+      if (!Number.isFinite(n) || n < 0) {
+        return NextResponse.json({ error: "Distance ou durée invalide." }, { status: 400 });
+      }
+      body[key] = key === "travelMinutes" ? Math.round(n) : n;
+    } else if (body[key] === "") {
+      body[key] = null;
+    }
+  }
   const sets = [];
   const values = [];
   let i = 1;

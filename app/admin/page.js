@@ -12,17 +12,18 @@ async function getDashboardData() {
 
   const [visitsRes, unbilledRes, unpaidRes, clientCountRes] = await Promise.all([
     query(
-      `SELECT v.*, p.name AS pet_name, c.first_name, c.last_name, c.address,
+      `SELECT v.*, p.name AS pet_name, c.first_name, c.last_name, c.address, i.status AS invoice_status,
         (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id) AS task_count,
         (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id AND t.done) AS task_done_count,
         (SELECT COUNT(*) FROM photos ph WHERE ph.visit_id = v.id) AS photo_count
        FROM visits v JOIN pets p ON p.id = v.pet_id JOIN clients c ON c.id = v.client_id
+       LEFT JOIN invoices i ON i.id = v.invoice_id
        WHERE v.date = $1
        ORDER BY v.start_time ASC NULLS LAST`,
       [today]
     ),
     query(
-      `SELECT COUNT(*) AS count, COALESCE(SUM(price),0) AS total FROM visits WHERE invoice_id IS NULL AND status = 'FAIT'`
+      `SELECT COUNT(*) AS count, COALESCE(SUM(CASE WHEN is_free THEN 0 ELSE price + COALESCE(travel_fee,0) END),0) AS total FROM visits WHERE invoice_id IS NULL AND status = 'FAIT'`
     ),
     query(
       `SELECT COALESCE(SUM(total_ttc - COALESCE((SELECT SUM(amount) FROM payments p WHERE p.invoice_id = i.id),0)),0) AS total

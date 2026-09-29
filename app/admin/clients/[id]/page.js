@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
-import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
+import { VisitBillingBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
 import ClientInfoCard from "@/components/ClientInfoCard";
 import PetManager from "@/components/PetManager";
 import ClientLoginManager from "@/components/ClientLoginManager";
@@ -16,11 +16,12 @@ async function getClientData(id) {
   if (!clientRes.rows[0]) return null;
   const petsRes = await query("SELECT * FROM pets WHERE client_id = $1 ORDER BY created_at", [id]);
   const visitsRes = await query(
-    `SELECT v.*, p.name AS pet_name,
+    `SELECT v.*, p.name AS pet_name, i.status AS invoice_status,
       (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id) AS task_count,
       (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id AND t.done) AS task_done_count,
       (SELECT COUNT(*) FROM photos ph WHERE ph.visit_id = v.id) AS photo_count
      FROM visits v JOIN pets p ON p.id = v.pet_id
+     LEFT JOIN invoices i ON i.id = v.invoice_id
      WHERE v.client_id = $1 ORDER BY v.date DESC, v.start_time DESC LIMIT 30`,
     [id]
   );
@@ -97,7 +98,7 @@ export default async function ClientDetailPage({ params }) {
                         </span>
                       </p>
                     </div>
-                    <VisitStatusBadge status={v.status} />
+                    <VisitBillingBadge visit={v} invoiceStatus={v.invoice_status} />
                   </Link>
                 ))}
               </div>

@@ -69,10 +69,15 @@ export default async function InvoiceDetailPage({ params }) {
             <tbody>
               {items.map((it) => (
                 <tr key={it.id} className="border-t border-trait">
-                  <td className="py-2">{it.description}</td>
+                  <td className="py-2">
+                    {it.description}
+                    {Number(it.total) === 0 && !/offerte/i.test(it.description) && (
+                      <span className="text-mousse font-bold"> — offerte</span>
+                    )}
+                  </td>
                   <td className="py-2 text-right">{it.quantity}</td>
                   <td className="py-2 text-right">{formatEUR(it.unit_price)}</td>
-                  <td className="py-2 text-right font-medium">{formatEUR(it.total)}</td>
+                  <td className="py-2 text-right font-medium">{formatEUR(Number(it.total) || 0)}</td>
                 </tr>
               ))}
             </tbody>

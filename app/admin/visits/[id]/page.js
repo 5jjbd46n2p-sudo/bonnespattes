@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
 import { formatDateFR } from "@/lib/utils";
-import { VisitStatusBadge } from "@/components/StatusBadge";
+import { VisitBillingBadge } from "@/components/StatusBadge";
 import WazeLink from "@/components/WazeLink";
 import TaskChecklist from "@/components/TaskChecklist";
 import PhotoUploader from "@/components/PhotoUploader";
@@ -13,8 +13,9 @@ export const dynamic = "force-dynamic";
 
 async function getVisit(id) {
   const visitRes = await query(
-    `SELECT v.*, p.name AS pet_name, p.species, p.breed, c.first_name, c.last_name, c.address
+    `SELECT v.*, p.name AS pet_name, p.species, p.breed, c.first_name, c.last_name, c.address, i.status AS invoice_status
      FROM visits v JOIN pets p ON p.id = v.pet_id JOIN clients c ON c.id = v.client_id
+     LEFT JOIN invoices i ON i.id = v.invoice_id
      WHERE v.id = $1`,
     [id]
   );
@@ -37,7 +38,7 @@ export default async function VisitDetailPage({ params }) {
           <ArrowLeft size={16} aria-hidden="true" />
           {visit.first_name} {visit.last_name}
         </Link>
-        <VisitStatusBadge status={visit.status} />
+        <VisitBillingBadge visit={visit} invoiceStatus={visit.invoice_status} />
       </div>
 
       <div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Repeat } from "@phosphor-icons/react";
+import { Check, Repeat, Gift } from "@phosphor-icons/react";
 
 export default function VisitEditPanel({ visit }) {
   const router = useRouter();
@@ -12,10 +12,17 @@ export default function VisitEditPanel({ visit }) {
     startTime: visit.start_time ? visit.start_time.slice(0, 5) : "",
     endTime: visit.end_time ? visit.end_time.slice(0, 5) : "",
     price: visit.price,
+    travelFee: visit.travel_fee ?? 0,
     notes: visit.notes || "",
   });
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isFree, setIsFree] = useState(!!visit.is_free);
+  const [freeReason, setFreeReason] = useState(visit.free_reason || "");
+  const [offering, setOffering] = useState(false); // formulaire de confirmation ouvert
+  const [reasonDraft, setReasonDraft] = useState("");
+  const [freeBusy, setFreeBusy] = useState(false);
+  const [freeError, setFreeError] = useState("");
   const [removeSeries, setRemoveSeries] = useState(false);
 
   async function save() {
@@ -23,12 +30,33 @@ export default function VisitEditPanel({ visit }) {
     await fetch(`/api/visits/${visit.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, price: Number(form.price) }),
+      body: JSON.stringify({ ...form, price: Number(form.price), travelFee: Number(form.travelFee) || 0 }),
     });
     setLoading(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     router.refresh();
+  }
+
+  async function setFree(nextFree, reason) {
+    setFreeBusy(true);
+    setFreeError("");
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFree: nextFree, freeReason: nextFree ? reason : "" }),
+      });
+      if (!res.ok) throw new Error();
+      setIsFree(nextFree);
+      setFreeReason(nextFree ? reason : "");
+      setOffering(false);
+      router.refresh();
+    } catch {
+      setFreeError("Impossible de modifier l'offre, réessaie.");
+    } finally {
+      setFreeBusy(false);
+    }
   }
 
   async function remove() {
@@ -96,8 +124,62 @@ export default function VisitEditPanel({ visit }) {
         </div>
       </div>
       <div>
-        <label className="label block mb-1">Prix (€)</label>
-        <input type="number" step="0.01" className="input" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="label block mb-1">Prestation (€)</label>
+            <input type="number" step="0.01" className="input" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          </div>
+          <div>
+            <label className="label block mb-1">Déplacement (€)</label>
+            <input type="number" step="0.01" className="input" value={form.travelFee} onChange={(e) => setForm({ ...form, travelFee: e.target.value })} />
+          </div>
+        </div>
+        <p className="text-[13px] text-pierre mt-1 tabular-nums">
+          {isFree
+            ? "Visite offerte : compte 0 € dans les totaux."
+            : `Montant dû : ${(Number(form.price) + (Number(form.travelFee) || 0)).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}`}
+        </p>
+      </div>
+      <div className="border-t border-trait pt-3">
+        {isFree ? (
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm inline-flex items-center gap-2">
+              <Gift size={20} aria-hidden="true" />
+              <span>
+                <span className="font-bold">Offerte</span>
+                {freeReason && <span className="text-pierre"> : {freeReason}</span>}
+              </span>
+            </p>
+            <button type="button" onClick={() => setFree(false)} disabled={freeBusy} className="btn-ghost text-sm !py-1.5 !px-3">
+              Annuler l'offre
+            </button>
+          </div>
+        ) : offering ? (
+          <div className="space-y-2">
+            <label className="label block">Motif (facultatif)</label>
+            <input
+              className="input"
+              value={reasonDraft}
+              onChange={(e) => setReasonDraft(e.target.value)}
+              placeholder="Geste commercial, essai…"
+            />
+            <p className="text-[13px] text-pierre">Cette visite sera comptée 0 € et apparaîtra « offerte » sur la facture.</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setFree(true, reasonDraft.trim())} disabled={freeBusy} className="btn-primary text-sm">
+                Confirmer l'offre
+              </button>
+              <button type="button" onClick={() => setOffering(false)} className="btn-ghost text-sm">
+                Annuler
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setOffering(true)} className="btn-ghost text-sm inline-flex items-center gap-2">
+            <Gift size={20} aria-hidden="true" />
+            Offrir cette visite
+          </button>
+        )}
+        {freeError && <p className="text-sm text-brique mt-2">{freeError}</p>}
       </div>
       <div>
         <label className="label block mb-1">Notes</label>

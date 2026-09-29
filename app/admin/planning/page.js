@@ -87,11 +87,12 @@ export default async function PlanningPage({ searchParams }) {
   }
 
   const visitsRes = await query(
-    `SELECT v.*, p.name AS pet_name, c.first_name, c.last_name, c.address,
+    `SELECT v.*, p.name AS pet_name, c.first_name, c.last_name, c.address, i.status AS invoice_status,
       (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id) AS task_count,
       (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id AND t.done) AS task_done_count,
       (SELECT COUNT(*) FROM photos ph WHERE ph.visit_id = v.id) AS photo_count
      FROM visits v JOIN pets p ON p.id = v.pet_id JOIN clients c ON c.id = v.client_id
+     LEFT JOIN invoices i ON i.id = v.invoice_id
      WHERE v.date = $1 ORDER BY v.start_time ASC NULLS LAST`,
     [selected]
   );

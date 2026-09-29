@@ -23,7 +23,22 @@ export async function PATCH(req) {
     invoicePrefix: "invoice_prefix",
     legalForm: "legal_form",
     contactEmail: "contact_email",
+    kmRate: "km_rate",
+    travelTimeShare: "travel_time_share",
+    travelFreeKm: "travel_free_km",
+    rate30: "rate_30",
+    rate45: "rate_45",
+    rate60: "rate_60",
   };
+  for (const key of ["kmRate", "travelTimeShare", "travelFreeKm", "rate30", "rate45", "rate60"]) {
+    if (body[key] !== undefined) {
+      const n = Number(body[key]);
+      if (body[key] === "" || body[key] === null || !Number.isFinite(n) || n < 0 || (key === "travelTimeShare" && n > 1)) {
+        return NextResponse.json({ error: "Valeur de tarif invalide." }, { status: 400 });
+      }
+      body[key] = n;
+    }
+  }
   const sets = [];
   const values = [];
   let i = 1;

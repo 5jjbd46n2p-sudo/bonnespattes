@@ -3,29 +3,36 @@ import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { InvoiceStatusBadge } from "@/components/StatusBadge";
 import { DownloadSimple, Plus } from "@phosphor-icons/react/ssr";
+import ToInvoiceGroup from "./ToInvoiceGroup";
+import MarkPaidButton from "./MarkPaidButton";
 
 export const dynamic = "force-dynamic";
 
+const TABS = [
+  { id: "a-facturer", label: "À facturer" },
+  { id: "a-encaisser", label: "À encaisser" },
+  { id: "payees", label: "Payées" },
+];
+
 export default async function AccountingPage({ searchParams }) {
   const sp = await searchParams;
-  const status = sp.status || "";
+  const tab = TABS.some((t) => t.id === sp.tab) ? sp.tab : "a-facturer";
 
-  const conditions = [];
-  const values = [];
-  let i = 1;
-  if (status) {
-    conditions.push(`i.status = $${i++}`);
-    values.push(status);
-  }
-  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const visitsRes = await query(
+    `SELECT v.id, v.date, v.price, v.travel_fee, v.is_free, v.client_id, p.name AS pet_name,
+            c.first_name, c.last_name
+     FROM visits v
+     JOIN pets p ON p.id = v.pet_id
+     JOIN clients c ON c.id = v.client_id
+     WHERE v.invoice_id IS NULL AND v.status = 'FAIT'
+     ORDER BY c.last_name, c.first_name, v.date ASC`
+  );
 
   const invoicesRes = await query(
     `SELECT i.*, c.first_name, c.last_name,
       (SELECT COALESCE(SUM(amount),0) FROM payments pay WHERE pay.invoice_id = i.id) AS paid_amount
      FROM invoices i JOIN clients c ON c.id = i.client_id
-     ${where}
-     ORDER BY i.issue_date DESC, i.created_at DESC`,
-    values
+     ORDER BY i.issue_date DESC, i.created_at DESC`
   );
 
   const summaryRes = await query(`
@@ -37,17 +44,88 @@ export default async function AccountingPage({ searchParams }) {
   `);
   const summary = summaryRes.rows[0];
 
-  const unbilledRes = await query(
-    `SELECT COUNT(*) AS count, COALESCE(SUM(price),0) AS total FROM visits WHERE invoice_id IS NULL AND status = 'FAIT'`
+  // Visites à facturer, groupées par client
+  const groups = [];
+  const byClient = new Map();
+  for (const v of visitsRes.rows) {
+    let g = byClient.get(v.client_id);
+    if (!g) {
+      g = { clientId: v.client_id, clientName: `${v.first_name} ${v.last_name}`, visits: [] };
+      byClient.set(v.client_id, g);
+      groups.push(g);
+    }
+    g.visits.push({
+      id: v.id,
+      date: v.date,
+      pet_name: v.pet_name,
+      price: v.price,
+      travel_fee: v.travel_fee,
+      is_free: v.is_free,
+    });
+  }
+  const unbilledTotal = visitsRes.rows.reduce(
+    (s, v) => s + (v.is_free ? 0 : (Number(v.price) || 0) + (Number(v.travel_fee) || 0)),
+    0
   );
 
-  const filters = [
-    { value: "", label: "Toutes" },
-    { value: "BROUILLON", label: "Brouillons" },
-    { value: "ENVOYEE", label: "Envoyées" },
-    { value: "PAYEE", label: "Payées" },
-    { value: "EN_RETARD", label: "En retard" },
-  ];
+  const toCollect = invoicesRes.rows.filter((i) => ["BROUILLON", "ENVOYEE", "EN_RETARD"].includes(i.status));
+  const paid = invoicesRes.rows.filter((i) => i.status === "PAYEE");
+  const overdue = toCollect.filter((i) => i.status === "EN_RETARD");
+  const overdueTotal = overdue.reduce((s, i) => s + Math.max(0, Number(i.total_ttc) - Number(i.paid_amount)), 0);
+  const counts = { "a-facturer": visitsRes.rows.length, "a-encaisser": toCollect.length, payees: paid.length };
+
+  const InvoiceTable = ({ rows, collect }) =>
+    rows.length === 0 ? (
+      <div className="card p-10 text-center text-pierre">
+        {collect ? "Rien à encaisser pour l'instant." : "Aucune facture payée pour l'instant."}
+      </div>
+    ) : (
+      <div className="card overflow-hidden">
+        <div className="scroll-x">
+          <table className="w-full text-sm min-w-[560px] tabular-nums">
+            <thead className="text-pierre text-[13px] font-bold">
+              <tr>
+                <th className="text-left font-bold px-4 py-3">Numéro</th>
+                <th className="text-left font-bold px-4 py-3">Client</th>
+                <th className="text-left font-bold px-4 py-3">Date</th>
+                <th className="text-right font-bold px-4 py-3">Montant</th>
+                {collect && <th className="text-right font-bold px-4 py-3">Reste à payer</th>}
+                <th className="text-left font-bold px-4 py-3">Statut</th>
+                {collect && <th className="px-4 py-3"><span className="sr-only">Action</span></th>}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((inv) => {
+                const balance = Math.max(0, Number(inv.total_ttc) - Number(inv.paid_amount));
+                return (
+                  <tr key={inv.id} className="border-t border-trait hover:bg-sable transition-colors">
+                    <td className="px-4 py-3">
+                      <Link href={`/admin/accounting/invoices/${inv.id}`} className="font-medium hover:underline">
+                        {inv.number}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      {inv.first_name} {inv.last_name}
+                    </td>
+                    <td className="px-4 py-3">{formatDateFR(inv.issue_date)}</td>
+                    <td className="px-4 py-3 text-right font-medium">{formatEUR(inv.total_ttc)}</td>
+                    {collect && <td className="px-4 py-3 text-right font-bold">{formatEUR(balance)}</td>}
+                    <td className="px-4 py-3">
+                      <InvoiceStatusBadge status={inv.status} />
+                    </td>
+                    {collect && (
+                      <td className="px-4 py-3 text-right">
+                        <MarkPaidButton invoiceId={inv.id} balance={balance} number={inv.number} />
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
 
   return (
     <div className="space-y-6">
@@ -67,7 +145,6 @@ export default async function AccountingPage({ searchParams }) {
         </div>
       </div>
 
-      {/* Une seule ligne de chiffres, discrète */}
       <p className="text-sm text-pierre tabular-nums flex flex-wrap gap-x-2 gap-y-1">
         <span>{formatEUR(summary.total_ttc)} facturés</span>
         <span aria-hidden="true">·</span>
@@ -75,66 +152,54 @@ export default async function AccountingPage({ searchParams }) {
         <span aria-hidden="true">·</span>
         <span>{formatEUR(summary.total_unpaid)} en attente</span>
         <span aria-hidden="true">·</span>
-        <span>
-          {unbilledRes.rows[0].count} visite{Number(unbilledRes.rows[0].count) > 1 ? "s" : ""} à facturer (
-          {formatEUR(unbilledRes.rows[0].total)})
-        </span>
+        <span>{formatEUR(unbilledTotal)} à facturer</span>
       </p>
 
-      <div className="flex gap-2 flex-wrap">
-        {filters.map((f) => (
-          <Link
-            key={f.value}
-            href={f.value ? `/admin/accounting?status=${f.value}` : "/admin/accounting"}
-            className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-colors ${
-              status === f.value ? "bg-rouille text-sur-rouille border-rouille" : "border-trait text-pierre hover:bg-sable"
-            }`}
-          >
-            {f.label}
-          </Link>
-        ))}
-      </div>
-
-      {invoicesRes.rows.length === 0 ? (
-        <div className="card p-10 text-center text-pierre">Aucune facture pour l'instant.</div>
-      ) : (
-        <div className="card overflow-hidden">
-          <div className="scroll-x">
-            <table className="w-full text-sm min-w-[560px] tabular-nums">
-              <thead className="text-pierre text-[13px] font-bold">
-                <tr>
-                  <th className="text-left font-bold px-4 py-3">Numéro</th>
-                  <th className="text-left font-bold px-4 py-3">Client</th>
-                  <th className="text-left font-bold px-4 py-3">Date</th>
-                  <th className="text-right font-bold px-4 py-3">Montant</th>
-                  <th className="text-right font-bold px-4 py-3">Payé</th>
-                  <th className="text-left font-bold px-4 py-3">Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoicesRes.rows.map((inv) => (
-                  <tr key={inv.id} className="border-t border-trait hover:bg-sable transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/accounting/invoices/${inv.id}`} className="font-medium hover:underline">
-                        {inv.number}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      {inv.first_name} {inv.last_name}
-                    </td>
-                    <td className="px-4 py-3">{formatDateFR(inv.issue_date)}</td>
-                    <td className="px-4 py-3 text-right font-medium">{formatEUR(inv.total_ttc)}</td>
-                    <td className="px-4 py-3 text-right text-pierre">{formatEUR(inv.paid_amount)}</td>
-                    <td className="px-4 py-3">
-                      <InvoiceStatusBadge status={inv.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {overdue.length > 0 && (
+        <div className="card p-4 border-brique" role="status">
+          <p className="font-bold text-brique tabular-nums">
+            {formatEUR(overdueTotal)} impayés en retard
+          </p>
+          <p className="text-sm text-pierre">
+            {overdue.length} facture{overdue.length > 1 ? "s" : ""} en retard de paiement.
+          </p>
         </div>
       )}
+
+      <nav aria-label="Sections de la comptabilité">
+        <ul className="flex gap-2 flex-wrap">
+          {TABS.map((t) => {
+            const active = tab === t.id;
+            return (
+              <li key={t.id}>
+                <Link
+                  href={`/admin/accounting?tab=${t.id}`}
+                  aria-current={active ? "page" : undefined}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-colors inline-flex items-center gap-2 ${
+                    active ? "bg-rouille text-sur-rouille border-rouille" : "border-trait text-pierre hover:bg-sable"
+                  }`}
+                >
+                  {t.label}
+                  <span className="tabular-nums font-normal">({counts[t.id]})</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {tab === "a-facturer" &&
+        (groups.length === 0 ? (
+          <div className="card p-10 text-center text-pierre">Toutes les visites terminées sont facturées.</div>
+        ) : (
+          <div className="space-y-4">
+            {groups.map((g) => (
+              <ToInvoiceGroup key={g.clientId} clientId={g.clientId} clientName={g.clientName} visits={g.visits} />
+            ))}
+          </div>
+        ))}
+      {tab === "a-encaisser" && <InvoiceTable rows={toCollect} collect />}
+      {tab === "payees" && <InvoiceTable rows={paid} />}
     </div>
   );
 }

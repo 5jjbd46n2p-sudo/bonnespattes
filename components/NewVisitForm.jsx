@@ -3,7 +3,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, X, MagnifyingGlass, MapPin, CaretRight } from "@phosphor-icons/react";
+import { ArrowLeft, X, MagnifyingGlass, MapPin, CaretRight, NavigationArrow } from "@phosphor-icons/react";
+import { basePrice, travelFee as computeTravelFee } from "@/lib/pricing";
 import {
   computeVisitHours,
   generateWeeklyRecurrenceDates,
@@ -12,6 +13,25 @@ import {
   formatDateFR,
   todayISO,
 } from "@/lib/utils";
+
+// Montant sans décimales inutiles : « 22 € », « 9,50 € ».
+function eur(n) {
+  const v = Number(n) || 0;
+  return Number.isInteger(v)
+    ? `${v} €`
+    : `${v.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+}
+
+// Durée en minutes entre deux heures "HH:MM" (null si impossible).
+function minutesBetween(start, end) {
+  if (!start || !end) return null;
+  const toMin = (t) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + (m || 0);
+  };
+  const d = toMin(end) - toMin(start);
+  return d > 0 ? d : null;
+}
 
 const DEFAULT_TASKS = ["Nourrir", "Promenade", "Eau fraîche", "Litière / propreté", "Câlins & jeu"];
 
@@ -33,7 +53,7 @@ function normalize(s) {
  *   barre d'onglets) : on demande d'abord le client, et tout le reste du
  *   formulaire reste bloqué tant qu'aucun client n'est sélectionné.
  */
-export default function NewVisitForm({ client: fixedClient = null, clients = [], pets = [], initialDate }) {
+export default function NewVisitForm({ client: fixedClient = null, clients = [], pets = [], initialDate, settings = {} }) {
   const router = useRouter();
   const pickMode = !fixedClient;
 
@@ -48,7 +68,11 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
   const [date, setDate] = useState(initialDate || todayISO());
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [manualPrice, setManualPrice] = useState(null); // null = prix calculé automatiquement
+  const [manualPrice, setManualPrice] = useState(null); // null = prestation conseillée
+  const [manualTravel, setManualTravel] = useState(null); // null = déplacement conseillé
+  const [calc, setCalc] = useState(null); // distance calculée dans cette session {clientId, km, min}
+  const [calcLoading, setCalcLoading] = useState(false);
+  const [calcError, setCalcError] = useState("");
   const [notes, setNotes] = useState("");
   const [tasks, setTasks] = useState([...DEFAULT_TASKS]);
   const [newTask, setNewTask] = useState("");
@@ -59,11 +83,39 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
   const [loading, setLoading] = useState(false);
 
   const hours = computeVisitHours(startTime, endTime);
-  const hourlyRate = Number(selectedClient?.hourly_rate) || 0;
-  // Prix calculé depuis le tarif horaire du client et la durée (1 h par défaut
-  // tant que les horaires ne sont pas saisis), sauf s'il a été modifié à la main.
-  const autoPrice = hourlyRate ? (hourlyRate * (hours || 1)).toFixed(2) : "";
-  const price = manualPrice !== null ? manualPrice : autoPrice;
+  // Tarif conseillé = prestation (selon la durée, 1 h tant que les horaires ne
+  // sont pas saisis) + déplacement (selon la distance du client).
+  const minutes = minutesBetween(startTime, endTime) || 60;
+  const dist =
+    calc && calc.clientId === selectedClient?.id
+      ? { km: calc.km, min: calc.min }
+      : { km: selectedClient?.distance_km, min: selectedClient?.travel_minutes };
+  const distanceKnown = dist.km !== null && dist.km !== undefined && dist.km !== "";
+  const suggestedBase = Number(basePrice(minutes, settings)) || 0;
+  const suggestedTravel = distanceKnown
+    ? Number(computeTravelFee({ distanceKm: Number(dist.km), travelMinutes: Number(dist.min) || 0 }, settings)) || 0
+    : 0;
+  const suggestedTotal = suggestedBase + suggestedTravel;
+  const price = manualPrice !== null ? manualPrice : suggestedBase.toFixed(2);
+  const travelFee = manualTravel !== null ? manualTravel : suggestedTravel.toFixed(2);
+  const isApplied = manualPrice === null && manualTravel === null;
+
+  async function calculateDistance() {
+    if (!selectedClient) return;
+    setCalcLoading(true);
+    setCalcError("");
+    try {
+      const res = await fetch(`/api/clients/${selectedClient.id}/travel`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Impossible de calculer la distance.");
+      setCalc({ clientId: selectedClient.id, km: data.distanceKm, min: data.travelMinutes });
+      setManualTravel(null);
+    } catch (e) {
+      setCalcError(e.message || "Impossible de calculer la distance.");
+    } finally {
+      setCalcLoading(false);
+    }
+  }
 
   const locked = !selectedClient;
 
@@ -72,6 +124,8 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
     const first = pets.find((p) => p.client_id === id);
     setPetId(first?.id || "");
     setManualPrice(null);
+    setManualTravel(null);
+    setCalcError("");
     setError("");
   }
 
@@ -130,6 +184,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
         startTime: startTime || null,
         endTime: endTime || null,
         price: price ? Number(price) : 0,
+        travelFee: travelFee ? Number(travelFee) : 0,
         notes,
         tasks,
         recurrence:
@@ -264,30 +319,77 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             </div>
           </div>
 
-          <div>
-            <label className="label block mb-1">
-              Prix prévu (€) {hours ? <span className="text-pierre font-normal">— {hours} h</span> : null}
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              className="input"
-              value={price}
-              onChange={(e) => setManualPrice(e.target.value)}
-            />
-            {hourlyRate > 0 && (
-              <p className="text-[13px] text-pierre mt-1">
-                Calculé automatiquement depuis le tarif horaire ({hourlyRate} €/h) — modifiable.
-                {manualPrice !== null && (
-                  <>
-                    {" "}
-                    <button type="button" className="underline" onClick={() => setManualPrice(null)}>
-                      Recalculer
-                    </button>
-                  </>
-                )}
+          <div className="space-y-3">
+            <div className="ios-field-group">
+              <div className="ios-field-row">
+                <span className="min-w-0">
+                  <span className="label block">Tarif conseillé</span>
+                  <span className="text-[13px] text-pierre tabular-nums block">
+                    Prestation {eur(suggestedBase)}
+                    {distanceKnown ? ` + Déplacement ${eur(suggestedTravel)}` : ""}
+                    {hours ? ` (${hours} h)` : ""}
+                  </span>
+                </span>
+                <span className="flex items-center gap-3 shrink-0">
+                  <span className="font-bold tabular-nums">{eur(suggestedTotal)}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualPrice(null);
+                      setManualTravel(null);
+                    }}
+                    disabled={isApplied}
+                    className="btn-ghost !py-1 !px-3 text-sm"
+                  >
+                    {isApplied ? "Appliqué" : "Appliquer"}
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            {!distanceKnown && selectedClient && (
+              <p className="text-[13px] text-pierre flex items-center gap-2 flex-wrap">
+                <span>Distance du client inconnue : déplacement non compté.</span>
+                <button
+                  type="button"
+                  onClick={calculateDistance}
+                  disabled={calcLoading}
+                  className="inline-flex items-center gap-1.5 font-bold text-rouille hover:text-rouille-fonce underline underline-offset-4"
+                >
+                  <NavigationArrow size={20} aria-hidden="true" />
+                  {calcLoading ? "Calcul…" : "Calculer la distance"}
+                </button>
               </p>
             )}
+            {distanceKnown && (
+              <p className="text-[13px] text-pierre tabular-nums">
+                Trajet : {Number(dist.km)} km{dist.min ? `, ${dist.min} min` : ""} (aller simple).
+              </p>
+            )}
+            {calcError && <p className="text-sm text-brique">{calcError}</p>}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="label block mb-1">Prestation (€)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="input"
+                  value={price}
+                  onChange={(e) => setManualPrice(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label block mb-1">Déplacement (€)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="input"
+                  value={travelFee}
+                  onChange={(e) => setManualTravel(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="border-t border-trait pt-4">

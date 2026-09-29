@@ -90,7 +90,10 @@ export default async function PortalPage() {
                       </p>
                     )}
                   </div>
-                  <VisitStatusBadge status={v.status} />
+                  <div className="flex items-center gap-3">
+                    {v.is_free && <span className="text-mousse font-bold text-sm">Offerte</span>}
+                    <VisitStatusBadge status={v.status} />
+                  </div>
                 </div>
 
                 {tasks.length > 0 && (

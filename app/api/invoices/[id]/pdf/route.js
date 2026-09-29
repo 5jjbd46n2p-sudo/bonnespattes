@@ -99,10 +99,13 @@ export async function GET(req, { params }) {
   y -= 16;
 
   for (const it of itemsRes.rows) {
-    drawText(it.description, left, y, { size: 10 });
+    // Ligne offerte : 0,00 € et mention « offerte » (une ligne « Déplacement » s'affiche telle quelle)
+    const isFree = Number(it.total) === 0;
+    const desc = isFree && !/offerte/i.test(it.description || "") ? `${it.description} — offerte` : it.description;
+    drawText(desc, left, y, { size: 10, color: isFree ? muted : ink });
     drawText(String(it.quantity), 360, y, { size: 10 });
-    drawText(formatEUR(it.unit_price), 410, y, { size: 10 });
-    drawText(formatEUR(it.total), 490, y, { size: 10 });
+    drawText(formatEUR(isFree ? 0 : it.unit_price), 410, y, { size: 10 });
+    drawText(formatEUR(isFree ? 0 : it.total), 490, y, { size: 10 });
     y -= 18;
     if (y < 150) {
       y = 800;

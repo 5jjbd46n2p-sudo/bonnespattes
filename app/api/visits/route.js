@@ -61,7 +61,11 @@ export async function POST(req) {
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
 
   const body = await req.json();
-  const { petId, clientId, date, startTime, endTime, notes, price, tasks = [], recurrence } = body;
+  const { petId, clientId, date, startTime, endTime, notes, price, tasks = [], recurrence, travelFee } = body;
+  const fee = travelFee === undefined || travelFee === null || travelFee === "" ? 0 : Number(travelFee);
+  if (!Number.isFinite(fee) || fee < 0) {
+    return NextResponse.json({ error: "Frais de déplacement invalides." }, { status: 400 });
+  }
   if (!petId || !clientId || !date) {
     return NextResponse.json({ error: "Animal, client et date requis." }, { status: 400 });
   }
@@ -89,9 +93,9 @@ export async function POST(req) {
     const created = [];
     for (const visitDate of visitDates) {
       const visitRes = await client.query(
-        `INSERT INTO visits (pet_id, client_id, date, start_time, end_time, notes, price, recurrence_id)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-        [petId, clientId, visitDate, startTime || null, endTime || null, notes || "", price || 0, recurrenceId]
+        `INSERT INTO visits (pet_id, client_id, date, start_time, end_time, notes, price, recurrence_id, travel_fee)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [petId, clientId, visitDate, startTime || null, endTime || null, notes || "", price || 0, recurrenceId, fee]
       );
       const visit = visitRes.rows[0];
       let position = 0;

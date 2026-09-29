@@ -78,19 +78,13 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
 
   const visitItems = unbilledVisits
     .filter((v) => selectedVisitIds.has(v.id))
-    .map((v) => {
-      // Si la visite a une heure de début/fin, on reporte automatiquement la
-      // quantité en heures et le prix unitaire (= tarif horaire effectif) sur
-      // la ligne de facturation, plutôt qu'une ligne forfaitaire "x1".
-      const total = Number(v.price) || 0;
+    .flatMap((v) => {
       const hours = computeVisitHours(v.start_time, v.end_time);
-      const quantity = hours && total ? hours : 1;
-      const unitPrice = hours && total ? total / hours : total;
-      return {
-        description: `Visite du ${formatDateFR(v.date)} — ${v.pet_name}${hours ? ` (${hours} h)` : ""}`,
-        quantity,
-        unitPrice,
-      };
+      const label = `Visite du ${formatDateFR(v.date)} — ${v.pet_name}${hours ? ` (${hours} h)` : ""}`;
+      if (v.is_free) return [{ description: `${label} — offerte`, quantity: 1, unitPrice: 0 }];
+      const rows = [{ description: label, quantity: 1, unitPrice: Number(v.price) || 0 }];
+      if (Number(v.travel_fee) > 0) rows.push({ description: "Déplacement", quantity: 1, unitPrice: Number(v.travel_fee) });
+      return rows;
     });
 
   const allItems = [...visitItems, ...manualItems.filter((it) => it.description.trim())];
@@ -162,7 +156,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
 
           {unbilledVisits.length > 0 && (
             <div>
-              <label className="label block mb-2">Visites non facturées à inclure</label>
+              <label className="label block mb-2">Visites à facturer (décoche celles à laisser de côté)</label>
               <div className="list-group">
                 {unbilledVisits.map((v) => (
                   <label key={v.id} className="list-row text-sm cursor-pointer">
@@ -177,7 +171,13 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
                         <span className="text-pierre"> ({computeVisitHours(v.start_time, v.end_time)} h)</span>
                       )}
                     </span>
-                    <span className="font-bold tabular-nums">{Number(v.price).toFixed(2)} €</span>
+                    {v.is_free ? (
+                      <span className="font-bold text-mousse">offerte</span>
+                    ) : (
+                      <span className="font-bold tabular-nums">
+                        {(Number(v.price) + (Number(v.travel_fee) || 0)).toFixed(2)} €
+                      </span>
+                    )}
                   </label>
                 ))}
               </div>
@@ -205,6 +205,11 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
             </div>
           )}
 
+          <details className="border-t border-trait pt-3" open={manualItems.length > 0}>
+            <summary className="cursor-pointer text-sm font-bold text-rouille">
+              Ajouter une ligne, changer la TVA ou l'échéance
+            </summary>
+            <div className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
             <label className="label">Lignes manuelles</label>
             <button type="button" onClick={addManualItem} className="btn-ghost text-sm !py-1 !px-3">
@@ -268,6 +273,8 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
             <label className="label block mb-1">Notes (visibles sur la facture)</label>
             <textarea className="input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
+            </div>
+          </details>
         </div>
 
         <div className="card p-5 space-y-1 tabular-nums">
