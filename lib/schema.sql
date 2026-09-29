@@ -269,3 +269,10 @@ CREATE TABLE IF NOT EXISTS site_photos (
 -- Factures de test (numéro FT, hors comptabilité) :
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS next_test_invoice_seq INTEGER NOT NULL DEFAULT 1;
+
+-- Fiche animal : stérilisé, identifié, âge, alimentation, pathologies :
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS sterilized BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS identified BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS age_info TEXT NOT NULL DEFAULT '';
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS diet TEXT NOT NULL DEFAULT '';
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS health_conditions TEXT NOT NULL DEFAULT '';

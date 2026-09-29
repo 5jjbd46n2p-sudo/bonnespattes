@@ -8,8 +8,8 @@ export async function PATCH(req, { params }) {
   const { id } = await params;
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
-  const { name, species, breed, notes } = body;
-  for (const v of [name, species, breed, notes]) {
+  const { name, species, breed, notes, sterilized, identified, ageInfo, diet, healthConditions } = body;
+  for (const v of [name, species, breed, notes, ageInfo, diet, healthConditions]) {
     if (v !== undefined && v !== null && typeof v !== "string") {
       return NextResponse.json({ error: "Valeur invalide." }, { status: 400 });
     }
@@ -17,10 +17,18 @@ export async function PATCH(req, { params }) {
   if (name !== undefined && name !== null && !name.trim()) {
     return NextResponse.json({ error: "Le nom de l'animal est requis." }, { status: 400 });
   }
+  for (const v of [sterilized, identified]) {
+    if (v !== undefined && v !== null && typeof v !== "boolean") {
+      return NextResponse.json({ error: "Valeur invalide." }, { status: 400 });
+    }
+  }
   const { rows } = await query(
     `UPDATE pets SET name = COALESCE($1,name), species = COALESCE($2,species),
-     breed = COALESCE($3,breed), notes = COALESCE($4,notes) WHERE id = $5 RETURNING *`,
-    [name?.trim(), species?.trim(), breed?.trim(), notes, id]
+     breed = COALESCE($3,breed), notes = COALESCE($4,notes),
+     sterilized = COALESCE($5,sterilized), identified = COALESCE($6,identified),
+     age_info = COALESCE($7,age_info), diet = COALESCE($8,diet), health_conditions = COALESCE($9,health_conditions)
+     WHERE id = $10 RETURNING *`,
+    [name?.trim(), species?.trim(), breed?.trim(), notes, sterilized, identified, ageInfo, diet, healthConditions, id]
   );
   if (!rows[0]) return NextResponse.json({ error: "Animal introuvable." }, { status: 404 });
   return NextResponse.json({ pet: rows[0] });

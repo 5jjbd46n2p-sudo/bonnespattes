@@ -4,36 +4,120 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "@phosphor-icons/react";
 
+const EMPTY = {
+  name: "",
+  species: "",
+  breed: "",
+  ageInfo: "",
+  sterilized: false,
+  identified: false,
+  diet: "",
+  healthConditions: "",
+  notes: "",
+};
+
+const fromPet = (p) => ({
+  name: p.name || "",
+  species: p.species || "",
+  breed: p.breed || "",
+  ageInfo: p.age_info || "",
+  sterilized: !!p.sterilized,
+  identified: !!p.identified,
+  diet: p.diet || "",
+  healthConditions: p.health_conditions || "",
+  notes: p.notes || "",
+});
+
+function PetFields({ value, onChange }) {
+  const set = (k) => (e) => onChange({ ...value, [k]: e.target.value });
+  const check = (k) => (e) => onChange({ ...value, [k]: e.target.checked });
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <input className="input" aria-label="Nom" placeholder="Nom *" value={value.name} onChange={set("name")} />
+        <input className="input" aria-label="Espèce" placeholder="Espèce (chien, chat…)" value={value.species} onChange={set("species")} />
+        <input className="input" aria-label="Race" placeholder="Race" value={value.breed} onChange={set("breed")} />
+      </div>
+      <label className="block">
+        <span className="label block mb-1">Âge / date de naissance</span>
+        <input className="input" value={value.ageInfo} onChange={set("ageInfo")} placeholder="Ex. 6 ans, ou née le 12/03/2019" />
+      </label>
+      <div className="flex flex-wrap gap-x-6 gap-y-1">
+        <label className="flex items-center gap-2 min-h-[44px]">
+          <input type="checkbox" className="w-5 h-5" checked={value.sterilized} onChange={check("sterilized")} />
+          Stérilisé(e)
+        </label>
+        <label className="flex items-center gap-2 min-h-[44px]">
+          <input type="checkbox" className="w-5 h-5" checked={value.identified} onChange={check("identified")} />
+          Identifié(e) (puce ou tatouage)
+        </label>
+      </div>
+      <label className="block">
+        <span className="label block mb-1">Régime, rythme et quantité alimentaire</span>
+        <textarea className="input" rows={2} value={value.diet} onChange={set("diet")} placeholder="Ex. croquettes, 2 repas par jour, 80 g le matin et le soir" />
+      </label>
+      <label className="block">
+        <span className="label block mb-1">Pathologie / maladie</span>
+        <textarea className="input" rows={2} value={value.healthConditions} onChange={set("healthConditions")} placeholder="Ex. diabète, traitement le matin ; allergies…" />
+      </label>
+      <label className="block">
+        <span className="label block mb-1">Autres notes</span>
+        <textarea className="input" rows={2} value={value.notes} onChange={set("notes")} placeholder="Habitudes, caractère…" />
+      </label>
+    </div>
+  );
+}
+
+function Detail({ label, children }) {
+  if (!children) return null;
+  return (
+    <p className="text-sm text-pierre mt-0.5 whitespace-pre-line">
+      <span className="font-bold">{label} : </span>
+      {children}
+    </p>
+  );
+}
+
 export default function PetManager({ clientId, pets }) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ name: "", species: "", breed: "", notes: "" });
+  const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  const [editId, setEditId] = useState(null);
+  const [edit, setEdit] = useState(EMPTY);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
 
   async function addPet(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) {
+      setAddError("Le nom est requis.");
+      return;
+    }
     setLoading(true);
-    await fetch(`/api/clients/${clientId}/pets`, {
+    setAddError("");
+    const res = await fetch(`/api/clients/${clientId}/pets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
     setLoading(false);
-    setForm({ name: "", species: "", breed: "", notes: "" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setAddError(data.error || "Ajout impossible.");
+      return;
+    }
+    setForm(EMPTY);
     setAdding(false);
     router.refresh();
   }
 
-  const [editId, setEditId] = useState(null);
-  const [edit, setEdit] = useState({ name: "", species: "", breed: "", notes: "" });
-  const [saving, setSaving] = useState(false);
-  const [editError, setEditError] = useState("");
-
   function startEdit(p) {
     setEditId(p.id);
     setEditError("");
-    setEdit({ name: p.name || "", species: p.species || "", breed: p.breed || "", notes: p.notes || "" });
+    setEdit(fromPet(p));
   }
 
   async function saveEdit(e) {
@@ -77,33 +161,8 @@ export default function PetManager({ clientId, pets }) {
 
       {adding && (
         <form onSubmit={addPet} className="border border-trait rounded-lg p-4 space-y-3 mb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input
-              className="input"
-              placeholder="Nom *"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-            <input
-              className="input"
-              placeholder="Espèce (chien, chat…)"
-              value={form.species}
-              onChange={(e) => setForm({ ...form, species: e.target.value })}
-            />
-            <input
-              className="input"
-              placeholder="Race"
-              value={form.breed}
-              onChange={(e) => setForm({ ...form, breed: e.target.value })}
-            />
-          </div>
-          <textarea
-            className="input"
-            placeholder="Notes (santé, habitudes, allergies…)"
-            rows={2}
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
+          <PetFields value={form} onChange={setForm} />
+          {addError && <p role="alert" className="text-sm font-bold text-brique">{addError}</p>}
           <button disabled={loading} className="btn-primary text-sm">
             {loading ? "Ajout..." : "Ajouter l'animal"}
           </button>
@@ -117,12 +176,7 @@ export default function PetManager({ clientId, pets }) {
           {pets.map((p) =>
             editId === p.id ? (
               <form key={p.id} onSubmit={saveEdit} className="p-4 space-y-3 bg-sable rounded-lg my-2">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input className="input" aria-label="Nom" placeholder="Nom *" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
-                  <input className="input" aria-label="Espèce" placeholder="Espèce (chien, chat…)" value={edit.species} onChange={(e) => setEdit({ ...edit, species: e.target.value })} />
-                  <input className="input" aria-label="Race" placeholder="Race" value={edit.breed} onChange={(e) => setEdit({ ...edit, breed: e.target.value })} />
-                </div>
-                <textarea className="input" aria-label="Notes" placeholder="Notes (santé, habitudes, allergies…)" rows={3} value={edit.notes} onChange={(e) => setEdit({ ...edit, notes: e.target.value })} />
+                <PetFields value={edit} onChange={setEdit} />
                 {editError && <p role="alert" className="text-sm font-bold text-brique">{editError}</p>}
                 <div className="flex gap-2">
                   <button disabled={saving} className="btn-primary text-sm">{saving ? "Enregistrement..." : "Enregistrer"}</button>
@@ -138,7 +192,15 @@ export default function PetManager({ clientId, pets }) {
                       {[p.species, p.breed].filter(Boolean).join(" · ")}
                     </span>
                   </p>
-                  {p.notes && <p className="text-sm text-pierre mt-0.5 whitespace-pre-line">{p.notes}</p>}
+                  {(p.sterilized || p.identified) && (
+                    <p className="text-sm text-pierre mt-0.5">
+                      {[p.sterilized && "Stérilisé(e)", p.identified && "Identifié(e)"].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  <Detail label="Âge / naissance">{p.age_info}</Detail>
+                  <Detail label="Alimentation">{p.diet}</Detail>
+                  <Detail label="Pathologie">{p.health_conditions}</Detail>
+                  <Detail label="Notes">{p.notes}</Detail>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 ml-3">
                   <button onClick={() => startEdit(p)} className="text-[13px] font-bold text-rouille hover:underline min-h-[44px]">
