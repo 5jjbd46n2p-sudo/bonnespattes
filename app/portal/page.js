@@ -4,7 +4,7 @@ import CopyLink from "@/components/landing/CopyLink";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
-import { CheckSquare, DownloadSimple, Gift, Square } from "@phosphor-icons/react/ssr";
+import { CheckSquare, DownloadSimple, FileText, Gift, Square } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +68,17 @@ export default async function PortalPage() {
     const host = h.get("x-forwarded-host") || h.get("host");
     const base = (process.env.NEXT_PUBLIC_APP_URL || (host ? `https://${host}` : "")).replace(/\/$/, "");
     referralLink = `${base}/?parrain=${referralCode}`;
+  }
+
+  let signedContract = null;
+  try {
+    const cRes = await query(
+      "SELECT id, version, signed_at FROM contract_signatures WHERE client_id = $1 AND status = 'SIGNE' ORDER BY signed_at DESC LIMIT 1",
+      [clientId]
+    );
+    signedContract = cRes.rows[0] || null;
+  } catch {
+    signedContract = null;
   }
 
   const petNames = petsRes.rows.map((p) => p.name);
@@ -174,6 +185,21 @@ export default async function PortalPage() {
             Crédit disponible : <span className="font-bold">{formatEUR(balance)}</span>
           </p>
         </section>
+)}
+
+      {signedContract && (
+        <div className="card p-5 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="font-display text-xl font-semibold">Votre contrat</h2>
+            <p className="text-sm text-pierre tabular-nums">
+              Signé le {formatDateFR(signedContract.signed_at)} (version {signedContract.version})
+            </p>
+          </div>
+          <a href={`/api/contracts/${signedContract.id}/pdf`} className="btn-ghost text-sm gap-2 !py-1.5 !px-3">
+            <FileText size={20} aria-hidden="true" />
+            Télécharger le PDF
+          </a>
+        </div>
       )}
 
       {invoicesRes.rows.length > 0 && (
