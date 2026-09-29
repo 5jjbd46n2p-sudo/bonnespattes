@@ -5,6 +5,7 @@ import { formatDateFR, formatEUR } from "@/lib/utils";
 import { InvoiceStatusBadge } from "@/components/StatusBadge";
 import InvoiceStatusControl from "@/components/InvoiceStatusControl";
 import PaymentRecorder from "@/components/PaymentRecorder";
+import DeleteInvoiceButton from "@/components/DeleteInvoiceButton";
 import { ArrowLeft, DownloadSimple } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
@@ -100,6 +101,8 @@ export default async function InvoiceDetailPage({ params }) {
       </div>
 
       <PaymentRecorder invoiceId={id} payments={payments} balance={balance} />
+
+      <DeleteInvoiceButton invoiceId={id} number={invoice.number} status={invoice.status} />
     </div>
   );
 }
