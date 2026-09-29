@@ -11,20 +11,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // 2e étape (double authentification) : code de l'application d'authentification
+  const [mfaStep, setMfaStep] = useState(false);
+  const [code, setCode] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(mfaStep ? "/api/auth/mfa" : "/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(mfaStep ? { code } : { email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Une erreur est survenue.");
+        setLoading(false);
+        if (res.status === 401 && mfaStep) {
+          setMfaStep(false);
+          setCode("");
+        }
+        return;
+      }
+      if (data.mfaRequired) {
+        setPassword("");
+        setMfaStep(true);
         setLoading(false);
         return;
       }
@@ -47,6 +60,30 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+          {mfaStep ? (
+            <div>
+              <label htmlFor="login-code" className="text-[13px] font-bold text-pierre block mb-1">
+                Code de vérification
+              </label>
+              <input
+                id="login-code"
+                inputMode="numeric"
+                pattern="[0-9 ]{6,7}"
+                maxLength={7}
+                required
+                autoFocus
+                autoComplete="one-time-code"
+                className="input tracking-[0.3em] text-center"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="000000"
+              />
+              <p className="text-[13px] text-pierre mt-1.5">
+                Saisis le code à 6 chiffres affiché dans ton application d&apos;authentification.
+              </p>
+            </div>
+          ) : (
+          <>
           <div>
             <label htmlFor="login-email" className="text-[13px] font-bold text-pierre block mb-1">
               Email
@@ -77,13 +114,15 @@ export default function LoginPage() {
               placeholder="••••••••"
             />
           </div>
+          </>
+          )}
           {error && (
             <p className="text-sm text-brique border border-brique rounded-lg px-3 py-2" role="alert">
               {error}
             </p>
           )}
           <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? "Connexion…" : "Se connecter"}
+            {loading ? "Connexion…" : mfaStep ? "Valider" : "Se connecter"}
           </button>
         </form>
         <p className="text-center text-sm text-pierre mt-6">

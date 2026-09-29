@@ -16,7 +16,7 @@ async function main() {
   const sql = readFileSync(join(__dirname, "..", "lib", "schema.sql"), "utf-8");
   const pool = new Pool({
     connectionString,
-    ssl: connectionString.includes("sslmode=") ? undefined : { rejectUnauthorized: false },
+    ssl: connectionString.includes("sslmode=") ? undefined : { rejectUnauthorized: true },
   });
   const client = await pool.connect();
   try {

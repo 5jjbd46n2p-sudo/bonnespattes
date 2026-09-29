@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin, hashPassword } from "@/lib/auth";
+import { passwordProblem } from "@/lib/security";
 import { sendClientCredentialsEmail } from "@/lib/email";
 
 // Crée ou remplace l'identifiant/mot de passe d'un client
@@ -8,22 +9,31 @@ export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  const { email, password, sendEmail } = await req.json();
-  if (!email || !password) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  const { email, password, sendEmail } = (await req.json().catch(() => ({}))) || {};
+  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
     return NextResponse.json({ error: "Email et mot de passe requis." }, { status: 400 });
   }
+  const problem = passwordProblem(password, { email });
+  if (problem) return NextResponse.json({ error: problem }, { status: 400 });
   try {
     const hash = await hashPassword(password);
     const existing = await query("SELECT id FROM users WHERE client_id = $1", [id]);
     if (existing.rows[0]) {
-      await query("UPDATE users SET email = $1, password_hash = $2 WHERE client_id = $3", [
-        email.trim().toLowerCase(),
-        hash,
-        id,
-      ]);
+      // Réinitialisation : mot de passe provisoire à changer, anciennes sessions révoquées.
+      await query(
+        `UPDATE users SET email = $1, password_hash = $2, must_change_password = true,
+                session_version = session_version + 1, failed_login_attempts = 0, locked_until = NULL
+          WHERE client_id = $3`,
+        [
+          email.trim().toLowerCase(),
+          hash,
+          id,
+        ]
+      );
     } else {
       await query(
-        "INSERT INTO users (email, password_hash, role, client_id) VALUES ($1,$2,'CLIENT',$3)",
+        "INSERT INTO users (email, password_hash, role, client_id, must_change_password) VALUES ($1,$2,'CLIENT',$3,true)",
         [email.trim().toLowerCase(), hash, id]
       );
     }
@@ -41,7 +51,7 @@ export async function POST(req, { params }) {
         });
       } catch (emailErr) {
         console.error(emailErr);
-        emailWarning = emailErr.message;
+        emailWarning = "l'email n'a pas pu être envoyé";
       }
     }
 

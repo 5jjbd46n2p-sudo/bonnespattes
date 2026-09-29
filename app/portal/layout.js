@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { requireClient } from "@/lib/auth";
+import { clientPageGuard } from "@/lib/auth";
 import { query } from "@/lib/db";
 import PortalNav from "@/components/PortalNav";
 
 export default async function PortalLayout({ children }) {
-  const user = await requireClient();
-  if (!user) redirect("/login");
+  const user = await clientPageGuard();
   const { rows } = await query("SELECT * FROM clients WHERE id = $1", [user.client_id]);
   const client = rows[0];
 
@@ -21,6 +19,10 @@ export default async function PortalLayout({ children }) {
         {" · "}
         <Link href="/confidentialite" className="underline hover:text-ink">
           Confidentialité
+        </Link>
+        {" · "}
+        <Link href="/compte/mot-de-passe" className="underline hover:text-ink">
+          Changer mon mot de passe
         </Link>
       </footer>
     </div>

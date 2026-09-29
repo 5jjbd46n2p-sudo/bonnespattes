@@ -1,11 +1,9 @@
-import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { adminPageGuard } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
 import MobileNav from "@/components/MobileNav";
 
 export default async function AdminLayout({ children }) {
-  const admin = await requireAdmin();
-  if (!admin) redirect("/login");
+  const admin = await adminPageGuard();
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">

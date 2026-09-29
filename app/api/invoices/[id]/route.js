@@ -3,6 +3,11 @@ import { query, tx } from "@/lib/db";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { allocateInvoiceNumber, resyncInvoiceSequences } from "@/lib/invoiceNumber";
 
+// Code de commerce / CGI : une facture émise se conserve 10 ans et la
+// numérotation doit rester continue. On corrige par un avoir, jamais en supprimant.
+const ISSUED_ERROR =
+  "Cette facture a été émise : elle ne peut être ni supprimée ni retirée de la comptabilité (obligation légale). Pour l'annuler, établis un avoir.";
+
 export async function GET(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
@@ -38,9 +43,11 @@ export async function PATCH(req, { params }) {
   if (body.isTest === true) {
     try {
       const inv = await tx(async (client) => {
-        const cur = await client.query("SELECT id, is_test FROM invoices WHERE id = $1 FOR UPDATE", [id]);
+        const cur = await client.query("SELECT id, is_test, status FROM invoices WHERE id = $1 FOR UPDATE", [id]);
         if (!cur.rows[0]) return null;
         if (cur.rows[0].is_test) return cur.rows[0];
+        // Une facture émise ne peut pas sortir de la comptabilité (obligation légale).
+        if (cur.rows[0].status !== "BROUILLON") return { issued: true };
         const settings = (await client.query("SELECT * FROM settings LIMIT 1 FOR UPDATE")).rows[0];
         const number = await allocateInvoiceNumber(client, settings, true);
         const r = await client.query("UPDATE invoices SET number = $1, is_test = true WHERE id = $2 RETURNING *", [number, id]);
@@ -48,10 +55,23 @@ export async function PATCH(req, { params }) {
         return r.rows[0];
       });
       if (!inv) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
+      if (inv.issued) return NextResponse.json({ error: ISSUED_ERROR }, { status: 409 });
       return NextResponse.json({ invoice: inv });
     } catch (e) {
       console.error(e);
       return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
+    }
+  }
+
+  if (body.status !== undefined) {
+    if (!["BROUILLON", "ENVOYEE", "PAYEE", "EN_RETARD"].includes(body.status)) {
+      return NextResponse.json({ error: "Statut invalide." }, { status: 400 });
+    }
+    if (body.status === "BROUILLON") {
+      const cur = await query("SELECT status, is_test FROM invoices WHERE id = $1", [id]);
+      if (cur.rows[0] && cur.rows[0].status !== "BROUILLON" && !cur.rows[0].is_test) {
+        return NextResponse.json({ error: "Une facture émise ne peut pas redevenir un brouillon. Pour l'annuler, établis un avoir." }, { status: 409 });
+      }
     }
   }
 
@@ -81,8 +101,9 @@ export async function DELETE(req, { params }) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
   try {
     const result = await tx(async (client) => {
-      const inv = await client.query("SELECT id, number FROM invoices WHERE id = $1 FOR UPDATE", [id]);
+      const inv = await client.query("SELECT id, number, status, is_test FROM invoices WHERE id = $1 FOR UPDATE", [id]);
       if (!inv.rows[0]) return null;
+      if (inv.rows[0].status !== "BROUILLON" && !inv.rows[0].is_test) return { issued: true };
       await client.query("UPDATE client_credits SET used_at = NULL, used_invoice_id = NULL WHERE used_invoice_id = $1", [id]);
       await client.query("DELETE FROM invoices WHERE id = $1", [id]);
       const before = await client.query("SELECT next_invoice_seq + next_test_invoice_seq AS n FROM settings LIMIT 1");
@@ -92,6 +113,7 @@ export async function DELETE(req, { params }) {
       return { number: inv.rows[0].number, renumbered };
     });
     if (!result) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
+    if (result.issued) return NextResponse.json({ error: ISSUED_ERROR }, { status: 409 });
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     console.error(e);

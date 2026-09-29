@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { query } from "@/lib/db";
 import { formatDateLongFR, formatEUR, todayISO, toCardVisit } from "@/lib/utils";
@@ -42,6 +43,7 @@ async function getDashboardData() {
 }
 
 export default async function AdminDashboard() {
+  await adminPageGuard();
   const { today, visits, unbilled, unpaidTotal } = await getDashboardData();
 
   // Résumé de la journée (hors visites annulées)

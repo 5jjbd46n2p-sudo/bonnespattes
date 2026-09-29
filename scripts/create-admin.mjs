@@ -17,14 +17,18 @@ async function main() {
 
   const pool = new Pool({
     connectionString,
-    ssl: connectionString.includes("sslmode=") ? undefined : { rejectUnauthorized: false },
+    ssl: connectionString.includes("sslmode=") ? undefined : { rejectUnauthorized: true },
   });
   const client = await pool.connect();
   try {
-    const hash = await bcrypt.hash(password, 10);
+    if (password.length < 12) {
+      console.error("❌ Mot de passe trop court : 12 caractères minimum.");
+      process.exit(1);
+    }
+    const hash = await bcrypt.hash(password, 12);
     const existing = await client.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
     if (existing.rows[0]) {
-      await client.query("UPDATE users SET password_hash = $1, role = 'ADMIN' WHERE email = $2", [
+      await client.query("UPDATE users SET password_hash = $1, role = 'ADMIN', session_version = session_version + 1, failed_login_attempts = 0, locked_until = NULL WHERE email = $2", [
         hash,
         email.toLowerCase(),
       ]);

@@ -104,6 +104,8 @@ export default async function ContratPage({ params }) {
     );
   }
 
+  // Composant serveur rendu une fois par requête : lire l'heure est voulu ici.
+  // eslint-disable-next-line react-hooks/purity
   if (new Date(sig.expires_at).getTime() < Date.now()) {
     return (
       <Shell>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin, hashPassword } from "@/lib/auth";
+import { passwordProblem } from "@/lib/security";
 import { sendClientCredentialsEmail } from "@/lib/email";
 import { ensureReferralCode } from "@/lib/referral";
 
@@ -13,6 +14,7 @@ export async function GET() {
       (SELECT COUNT(*) FROM pets p WHERE p.client_id = c.id) AS pet_count,
       (SELECT u.email FROM users u WHERE u.client_id = c.id LIMIT 1) AS login_email
     FROM clients c
+    WHERE c.anonymized_at IS NULL
     ORDER BY c.last_name, c.first_name
   `);
   return NextResponse.json({ clients: rows });
@@ -47,6 +49,10 @@ export async function POST(req) {
       { status: 400 }
     );
   }
+  if (createLogin) {
+    const problem = passwordProblem(loginPassword, { email: loginEmail });
+    if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+  }
 
   try {
     const result = await tx(async (client) => {
@@ -69,7 +75,8 @@ export async function POST(req) {
       if (createLogin) {
         const hash = await hashPassword(loginPassword);
         await client.query(
-          `INSERT INTO users (email, password_hash, role, client_id) VALUES ($1,$2,'CLIENT',$3)`,
+          // Mot de passe provisoire : le client devra le remplacer à sa première connexion.
+          `INSERT INTO users (email, password_hash, role, client_id, must_change_password) VALUES ($1,$2,'CLIENT',$3,true)`,
           [loginEmail.trim().toLowerCase(), hash, newClient.id]
         );
       }
@@ -90,7 +97,7 @@ export async function POST(req) {
         });
       } catch (emailErr) {
         console.error(emailErr);
-        emailWarning = emailErr.message;
+        emailWarning = "l'email n'a pas pu être envoyé";
       }
     }
 

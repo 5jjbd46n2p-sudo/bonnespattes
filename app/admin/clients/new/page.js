@@ -26,9 +26,9 @@ export default function NewClientPage() {
 
   function generatePassword() {
     const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-    let pw = "";
-    for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)];
-    return pw;
+    // Générateur aléatoire cryptographique (Math.random est prévisible)
+    const bytes = crypto.getRandomValues(new Uint32Array(14));
+    return Array.from(bytes, (n) => chars[n % chars.length]).join("");
   }
 
   function updatePet(i, field, value) {

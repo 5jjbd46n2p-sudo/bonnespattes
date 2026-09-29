@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { del } from "@vercel/blob";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { eraseClient } from "@/lib/privacy";
 
 export async function GET(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
 
   const clientRes = await query("SELECT * FROM clients WHERE id = $1", [id]);
   if (!clientRes.rows[0]) {
@@ -92,22 +93,16 @@ export async function DELETE(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
 
-  // Droit à l'effacement (RGPD) : on supprime aussi les photos stockées chez
-  // le fournisseur de stockage (Vercel Blob), qui ne sont pas nettoyées par
-  // la suppression en cascade en base — celle-ci ne supprime que les lignes SQL.
-  const photosRes = await query(
-    `SELECT ph.url FROM photos ph JOIN visits v ON v.id = ph.visit_id WHERE v.client_id = $1`,
-    [id]
-  );
-  for (const photo of photosRes.rows) {
-    try {
-      await del(photo.url);
-    } catch (e) {
-      console.warn("Suppression blob échouée (ignorée) :", e.message);
-    }
+  // Droit à l'effacement (RGPD) : suppression complète, ou anonymisation si des
+  // factures existent (elles doivent légalement être conservées 10 ans).
+  try {
+    const mode = await eraseClient(id);
+    if (!mode) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+    return NextResponse.json({ ok: true, mode });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Suppression impossible, réessaie dans un instant." }, { status: 500 });
   }
-
-  await query("DELETE FROM clients WHERE id = $1", [id]);
-  return NextResponse.json({ ok: true });
 }

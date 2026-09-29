@@ -1,13 +1,15 @@
+import { adminPageGuard } from "@/lib/auth";
 import { query } from "@/lib/db";
 import NewInvoiceForm from "@/components/NewInvoiceForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewInvoicePage({ searchParams }) {
+  await adminPageGuard();
   const sp = await searchParams;
   const preselectedClientId = sp.clientId || "";
 
-  const clientsRes = await query("SELECT id, first_name, last_name FROM clients ORDER BY last_name");
+  const clientsRes = await query("SELECT id, first_name, last_name FROM clients WHERE anonymized_at IS NULL ORDER BY last_name");
   const settingsRes = await query("SELECT * FROM settings LIMIT 1");
 
   let unbilledVisits = [];

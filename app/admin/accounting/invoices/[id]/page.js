@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
@@ -23,12 +24,16 @@ async function getInvoice(id) {
 }
 
 export default async function InvoiceDetailPage({ params }) {
+  await adminPageGuard();
   const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const data = await getInvoice(id);
   if (!data) notFound();
   const { invoice, items, payments } = data;
   const paidAmount = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const balance = Number(invoice.total_ttc) - paidAmount;
+  const cn = await query("SELECT number FROM invoices WHERE credit_note_of = $1", [id]);
+  const creditNoteNumber = cn.rows[0]?.number || null;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -102,7 +107,14 @@ export default async function InvoiceDetailPage({ params }) {
 
       <PaymentRecorder invoiceId={id} payments={payments} balance={balance} />
 
-      <DeleteInvoiceButton invoiceId={id} number={invoice.number} status={invoice.status} isTest={invoice.is_test} />
+      <DeleteInvoiceButton
+        invoiceId={id}
+        number={invoice.number}
+        status={invoice.status}
+        isTest={invoice.is_test}
+        isCreditNote={Boolean(invoice.credit_note_of)}
+        creditNoteNumber={creditNoteNumber}
+      />
     </div>
   );
 }

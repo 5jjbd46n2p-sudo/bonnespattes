@@ -42,7 +42,7 @@ export async function POST(req, { params }) {
     });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: e.message || "Envoi impossible." }, { status: 502 });
+    return NextResponse.json({ error: "Envoi impossible, réessaie plus tard." }, { status: 502 });
   }
   return NextResponse.json({ ok: true, sentTo: client.email });
 }

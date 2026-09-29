@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { query } from "@/lib/db";
 import LeadActions from "./LeadActions";
@@ -15,6 +16,7 @@ const TABS = [
 const SERVICES = { VISITE: "Visites à domicile", PROMENADE: "Promenades", LES_DEUX: "Visites et promenades" };
 
 export default async function LeadsPage({ searchParams }) {
+  await adminPageGuard();
   const sp = await searchParams;
   const raw = Array.isArray(sp?.status) ? sp.status[0] : sp?.status;
   const status = TABS.some((t) => t.key === raw) ? raw : "NOUVEAU";

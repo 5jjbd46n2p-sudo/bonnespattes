@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
@@ -26,6 +27,7 @@ async function getVisit(id) {
 }
 
 export default async function VisitDetailPage({ params }) {
+  await adminPageGuard();
   const { id } = await params;
   const data = await getVisit(id);
   if (!data) notFound();

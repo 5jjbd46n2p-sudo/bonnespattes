@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/ssr";
 import { loadSitePhotos, SITE_PHOTO_SLOTS } from "@/lib/sitePhotos";
@@ -6,6 +7,7 @@ import SitePhotosManager from "./SitePhotosManager";
 export const dynamic = "force-dynamic";
 
 export default async function SitePhotosPage() {
+  await adminPageGuard();
   const versions = await loadSitePhotos();
   return (
     <div className="max-w-3xl space-y-5">

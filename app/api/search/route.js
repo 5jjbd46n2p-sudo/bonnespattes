@@ -21,10 +21,10 @@ export async function GET(req) {
       query(
         `SELECT id, first_name, last_name, address, phone
          FROM clients
-         WHERE first_name ILIKE $1 OR last_name ILIKE $1
+         WHERE anonymized_at IS NULL AND (first_name ILIKE $1 OR last_name ILIKE $1
             OR (first_name || ' ' || last_name) ILIKE $1
             OR (last_name || ' ' || first_name) ILIKE $1
-            OR address ILIKE $1 OR phone ILIKE $1 OR email ILIKE $1
+            OR address ILIKE $1 OR phone ILIKE $1 OR email ILIKE $1)
          ORDER BY last_name, first_name
          LIMIT 8`,
         [like]

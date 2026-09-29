@@ -279,3 +279,38 @@ ALTER TABLE pets ADD COLUMN IF NOT EXISTS health_conditions TEXT NOT NULL DEFAUL
 
 -- Numéro de puce ou de tatouage (facultatif, conseillé) :
 ALTER TABLE pets ADD COLUMN IF NOT EXISTS identification_number TEXT NOT NULL DEFAULT '';
+
+-- Sécurité : révocation des sessions, changement de mot de passe imposé,
+-- double authentification (TOTP) pour l'administrateur :
+ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last_step BIGINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
+
+-- Limitation des tentatives par adresse IP (connexion, codes de signature…).
+-- On ne stocke qu'une empreinte de l'IP, jamais l'IP elle-même.
+CREATE TABLE IF NOT EXISTS rate_limit_hits (
+  id BIGSERIAL PRIMARY KEY,
+  bucket TEXT NOT NULL,
+  key_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limit_hits ON rate_limit_hits(bucket, key_hash, created_at);
+
+-- RGPD : client anonymisé (droit à l'effacement ou fin de la durée de
+-- conservation) tout en gardant ses factures, que la loi impose de conserver.
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS anonymized_at TIMESTAMPTZ;
+
+-- Obligation comptable : une facture ne doit jamais disparaître avec la fiche
+-- client. La suppression d'un client ayant des factures passe par
+-- l'anonymisation (voir lib/privacy.js).
+ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_client_id_fkey;
+ALTER TABLE invoices ADD CONSTRAINT invoices_client_id_fkey
+  FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT;
+
+-- Avoirs : une facture émise s'annule par une facture d'avoir (montants
+-- négatifs, même suite de numéros), jamais par suppression.
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS credit_note_of UUID REFERENCES invoices(id) ON DELETE RESTRICT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_credit_note_of ON invoices(credit_note_of) WHERE credit_note_of IS NOT NULL;
