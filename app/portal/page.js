@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { requireClient } from "@/lib/auth";
+import { clientPageGuard } from "@/lib/auth";
 import CopyLink from "@/components/landing/CopyLink";
 import PortalPetIdentification from "@/components/PortalPetIdentification";
 import { query } from "@/lib/db";
@@ -10,7 +10,7 @@ import { CheckSquare, DownloadSimple, FileText, Gift, Square } from "@phosphor-i
 export const dynamic = "force-dynamic";
 
 export default async function PortalPage() {
-  const user = await requireClient();
+  const user = await clientPageGuard();
   const clientId = user.client_id;
 
   const petsRes = await query("SELECT * FROM pets WHERE client_id = $1 ORDER BY name", [clientId]);

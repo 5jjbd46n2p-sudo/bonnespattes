@@ -7,6 +7,7 @@ export async function GET(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return new Response("Non autorisé.", { status: 401 });
   const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("Facture introuvable.", { status: 404 });
 
   const invRes = await query(
     `SELECT i.*, c.first_name, c.last_name, c.address, c.email AS client_email
@@ -19,6 +20,11 @@ export async function GET(req, { params }) {
     return new Response("Non autorisé.", { status: 403 });
   }
   const itemsRes = await query("SELECT * FROM invoice_items WHERE invoice_id = $1", [id]);
+  let cancelledNumber = null;
+  if (invoice.credit_note_of) {
+    const o = await query("SELECT number FROM invoices WHERE id = $1", [invoice.credit_note_of]);
+    cancelledNumber = o.rows[0]?.number || null;
+  }
   const paymentsRes = await query(
     "SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE invoice_id = $1",
     [id]
@@ -66,7 +72,10 @@ export async function GET(req, { params }) {
   }
 
   // Titre facture + numéro, aligné à droite
-  drawText(`FACTURE ${invoice.number}`, 350, 800, { size: 14, bold: true, color: accent });
+  drawText(`${invoice.credit_note_of ? "AVOIR" : "FACTURE"} ${invoice.number}`, 350, 800, { size: 14, bold: true, color: accent });
+  if (cancelledNumber) {
+    drawText(`Annule la facture ${cancelledNumber}`, 350, 740, { size: 9, bold: true, color: muted });
+  }
   drawText(`Date d'émission : ${formatDateFR(invoice.issue_date)}`, 350, 782, { size: 9, color: muted });
   if (invoice.is_test) {
     drawText("FACTURE DE TEST - sans valeur", 350, 754, { size: 10, bold: true, color: accent });
@@ -150,7 +159,9 @@ export async function GET(req, { params }) {
   return new Response(bytes, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${invoice.number}.pdf"`,
+      "Content-Disposition": `inline; filename="${String(invoice.number).replace(/[^A-Za-z0-9_-]/g, "")}.pdf"`,
+      // Document financier : jamais conservé en cache (navigateur, proxy)
+      "Cache-Control": "private, no-store",
     },
   });
 }

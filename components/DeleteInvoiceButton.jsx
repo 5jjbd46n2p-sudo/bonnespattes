@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash } from "@phosphor-icons/react";
 
-export default function DeleteInvoiceButton({ invoiceId, number, status, isTest }) {
+export default function DeleteInvoiceButton({ invoiceId, number, status, isTest, isCreditNote = false, creditNoteNumber = null }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -48,6 +48,45 @@ export default function DeleteInvoiceButton({ invoiceId, number, status, isTest 
     const data = await res.json().catch(() => ({}));
     setError(data.error || "Impossible de modifier la facture.");
     setBusy(false);
+  }
+
+  async function creditNote() {
+    if (!confirm(`Annuler la facture ${number} par un avoir ?\n\nUn avoir (montants négatifs) sera créé avec le prochain numéro. La facture reste conservée, ses visites redeviennent « à facturer ». Un remboursement éventuel se fait à part.`)) return;
+    setBusy(true);
+    setError("");
+    const res = await fetch(`/api/invoices/${invoiceId}/credit-note`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.creditNote) {
+      router.push(`/admin/accounting/invoices/${data.creditNote.id}`);
+      router.refresh();
+      return;
+    }
+    setError(data.error || "Création de l'avoir impossible.");
+    setBusy(false);
+  }
+
+  // Facture émise : ni suppression ni passage en test (obligation légale).
+  if (!isTest && status !== "BROUILLON") {
+    return (
+      <div className="card p-5 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="font-display text-lg font-semibold">{isCreditNote ? "Avoir" : "Facture émise"}</h2>
+          <p className="text-sm text-pierre">
+            {isCreditNote
+              ? "Un avoir se conserve comme une facture : il ne peut pas être supprimé."
+              : creditNoteNumber
+                ? `Annulée par l'avoir ${creditNoteNumber}. Elle reste conservée (obligation légale).`
+                : "Une facture envoyée ne se supprime pas (conservation 10 ans, numérotation continue). Pour l'annuler, crée un avoir."}
+          </p>
+          {error && <p role="alert" className="text-sm font-bold text-brique mt-1">{error}</p>}
+        </div>
+        {!isCreditNote && !creditNoteNumber && (
+          <button type="button" onClick={creditNote} disabled={busy} className="btn-ghost text-sm">
+            {busy ? "..." : "Annuler par un avoir"}
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (

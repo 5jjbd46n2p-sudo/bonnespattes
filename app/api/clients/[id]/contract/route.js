@@ -67,8 +67,9 @@ export async function POST(_req, { params }) {
       expiresAt: signature.expires_at,
     });
   } catch (e) {
+    console.error("Envoi du contrat échoué :", e);
     await query("UPDATE contract_signatures SET status = 'ANNULE' WHERE id = $1 AND status = 'ENVOYE'", [signature.id]);
-    return NextResponse.json({ error: e.message || "Échec de l'envoi de l'email." }, { status: 502 });
+    return NextResponse.json({ error: "Échec de l'envoi de l'email, réessaie plus tard." }, { status: 502 });
   }
   return NextResponse.json({ ok: true });
 }

@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { query } from "@/lib/db";
 import { formatDateLongFR, todayISO, localISO, toCardVisit } from "@/lib/utils";
@@ -41,6 +42,7 @@ function chunk(arr, size) {
 }
 
 export default async function PlanningPage({ searchParams }) {
+  await adminPageGuard();
   const sp = await searchParams;
   const today = todayISO();
   const selected = /^\d{4}-\d{2}-\d{2}$/.test(sp.date || "") ? sp.date : today;

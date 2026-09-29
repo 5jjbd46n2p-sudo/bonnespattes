@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { alertAdmin } from "@/lib/security";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -82,8 +83,20 @@ export async function PATCH(req) {
     if (templateChanged) sets.push("contract_version = contract_version + 1");
   }
   if (!sets.length) return NextResponse.json({ error: "Rien à mettre à jour." }, { status: 400 });
-  const current = await query("SELECT id FROM settings LIMIT 1");
+  const current = await query("SELECT id, iban FROM settings LIMIT 1");
   values.push(current.rows[0].id);
   const { rows } = await query(`UPDATE settings SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`, values);
+
+  // Changement d'IBAN : fraude classique après piratage d'un compte (les
+  // clients paieraient sur le compte du fraudeur). Alerte systématique.
+  const oldIban = String(current.rows[0].iban || "").replace(/\s/g, "");
+  const newIban = String(rows[0].iban || "").replace(/\s/g, "");
+  if (body.iban !== undefined && oldIban !== newIban) {
+    const mask = (v) => (v ? `${v.slice(0, 4)} … ${v.slice(-4)}` : "(vide)");
+    await alertAdmin(admin.email, "l'IBAN des factures a été modifié", [
+      `Ancien IBAN : ${mask(oldIban)}`,
+      `Nouvel IBAN : ${mask(newIban)}`,
+    ]);
+  }
   return NextResponse.json({ settings: rows[0] });
 }

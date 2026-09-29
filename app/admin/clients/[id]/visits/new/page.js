@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
 import NewVisitForm from "@/components/NewVisitForm";
@@ -6,6 +7,7 @@ import { getPricingSettings } from "@/app/admin/visits/pricingSettings";
 export const dynamic = "force-dynamic";
 
 export default async function NewVisitPage({ params, searchParams }) {
+  await adminPageGuard();
   const { id } = await params;
   const sp = await searchParams;
   const clientRes = await query("SELECT * FROM clients WHERE id = $1", [id]);

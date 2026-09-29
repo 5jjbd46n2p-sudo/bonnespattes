@@ -1,12 +1,15 @@
+import { adminPageGuard } from "@/lib/auth";
 import { query } from "@/lib/db";
 import SettingsForm, { LegalSettingsForm, PricingSettingsForm, PublicSettingsForm, ContractSettingsForm } from "@/components/SettingsForm";
 import ThemeToggle from "@/components/ThemeToggle";
 import LogoutButton from "@/components/LogoutButton";
+import SecuritySettings from "@/components/SecuritySettings";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
+  const admin = await adminPageGuard();
   const { rows } = await query("SELECT * FROM settings LIMIT 1");
   return (
     <div className="max-w-xl space-y-6">
@@ -36,10 +39,12 @@ export default async function SettingsPage() {
       <LegalSettingsForm settings={rows[0]} />
       <ContractSettingsForm settings={rows[0]} />
 
+      <SecuritySettings totpEnabled={Boolean(admin.totp_enabled)} />
+
       <div className="card p-5 flex items-center justify-between gap-3">
         <div>
           <h2 className="font-display text-xl font-semibold">Compte</h2>
-          <p className="text-sm text-pierre">Déconnexion de cet appareil.</p>
+          <p className="text-sm text-pierre">Déconnexion de tous tes appareils.</p>
         </div>
         <LogoutButton />
       </div>

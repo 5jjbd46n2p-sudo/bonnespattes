@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { query } from "@/lib/db";
 import { MapPin, Phone, Plus } from "@phosphor-icons/react/ssr";
@@ -9,12 +10,13 @@ async function getClients() {
     SELECT c.*,
       (SELECT COUNT(*) FROM pets p WHERE p.client_id = c.id) AS pet_count,
       (SELECT u.email FROM users u WHERE u.client_id = c.id LIMIT 1) AS login_email
-    FROM clients c ORDER BY c.last_name, c.first_name
+    FROM clients c WHERE c.anonymized_at IS NULL ORDER BY c.last_name, c.first_name
   `);
   return rows;
 }
 
 export default async function ClientsPage() {
+  await adminPageGuard();
   const clients = await getClients();
 
   return (

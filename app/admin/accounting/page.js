@@ -1,3 +1,4 @@
+import { adminPageGuard } from "@/lib/auth";
 import Link from "next/link";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
@@ -15,6 +16,7 @@ const TABS = [
 ];
 
 export default async function AccountingPage({ searchParams }) {
+  await adminPageGuard();
   const sp = await searchParams;
   const tab = TABS.some((t) => t.id === sp.tab) ? sp.tab : "a-facturer";
 
@@ -74,7 +76,8 @@ export default async function AccountingPage({ searchParams }) {
   const overdueTotal = overdue.reduce((s, i) => s + Math.max(0, Number(i.total_ttc) - Number(i.paid_amount)), 0);
   const counts = { "a-facturer": visitsRes.rows.length, "a-encaisser": toCollect.length, payees: paid.length };
 
-  const InvoiceTable = ({ rows, collect }) =>
+  // Simple fonction de rendu (pas un composant déclaré pendant le rendu)
+  const renderInvoiceTable = ({ rows, collect }) =>
     rows.length === 0 ? (
       <div className="card p-10 text-center text-pierre">
         {collect ? "Rien à encaisser pour l'instant." : "Aucune facture payée pour l'instant."}
@@ -198,8 +201,8 @@ export default async function AccountingPage({ searchParams }) {
             ))}
           </div>
         ))}
-      {tab === "a-encaisser" && <InvoiceTable rows={toCollect} collect />}
-      {tab === "payees" && <InvoiceTable rows={paid} />}
+      {tab === "a-encaisser" && renderInvoiceTable({ rows: toCollect, collect: true })}
+      {tab === "payees" && renderInvoiceTable({ rows: paid })}
     </div>
   );
 }

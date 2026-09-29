@@ -8,7 +8,9 @@ export async function GET(_req, { params }) {
     return NextResponse.json({ error: "Lien invalide." }, { status: 404 });
   }
   const { rows } = await query(
-    "SELECT * FROM contract_signatures WHERE token_hash = $1 AND status = 'SIGNE'",
+    // Le lien reçu par email ne donne accès au PDF que 30 jours après la
+    // signature (ensuite, le contrat reste consultable depuis l'espace client).
+    "SELECT * FROM contract_signatures WHERE token_hash = $1 AND status = 'SIGNE' AND signed_at > now() - interval '30 days'",
     [hashToken(token)]
   );
   const sig = rows[0];

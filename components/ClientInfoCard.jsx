@@ -61,9 +61,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
   async function removeClient() {
     const invoiceWarning =
       invoiceCount > 0
-        ? `\n\nAttention : ce client a ${invoiceCount} facture${invoiceCount > 1 ? "s" : ""} enregistrée${
-            invoiceCount > 1 ? "s" : ""
-          }. La loi impose normalement de conserver les documents comptables plusieurs années : exporte-les (Comptabilité, puis Export CSV, ou le PDF de chaque facture) avant de continuer si tu dois les garder.`
+        ? `\n\nCe client a ${invoiceCount} facture${invoiceCount > 1 ? "s" : ""} : ${invoiceCount > 1 ? "elles sont conservées" : "elle est conservée"} 10 ans comme l'exige la loi, avec seulement son nom et son adresse. Tout le reste (téléphone, email, notes, animaux, visites, photos, accès) est effacé.`
         : "";
     const confirmed = confirm(
       `Supprimer définitivement ${client.first_name} ${client.last_name} et toutes ses données (animaux, historique de visites, photos, accès au portail) ? Cette action est irréversible.${invoiceWarning}`
