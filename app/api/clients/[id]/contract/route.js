@@ -5,14 +5,14 @@ import {
   renderContract, newToken, hashToken, sha256Hex, missingContractSettings, CONTRACT_VALIDITY_DAYS,
 } from "@/lib/contract";
 import { sendContractEmail } from "@/lib/email";
+import { isUuid } from "@/lib/api";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(_req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
   const { rows } = await query(
     `SELECT id, client_id, version, status, sent_to, sent_at, expires_at, signed_at, signer_name, created_at
      FROM contract_signatures WHERE client_id = $1 ORDER BY created_at DESC`,
@@ -25,7 +25,7 @@ export async function POST(_req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
 
   const clientRes = await query("SELECT * FROM clients WHERE id = $1", [id]);
   const client = clientRes.rows[0];

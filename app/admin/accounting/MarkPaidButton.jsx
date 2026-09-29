@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "@phosphor-icons/react";
+import { todayISO } from "@/lib/utils";
 
 export default function MarkPaidButton({ invoiceId, balance, number }) {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function MarkPaidButton({ invoiceId, balance, number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: Number(Number(balance).toFixed(2)),
-          date: new Date().toISOString().slice(0, 10),
+          date: todayISO(),
           method,
         }),
       });

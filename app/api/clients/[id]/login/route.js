@@ -3,14 +3,15 @@ import { query } from "@/lib/db";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { passwordProblem } from "@/lib/security";
 import { sendClientCredentialsEmail } from "@/lib/email";
+import { isUuid, readJson } from "@/lib/api";
 
 // Crée ou remplace l'identifiant/mot de passe d'un client
 export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
-  const { email, password, sendEmail } = (await req.json().catch(() => ({}))) || {};
+  if (!isUuid(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  const { email, password, sendEmail } = (await readJson(req)) || {};
   if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
     return NextResponse.json({ error: "Email et mot de passe requis." }, { status: 400 });
   }
@@ -23,7 +24,7 @@ export async function POST(req, { params }) {
       // Réinitialisation : mot de passe provisoire à changer, anciennes sessions révoquées.
       await query(
         `UPDATE users SET email = $1, password_hash = $2, must_change_password = true,
-                session_version = session_version + 1, failed_login_attempts = 0, locked_until = NULL
+                session_version = session_version + 1
           WHERE client_id = $3`,
         [
           email.trim().toLowerCase(),
@@ -69,6 +70,7 @@ export async function DELETE(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
   await query("DELETE FROM users WHERE client_id = $1", [id]);
   return NextResponse.json({ ok: true });
 }

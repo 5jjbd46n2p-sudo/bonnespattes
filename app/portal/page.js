@@ -4,6 +4,7 @@ import CopyLink from "@/components/landing/CopyLink";
 import PortalPetIdentification from "@/components/PortalPetIdentification";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
+import { SETTLED_BY_CREDIT_NOTE_SQL } from "@/lib/invoiceNumber";
 import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
 import { CheckSquare, DownloadSimple, FileText, Gift, Square } from "@phosphor-icons/react/ssr";
 
@@ -41,8 +42,12 @@ export default async function PortalPage() {
   }
 
   const invoicesRes = await query(
-    `SELECT i.*, (SELECT COALESCE(SUM(amount),0) FROM payments pay WHERE pay.invoice_id = i.id) AS paid_amount
-     FROM invoices i WHERE client_id = $1 ORDER BY issue_date DESC`,
+    // Le client ne voit ni les brouillons ni les factures de test, qui ne lui ont pas été envoyés.
+    `SELECT i.*, (SELECT COALESCE(SUM(amount),0) FROM payments pay WHERE pay.invoice_id = i.id) AS paid_amount,
+            ${SETTLED_BY_CREDIT_NOTE_SQL} AS settled
+     FROM invoices i
+     WHERE client_id = $1 AND NOT is_test AND status <> 'BROUILLON'
+     ORDER BY issue_date DESC`,
     [clientId]
   );
 
@@ -217,7 +222,13 @@ export default async function PortalPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-bold tabular-nums">{formatEUR(inv.total_ttc)}</span>
-                  <InvoiceStatusBadge status={inv.status} />
+                  {inv.credit_note_of ? (
+                    <span className="badge text-pierre">Avoir</span>
+                  ) : inv.settled ? (
+                    <span className="badge text-pierre">Annulée</span>
+                  ) : (
+                    <InvoiceStatusBadge status={inv.status} />
+                  )}
                   <a
                     href={`/api/invoices/${inv.id}/pdf`}
                     target="_blank"

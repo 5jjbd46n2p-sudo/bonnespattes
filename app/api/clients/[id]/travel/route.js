@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { isUuid } from "@/lib/api";
 
 async function fetchJson(url) {
   const res = await fetch(url, { signal: AbortSignal.timeout(8000), headers: { Accept: "application/json" } });
@@ -21,6 +22,7 @@ export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
 
   const clientRes = await query("SELECT id, address FROM clients WHERE id = $1", [id]);
   const client = clientRes.rows[0];

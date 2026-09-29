@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin, verifyPassword, revokeAllSessions, createSessionCookie } from "@/lib/auth";
 import { generateTotpSecret, totpUri, verifyTotp, isRateLimited, recordHit, alertAdmin } from "@/lib/security";
+import { readJson } from "@/lib/api";
 
 // Double authentification de l'administratrice : préparation, activation, désactivation.
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
 export async function POST(req) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
-  const body = await req.json().catch(() => null);
+  const body = await readJson(req);
   const action = body?.action;
   const code = typeof body?.code === "string" ? body.code.replace(/\s/g, "") : "";
   const password = typeof body?.password === "string" ? body.password : "";

@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { deleteBlobs, visitPhotoUrls } from "@/lib/privacy";
+import { isUuid, readJson } from "@/lib/api";
 
 export async function PATCH(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
+  const body = await readJson(req);
   const { name, species, breed, notes, sterilized, identified, ageInfo, diet, healthConditions, identificationNumber } = body;
   for (const v of [name, species, breed, notes, ageInfo, diet, healthConditions, identificationNumber]) {
     if (v !== undefined && v !== null && typeof v !== "string") {
@@ -43,6 +45,19 @@ export async function DELETE(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
+  const inv = await query(
+    "SELECT 1 FROM visits v JOIN invoices i ON i.id = v.invoice_id WHERE v.pet_id = $1 AND NOT i.is_test LIMIT 1",
+    [id]
+  );
+  if (inv.rows[0]) {
+    return NextResponse.json(
+      { error: "Cet animal a des visites facturées : il ne peut pas être supprimé (les factures doivent rester complètes)." },
+      { status: 409 }
+    );
+  }
+  const urls = await visitPhotoUrls({ query }, "v.pet_id = $1", [id]);
   await query("DELETE FROM pets WHERE id = $1", [id]);
+  await deleteBlobs(urls);
   return NextResponse.json({ ok: true });
 }

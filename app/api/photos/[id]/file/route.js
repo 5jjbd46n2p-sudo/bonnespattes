@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { get } from "@vercel/blob";
 import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { isUuid } from "@/lib/api";
 
 // Les photos sont stockées dans un espace Vercel Blob PRIVÉ : elles n'ont pas
 // d'adresse publique. Cette route vérifie qui demande la photo (l'admin, ou le
@@ -10,7 +11,7 @@ export async function GET(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return new NextResponse("Non autorisé.", { status: 401 });
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return new NextResponse("Introuvable.", { status: 404 });
+  if (!isUuid(id)) return new NextResponse("Introuvable.", { status: 404 });
 
   const { rows } = await query(
     `SELECT ph.url, v.client_id FROM photos ph JOIN visits v ON v.id = ph.visit_id WHERE ph.id = $1`,

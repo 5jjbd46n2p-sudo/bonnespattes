@@ -5,6 +5,7 @@ import { formatDateLongFR, formatEUR, todayISO, toCardVisit } from "@/lib/utils"
 import VisitCard from "@/components/VisitCard";
 import NextVisitBanner from "@/components/NextVisitBanner";
 import { Plus } from "@phosphor-icons/react/ssr";
+import { SETTLED_BY_CREDIT_NOTE_SQL } from "@/lib/invoiceNumber";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +29,9 @@ async function getDashboardData() {
     ),
     query(
       `SELECT COALESCE(SUM(total_ttc - COALESCE((SELECT SUM(amount) FROM payments p WHERE p.invoice_id = i.id),0)),0) AS total
-       FROM invoices i WHERE status != 'PAYEE' AND NOT i.is_test`
+       FROM invoices i WHERE status != 'PAYEE' AND NOT i.is_test AND NOT ${SETTLED_BY_CREDIT_NOTE_SQL}`
     ),
-    query(`SELECT COUNT(*) AS count FROM clients`),
+    query(`SELECT COUNT(*) AS count FROM clients WHERE anonymized_at IS NULL`),
   ]);
 
   return {

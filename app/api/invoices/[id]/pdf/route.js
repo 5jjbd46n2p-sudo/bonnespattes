@@ -2,12 +2,13 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatEUR, formatDateFR } from "@/lib/utils";
+import { isUuid } from "@/lib/api";
 
 export async function GET(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return new Response("Non autorisé.", { status: 401 });
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("Facture introuvable.", { status: 404 });
+  if (!isUuid(id)) return new Response("Facture introuvable.", { status: 404 });
 
   const invRes = await query(
     `SELECT i.*, c.first_name, c.last_name, c.address, c.email AS client_email
@@ -16,8 +17,12 @@ export async function GET(req, { params }) {
   );
   const invoice = invRes.rows[0];
   if (!invoice) return new Response("Facture introuvable.", { status: 404 });
-  if (user.role === "CLIENT" && invoice.client_id !== user.client_id) {
-    return new Response("Non autorisé.", { status: 403 });
+  // Un client ne voit que ses factures émises (ni brouillon ni facture de test)
+  if (
+    user.role === "CLIENT" &&
+    (invoice.client_id !== user.client_id || invoice.is_test || invoice.status === "BROUILLON")
+  ) {
+    return new Response("Facture introuvable.", { status: 404 });
   }
   const itemsRes = await query("SELECT * FROM invoice_items WHERE invoice_id = $1", [id]);
   let cancelledNumber = null;

@@ -6,6 +6,7 @@ import { InvoiceStatusBadge } from "@/components/StatusBadge";
 import { DownloadSimple, Plus } from "@phosphor-icons/react/ssr";
 import ToInvoiceGroup from "./ToInvoiceGroup";
 import MarkPaidButton from "./MarkPaidButton";
+import { SETTLED_BY_CREDIT_NOTE_SQL } from "@/lib/invoiceNumber";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,8 @@ export default async function AccountingPage({ searchParams }) {
 
   const invoicesRes = await query(
     `SELECT i.*, c.first_name, c.last_name,
-      (SELECT COALESCE(SUM(amount),0) FROM payments pay WHERE pay.invoice_id = i.id) AS paid_amount
+      (SELECT COALESCE(SUM(amount),0) FROM payments pay WHERE pay.invoice_id = i.id) AS paid_amount,
+      ${SETTLED_BY_CREDIT_NOTE_SQL} AS settled
      FROM invoices i JOIN clients c ON c.id = i.client_id
      ORDER BY i.issue_date DESC, i.created_at DESC`
   );
@@ -41,8 +43,8 @@ export default async function AccountingPage({ searchParams }) {
     SELECT
       COALESCE(SUM(total_ttc),0) AS total_ttc,
       COALESCE(SUM(total_ttc) FILTER (WHERE status = 'PAYEE'),0) AS total_paid,
-      COALESCE(SUM(total_ttc) FILTER (WHERE status != 'PAYEE'),0) AS total_unpaid
-    FROM invoices WHERE NOT is_test
+      COALESCE(SUM(total_ttc) FILTER (WHERE status != 'PAYEE' AND NOT ${SETTLED_BY_CREDIT_NOTE_SQL}),0) AS total_unpaid
+    FROM invoices i WHERE NOT is_test
   `);
   const summary = summaryRes.rows[0];
 
@@ -70,8 +72,11 @@ export default async function AccountingPage({ searchParams }) {
     0
   );
 
-  const toCollect = invoicesRes.rows.filter((i) => ["BROUILLON", "ENVOYEE", "EN_RETARD"].includes(i.status));
-  const paid = invoicesRes.rows.filter((i) => i.status === "PAYEE");
+  // Avoirs et factures annulées par un avoir : classés avec les factures réglées
+  const toCollect = invoicesRes.rows.filter(
+    (i) => !i.settled && ["BROUILLON", "ENVOYEE", "EN_RETARD"].includes(i.status)
+  );
+  const paid = invoicesRes.rows.filter((i) => i.settled || i.status === "PAYEE");
   const overdue = toCollect.filter((i) => i.status === "EN_RETARD");
   const overdueTotal = overdue.reduce((s, i) => s + Math.max(0, Number(i.total_ttc) - Number(i.paid_amount)), 0);
   const counts = { "a-facturer": visitsRes.rows.length, "a-encaisser": toCollect.length, payees: paid.length };
@@ -80,7 +85,7 @@ export default async function AccountingPage({ searchParams }) {
   const renderInvoiceTable = ({ rows, collect }) =>
     rows.length === 0 ? (
       <div className="card p-10 text-center text-pierre">
-        {collect ? "Rien à encaisser pour l'instant." : "Aucune facture payée pour l'instant."}
+        {collect ? "Rien à encaisser pour l'instant." : "Aucune facture réglée pour l'instant."}
       </div>
     ) : (
       <div className="card overflow-hidden">
@@ -114,7 +119,13 @@ export default async function AccountingPage({ searchParams }) {
                     <td className="px-4 py-3 text-right font-medium">{formatEUR(inv.total_ttc)}</td>
                     {collect && <td className="px-4 py-3 text-right font-bold">{formatEUR(balance)}</td>}
                     <td className="px-4 py-3">
-                      <InvoiceStatusBadge status={inv.status} />
+                      {inv.credit_note_of ? (
+                        <span className="badge text-pierre">Avoir</span>
+                      ) : inv.settled ? (
+                        <span className="badge text-pierre">Annulée par avoir</span>
+                      ) : (
+                        <InvoiceStatusBadge status={inv.status} />
+                      )}
                     </td>
                     {collect && (
                       <td className="px-4 py-3 text-right">

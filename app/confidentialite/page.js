@@ -143,6 +143,11 @@ export default async function ConfidentialitePage() {
                 <strong>Resend Inc.</strong> (États-Unis) : envoi des emails (identifiants, codes de
                 signature, contrats, réponses aux demandes).
               </li>
+              <li>
+                <strong>Base Adresse Nationale</strong> (État français) et <strong>OSRM</strong> (association
+                FOSSGIS, Allemagne) : calcul de la distance de trajet jusqu&apos;à votre domicile, à partir de
+                votre adresse, pour les frais de déplacement. Aucune autre donnée n&apos;est transmise.
+              </li>
             </ul>
             <p>
               Les transferts de données vers les États-Unis sont encadrés par les clauses contractuelles

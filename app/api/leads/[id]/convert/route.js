@@ -2,14 +2,13 @@ import { NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { ensureReferralCode } from "@/lib/referral";
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { isUuid } from "@/lib/api";
 
 export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Demande introuvable." }, { status: 404 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Demande introuvable." }, { status: 404 });
 
   try {
     const clientId = await tx(async (db) => {
@@ -32,7 +31,13 @@ export async function POST(req, { params }) {
       await ensureReferralCode(db, newId);
       await db.query("UPDATE leads SET client_id = $1, status = 'CLIENT' WHERE id = $2", [newId, id]);
 
-      if (lead.referrer_client_id) {
+      // Pas de crédit si le « filleul » a la même adresse email que le parrain (auto-parrainage).
+      const referrer = lead.referrer_client_id
+        ? (await db.query("SELECT email FROM clients WHERE id = $1", [lead.referrer_client_id])).rows[0]
+        : null;
+      const selfReferral =
+        referrer && String(referrer.email || "").trim().toLowerCase() === String(lead.email || "").trim().toLowerCase();
+      if (lead.referrer_client_id && !selfReferral) {
         const amount = Number((await db.query("SELECT referral_credit FROM settings LIMIT 1")).rows[0]?.referral_credit);
         if (Number.isFinite(amount) && amount > 0) {
           const reason = `Parrainage — ${lead.name}`;

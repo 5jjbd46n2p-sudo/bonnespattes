@@ -2,17 +2,16 @@ import { NextResponse } from "next/server";
 import { del } from "@vercel/blob";
 import { query, tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-
-const UUID = /^[0-9a-f-]{36}$/i;
+import { isUuid, readJson } from "@/lib/api";
 
 // Suppression de plusieurs visites d'un coup (nettoyage). Une visite rattachée à une vraie
 // facture ne peut pas être supprimée ; celles d'une facture de test le peuvent.
 export async function POST(req) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
-  const body = await req.json().catch(() => null);
+  const body = await readJson(req);
   const ids = Array.isArray(body?.ids) ? [...new Set(body.ids)] : [];
-  if (ids.length === 0 || ids.length > 200 || ids.some((x) => typeof x !== "string" || !UUID.test(x))) {
+  if (ids.length === 0 || ids.length > 200 || ids.some((x) => typeof x !== "string" || !isUuid(x))) {
     return NextResponse.json({ error: "Sélection invalide." }, { status: 400 });
   }
   try {

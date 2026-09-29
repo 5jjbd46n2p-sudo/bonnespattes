@@ -12,16 +12,16 @@ export default async function PortalLayout({ children }) {
     <div className="min-h-screen flex flex-col">
       <PortalNav clientName={client ? `${client.first_name} ${client.last_name}` : ""} />
       <main className="flex-1 px-4 py-6 md:px-8 md:py-10 max-w-3xl mx-auto w-full">{children}</main>
-      <footer className="text-center text-xs text-muted py-4">
-        <Link href="/mentions-legales" className="underline hover:text-ink">
+      <footer className="text-center text-xs text-pierre py-4">
+        <Link href="/mentions-legales" className="underline hover:text-encre">
           Mentions légales
         </Link>
         {" · "}
-        <Link href="/confidentialite" className="underline hover:text-ink">
+        <Link href="/confidentialite" className="underline hover:text-encre">
           Confidentialité
         </Link>
         {" · "}
-        <Link href="/compte/mot-de-passe" className="underline hover:text-ink">
+        <Link href="/compte/mot-de-passe" className="underline hover:text-encre">
           Changer mon mot de passe
         </Link>
       </footer>

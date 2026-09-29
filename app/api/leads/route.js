@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { createHash } from "node:crypto";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { sendLeadEmails } from "@/lib/email";
 import { normalizeReferralCode } from "@/lib/referral";
 import { validateQuote } from "@/lib/quote";
+import { readJson } from "@/lib/api";
+import { clientIp, hashKey } from "@/lib/security";
 
 const STATUSES = ["NOUVEAU", "CONTACTE", "CLIENT", "SANS_SUITE"];
 const SERVICES = ["VISITE", "PROMENADE", "LES_DEUX"];
@@ -17,24 +18,12 @@ const clean = (v, max) => {
   return v.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim().slice(0, max + 1);
 };
 
-function ipHash(req) {
-  const fwd = req.headers.get("x-forwarded-for") || "";
-  const ip = fwd.split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
-  const salt = process.env.LEAD_IP_SALT || process.env.JWT_SECRET || "";
-  return createHash("sha256").update(ip + salt).digest("hex");
-}
+// Empreinte non réversible de l'IP (limite anti-spam), même calcul que les autres limites
+const ipHash = (req) => hashKey(clientIp(req));
 
 // Public : dépôt d'une demande de rendez-vous.
 export async function POST(req) {
-  let body;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
-  }
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
-  }
+  const body = await readJson(req);
 
   // Champ piège : un humain ne le remplit pas. On répond « ok » sans rien enregistrer.
   if (body.website !== undefined && body.website !== null && String(body.website).trim() !== "") {

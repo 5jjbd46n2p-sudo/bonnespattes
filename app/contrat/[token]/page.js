@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import { hashToken } from "@/lib/contract";
+import { hashToken, SIGNED_PDF_LINK_DAYS } from "@/lib/contract";
 import Logo from "@/components/Logo";
 import ContractSigner from "./ContractSigner";
 import { CheckCircle, Clock, DownloadSimple, WarningCircle } from "@phosphor-icons/react/ssr";
@@ -78,6 +78,9 @@ export default async function ContratPage({ params }) {
   }
 
   if (sig.status === "SIGNE") {
+    // Même délai que la route PDF : passé ce délai, le lien renverrait une erreur.
+    // eslint-disable-next-line react-hooks/purity
+    const pdfLinkActive = new Date(sig.signed_at).getTime() > Date.now() - SIGNED_PDF_LINK_DAYS * 24 * 60 * 60 * 1000;
     return (
       <Shell>
         <Notice icon={CheckCircle} tone="text-mousse" title="Contrat signé">
@@ -85,10 +88,14 @@ export default async function ContratPage({ params }) {
             Ce contrat a été signé par {sig.signer_name || "vous"} le{" "}
             <span className="tabular-nums">{formatDateTimeFR(sig.signed_at)}</span>. Un exemplaire PDF vous a été envoyé par email.
           </p>
-          <a href={`/api/contract/${token}/pdf`} className="btn-primary gap-2 inline-flex mt-2">
-            <DownloadSimple size={20} aria-hidden="true" />
-            Télécharger le PDF signé
-          </a>
+          {pdfLinkActive ? (
+            <a href={`/api/contract/${token}/pdf`} className="btn-primary gap-2 inline-flex mt-2">
+              <DownloadSimple size={20} aria-hidden="true" />
+              Télécharger le PDF signé
+            </a>
+          ) : (
+            <p>Le contrat signé reste consultable depuis votre espace client.</p>
+          )}
         </Notice>
       </Shell>
     );

@@ -10,9 +10,10 @@ import {
   redirectFor,
 } from "@/lib/auth";
 import { clientIp, isRateLimited, recordHit } from "@/lib/security";
+import { readJson } from "@/lib/api";
 
-const MAX_ATTEMPTS = 6; // par compte, avant verrouillage temporaire
-const LOCK_MINUTES = 15;
+// Par compte et par IP, avant blocage temporaire
+const ACCOUNT_LIMIT = { limit: 6, windowSeconds: 15 * 60 };
 // Par adresse IP, tous comptes confondus : bloque les attaques qui essaient un
 // mot de passe courant sur de nombreux comptes (et le blocage volontaire du
 // compte admin par un tiers devient beaucoup plus difficile).
@@ -23,7 +24,7 @@ const tooMany = () =>
 
 export async function POST(req) {
   try {
-    const body = await req.json().catch(() => null);
+    const body = await readJson(req);
     const email = typeof body?.email === "string" ? body.email : "";
     const password = typeof body?.password === "string" ? body.password : "";
     if (!email || !password || email.length > 200 || password.length > 200) {
@@ -47,8 +48,11 @@ export async function POST(req) {
       return genericError;
     }
 
-    // Compte temporairement verrouillé après plusieurs échecs consécutifs.
-    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+    // Verrouillage par couple compte + adresse IP : après 6 échecs, cette IP
+    // ne peut plus essayer ce compte pendant 15 minutes. Un tiers ne peut donc
+    // pas bloquer le compte de sa propriétaire, qui se connecte d'une autre IP.
+    const accountKey = `${user.id}|${ip}`;
+    if (await isRateLimited("login-account", accountKey, ACCOUNT_LIMIT)) {
       await verifyAgainstDummy(password);
       return tooMany();
     }
@@ -56,27 +60,13 @@ export async function POST(req) {
     const ok = await verifyPassword(password, user.password_hash);
     if (!ok) {
       await recordHit("login-ip", ip);
-      const attempts = (user.failed_login_attempts || 0) + 1;
-      if (attempts >= MAX_ATTEMPTS) {
-        await query(
-          "UPDATE users SET failed_login_attempts = 0, locked_until = now() + make_interval(mins => $1) WHERE id = $2",
-          [LOCK_MINUTES, user.id]
-        );
-        return tooMany();
-      }
-      await query("UPDATE users SET failed_login_attempts = $1 WHERE id = $2", [attempts, user.id]);
+      await recordHit("login-account", accountKey);
       return genericError;
     }
 
     // Renforcement transparent des anciennes empreintes de mot de passe
     if (needsRehash(user.password_hash)) {
       await query("UPDATE users SET password_hash = $1 WHERE id = $2", [await hashPassword(password), user.id]);
-    }
-
-    if (user.failed_login_attempts > 0 || user.locked_until) {
-      await query("UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = $1", [
-        user.id,
-      ]);
     }
 
     // Double authentification activée : le mot de passe seul ne suffit pas.

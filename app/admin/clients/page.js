@@ -69,7 +69,7 @@ export default async function ClientsPage() {
                 </div>
                 <span className="inline-flex items-center gap-2 text-[13px] font-bold text-pierre shrink-0 mt-0.5">
                   <span
-                    className={`w-2 h-2 rounded-full ${c.login_email ? "bg-mousse" : "bg-muted"}`}
+                    className={`w-2 h-2 rounded-full ${c.login_email ? "bg-mousse" : "bg-pierre"}`}
                     aria-hidden="true"
                   />
                   {c.login_email ? "Accès actif" : "Pas d'accès"}

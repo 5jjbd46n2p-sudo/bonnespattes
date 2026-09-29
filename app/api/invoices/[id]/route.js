@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { allocateInvoiceNumber, resyncInvoiceSequences } from "@/lib/invoiceNumber";
+import { isUuid, readJson } from "@/lib/api";
 
 // Code de commerce / CGI : une facture émise se conserve 10 ans et la
 // numérotation doit rester continue. On corrige par un avoir, jamais en supprimant.
@@ -12,6 +13,7 @@ export async function GET(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
 
   const invRes = await query(
     `SELECT i.*, c.first_name, c.last_name, c.address, c.email AS client_email
@@ -20,8 +22,12 @@ export async function GET(req, { params }) {
   );
   const invoice = invRes.rows[0];
   if (!invoice) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
-  if (user.role === "CLIENT" && invoice.client_id !== user.client_id) {
-    return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
+  // Un client ne voit que ses factures émises (ni brouillon ni facture de test)
+  if (
+    user.role === "CLIENT" &&
+    (invoice.client_id !== user.client_id || invoice.is_test || invoice.status === "BROUILLON")
+  ) {
+    return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
   }
 
   const itemsRes = await query("SELECT * FROM invoice_items WHERE invoice_id = $1", [id]);
@@ -37,7 +43,8 @@ export async function PATCH(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  const body = await req.json();
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
+  const body = await readJson(req);
 
   // Passage en facture de test : nouveau numéro FT#### ; la suite des vraies factures se referme.
   if (body.isTest === true) {
@@ -98,7 +105,7 @@ export async function DELETE(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
   try {
     const result = await tx(async (client) => {
       const inv = await client.query("SELECT id, number, status, is_test FROM invoices WHERE id = $1 FOR UPDATE", [id]);

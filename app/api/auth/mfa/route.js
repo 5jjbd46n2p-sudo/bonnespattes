@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getMfaPendingUser, createSessionCookie, redirectFor } from "@/lib/auth";
 import { clientIp, isRateLimited, recordHit, verifyTotp } from "@/lib/security";
+import { readJson } from "@/lib/api";
 
 // 2e étape de connexion : code à 6 chiffres de l'application d'authentification.
 const LIMIT = { limit: 5, windowSeconds: 15 * 60 };
@@ -11,7 +12,7 @@ export async function POST(req) {
   if (!user || !user.totp_enabled || !user.totp_secret) {
     return NextResponse.json({ error: "Session expirée. Reconnecte-toi." }, { status: 401 });
   }
-  const body = await req.json().catch(() => null);
+  const body = await readJson(req);
   const code = typeof body?.code === "string" ? body.code.replace(/\s/g, "") : "";
 
   const key = `${user.id}|${clientIp(req)}`;

@@ -1,11 +1,8 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Tokens de couleur. Les noms français (papier, lin, sable…) sont la
-   référence ; les anciens noms (sand, ink, forest…) restent en alias pour les
-   classes existantes, à migrer progressivement.
-   Le vert forêt est retiré : forest/ochre pointent désormais vers la rouille
-   (seule couleur d'action) et le miel.
+   Tokens de couleur « carnet de balade » (docs/IDENTITE_VISUELLE.md) :
+   papier, lin, sable, encre, pierre, trait, rouille, mousse, miel, brique.
    ------------------------------------------------------------------------- */
 :root {
   /* Palette « carnet de balade » (docs/IDENTITE_VISUELLE.md) */
@@ -26,20 +23,8 @@
   --color-sur-rouille: #ffffff;
   --shadow-modal: 0 8px 28px rgba(31, 26, 21, 0.14);
 
-  /* Alias hérités → nouvelle palette (ne pas utiliser dans du code neuf) */
-  --color-sand: var(--color-papier);
-  --color-sand-dark: var(--color-sable);
-  --color-card: var(--color-lin);
+  /* Couleurs dérivées */
   --color-input: var(--color-lin);
-  --color-ink: var(--color-encre);
-  --color-muted: var(--color-pierre);
-  --color-border: var(--color-trait);
-  --color-forest: var(--color-rouille);
-  --color-forest-dark: var(--color-rouille-fonce);
-  --color-forest-light: var(--color-rouille);
-  --color-ochre: var(--color-miel);
-  --color-ochre-dark: var(--color-rouille-fonce);
-  --color-danger: var(--color-brique);
   --color-tabbar: var(--color-nav);
 
   /* Polices (variables posées sur <html> par next/font dans app/layout.js) */
@@ -63,18 +48,6 @@
   --color-sur-nav: var(--color-sur-nav);
   --color-nav-actif: var(--color-nav-actif);
   --color-sur-rouille: var(--color-sur-rouille);
-  --color-sand: var(--color-sand);
-  --color-sand-dark: var(--color-sand-dark);
-  --color-ink: var(--color-ink);
-  --color-muted: var(--color-muted);
-  --color-forest: var(--color-forest);
-  --color-forest-dark: var(--color-forest-dark);
-  --color-forest-light: var(--color-forest-light);
-  --color-ochre: var(--color-ochre);
-  --color-ochre-dark: var(--color-ochre-dark);
-  --color-card: var(--color-card);
-  --color-border: var(--color-border);
-  --color-danger: var(--color-danger);
   --color-input: var(--color-input);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -264,7 +237,6 @@ button.list-row:hover {
 }
 
 .btn-primary,
-.btn-accent,
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -277,19 +249,16 @@ button.list-row:hover {
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-/* Rouille : seule couleur d'action. .btn-accent est conservé en alias. */
-.btn-primary,
-.btn-accent {
+/* Rouille : seule couleur d'action. */
+.btn-primary {
   background: var(--color-rouille);
   color: var(--color-sur-rouille);
   padding: 0.6rem 1.1rem;
 }
-.btn-primary:hover,
-.btn-accent:hover {
+.btn-primary:hover {
   background: var(--color-rouille-fonce);
 }
-.btn-primary:disabled,
-.btn-accent:disabled {
+.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
