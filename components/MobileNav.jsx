@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Sun, CalendarBlank, Plus, PawPrint, Receipt, GearSix } from "@phosphor-icons/react";
 import GlobalSearch from "@/components/GlobalSearch";
+import Logo from "@/components/Logo";
 
 // Onglets de la barre du bas (façon iOS) — le bouton central sert à planifier.
 const tabs = [
-  { href: "/admin", label: "Aujourd'hui", icon: "🏠", exact: true },
-  { href: "/admin/planning", label: "Planning", icon: "🗓️" },
-  { href: "/admin/visits/new", label: "Planifier", icon: "+", primary: true },
-  { href: "/admin/clients", label: "Clients", icon: "🐾" },
-  { href: "/admin/accounting", label: "Compta", icon: "💶" },
+  { href: "/admin", label: "Aujourd'hui", icon: Sun, exact: true },
+  { href: "/admin/planning", label: "Planning", icon: CalendarBlank },
+  { href: "/admin/visits/new", label: "Planifier", icon: Plus, primary: true },
+  { href: "/admin/clients", label: "Clients", icon: PawPrint },
+  { href: "/admin/accounting", label: "Compta", icon: Receipt },
 ];
 
 export default function MobileNav() {
@@ -20,21 +22,22 @@ export default function MobileNav() {
   return (
     <>
       {/* En-tête compact : marque + recherche + réglages */}
-      <header className="md:hidden sticky top-0 z-20 bg-nav text-white pt-[env(safe-area-inset-top)]">
+      <header className="md:hidden sticky top-0 z-20 bg-nav text-sur-nav pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between px-3 h-12">
-          <Link href="/admin" className="font-display font-semibold flex items-center gap-2 pl-1">
-            🐾 Aux Bonnes Pattes
+          <Link href="/admin" aria-label="Aux Bonnes Pattes, accueil" className="pl-1">
+            <Logo size={22} />
           </Link>
           <div className="flex items-center">
             <GlobalSearch variant="icon" />
             <Link
               href="/admin/settings"
               aria-label="Réglages"
-              className={`w-10 h-10 flex items-center justify-center rounded-full text-lg ${
-                settingsActive ? "bg-white/20" : "hover:bg-white/10"
+              aria-current={settingsActive ? "page" : undefined}
+              className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                settingsActive ? "text-nav-actif" : "hover:bg-white/10"
               }`}
             >
-              ⚙️
+              <GearSix size={24} aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -43,20 +46,21 @@ export default function MobileNav() {
       {/* Barre d'onglets fixe en bas de l'écran, à portée de pouce */}
       <nav
         aria-label="Navigation principale"
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 tabbar pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 tabbar border-t border-white/10 pb-[env(safe-area-inset-bottom)]"
       >
         <ul className="grid grid-cols-5 h-16">
           {tabs.map((t) => {
             const active = t.exact ? pathname === t.href : pathname.startsWith(t.href);
+            const Icon = t.icon;
             if (t.primary) {
               return (
                 <li key={t.href} className="flex items-center justify-center">
                   <Link
                     href={t.href}
                     aria-label="Planifier une visite"
-                    className="w-12 h-12 -mt-5 rounded-full bg-ochre text-white text-3xl leading-none flex items-center justify-center shadow-lg ring-4 ring-[var(--color-sand)] active:scale-95 transition-transform"
+                    className="w-12 h-12 rounded-full bg-rouille text-sur-rouille flex items-center justify-center hover:bg-rouille-fonce transition-colors"
                   >
-                    {t.icon}
+                    <Icon size={24} aria-hidden="true" />
                   </Link>
                 </li>
               );
@@ -66,11 +70,11 @@ export default function MobileNav() {
                 <Link
                   href={t.href}
                   aria-current={active ? "page" : undefined}
-                  className={`h-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors ${
-                    active ? "text-forest-dark" : "text-muted"
+                  className={`h-full flex flex-col items-center justify-center gap-1 text-[11px] font-bold transition-colors ${
+                    active ? "text-nav-actif" : "text-sur-nav/70"
                   }`}
                 >
-                  <span className={`text-xl leading-none ${active ? "" : "grayscale opacity-70"}`}>{t.icon}</span>
+                  <Icon size={24} aria-hidden="true" />
                   {t.label}
                 </Link>
               </li>

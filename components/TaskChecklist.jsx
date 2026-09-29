@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "@phosphor-icons/react";
 
 export default function TaskChecklist({ visitId, tasks }) {
   const router = useRouter();
@@ -38,29 +39,35 @@ export default function TaskChecklist({ visitId, tasks }) {
 
   return (
     <div>
-      <div className="space-y-2 mb-3">
-        {tasks.map((t) => (
-          <label
-            key={t.id}
-            className={`flex items-center gap-3 border border-border rounded-lg p-3 cursor-pointer ${
-              t.done ? "bg-emerald-50" : "bg-card"
-            }`}
-          >
-            <input type="checkbox" checked={t.done} onChange={() => toggle(t)} className="w-4 h-4" />
-            <span className={`flex-1 text-sm ${t.done ? "line-through text-muted" : ""}`}>{t.label}</span>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                removeTask(t.id);
-              }}
-              className="text-xs text-danger"
-            >
-              ✕
-            </button>
-          </label>
-        ))}
-        {tasks.length === 0 && <p className="text-sm text-muted">Aucune tâche pour cette visite.</p>}
+      <div className="mb-3">
+        {tasks.length > 0 ? (
+          <div className="list-group">
+            {tasks.map((t) => (
+              <label key={t.id} className="list-row cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={t.done}
+                  onChange={() => toggle(t)}
+                  className="w-5 h-5 accent-mousse"
+                />
+                <span className={`flex-1 text-sm ${t.done ? "line-through text-pierre" : ""}`}>{t.label}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    removeTask(t.id);
+                  }}
+                  aria-label={`Supprimer la tâche « ${t.label} »`}
+                  className="text-brique p-1 rounded-lg hover:bg-sable"
+                >
+                  <X size={20} aria-hidden="true" />
+                </button>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-pierre">Aucune tâche pour cette visite.</p>
+        )}
       </div>
       <form onSubmit={addTask} className="flex gap-2">
         <input

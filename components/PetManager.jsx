@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus } from "@phosphor-icons/react";
 
 export default function PetManager({ clientId, pets }) {
   const router = useRouter();
@@ -33,14 +34,15 @@ export default function PetManager({ clientId, pets }) {
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-forest-dark">Animaux</h2>
+        <h2 className="font-display font-semibold text-encre">Animaux</h2>
         <button onClick={() => setAdding((a) => !a)} className="btn-ghost text-sm !py-1 !px-3">
-          {adding ? "Annuler" : "+ Ajouter"}
+          {!adding && <Plus size={20} aria-hidden="true" />}
+          {adding ? "Annuler" : "Ajouter"}
         </button>
       </div>
 
       {adding && (
-        <form onSubmit={addPet} className="border border-border rounded-lg p-4 space-y-3 mb-4">
+        <form onSubmit={addPet} className="border border-trait rounded-lg p-4 space-y-3 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
               className="input"
@@ -75,21 +77,21 @@ export default function PetManager({ clientId, pets }) {
       )}
 
       {pets.length === 0 ? (
-        <p className="text-sm text-muted">Aucun animal enregistré.</p>
+        <p className="text-sm text-pierre">Aucun animal enregistré.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="list-group">
           {pets.map((p) => (
-            <div key={p.id} className="flex items-start justify-between border border-border rounded-lg p-3">
+            <div key={p.id} className="list-row justify-between">
               <div>
-                <p className="font-medium">
+                <p className="font-bold">
                   {p.name}{" "}
-                  <span className="text-muted text-sm font-normal">
+                  <span className="text-pierre text-sm font-normal">
                     {[p.species, p.breed].filter(Boolean).join(" · ")}
                   </span>
                 </p>
-                {p.notes && <p className="text-sm text-muted mt-0.5">{p.notes}</p>}
+                {p.notes && <p className="text-sm text-pierre mt-0.5">{p.notes}</p>}
               </div>
-              <button onClick={() => removePet(p.id)} className="text-xs text-danger hover:underline shrink-0 ml-3">
+              <button onClick={() => removePet(p.id)} className="text-[13px] font-bold text-brique hover:underline shrink-0 ml-3">
                 Supprimer
               </button>
             </div>

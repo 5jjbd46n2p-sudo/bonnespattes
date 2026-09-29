@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "@phosphor-icons/react";
 import { formatEUR, formatDateFR } from "@/lib/utils";
 
 export default function PaymentRecorder({ invoiceId, payments, balance }) {
@@ -36,15 +37,15 @@ export default function PaymentRecorder({ invoiceId, payments, balance }) {
 
   return (
     <div className="card p-5">
-      <h2 className="font-semibold text-forest-dark mb-3">Paiements</h2>
+      <h2 className="font-display font-semibold text-encre mb-3">Paiements</h2>
       {payments.length > 0 && (
-        <div className="space-y-1.5 mb-4">
+        <div className="divide-y divide-trait border-y border-trait mb-4">
           {payments.map((p) => (
-            <div key={p.id} className="flex justify-between text-sm border-b border-border pb-1.5">
-              <span className="text-muted">
+            <div key={p.id} className="flex justify-between gap-3 text-sm py-2.5">
+              <span className="text-pierre tabular-nums">
                 {formatDateFR(p.date)} · {p.method}
               </span>
-              <span className="font-medium">{formatEUR(p.amount)}</span>
+              <span className="font-bold tabular-nums">{formatEUR(p.amount)}</span>
             </div>
           ))}
         </div>
@@ -69,13 +70,16 @@ export default function PaymentRecorder({ invoiceId, payments, balance }) {
             <option>Carte bancaire</option>
             <option>Autre</option>
           </select>
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-brique">{error}</p>}
           <button disabled={loading} className="btn-primary text-sm w-full">
             {loading ? "Enregistrement..." : "Enregistrer le paiement"}
           </button>
         </form>
       ) : (
-        <p className="text-sm text-emerald-700 font-medium">✓ Facture soldée</p>
+        <p className="text-sm text-mousse font-bold flex items-center gap-1.5">
+          <Check size={20} aria-hidden="true" />
+          Facture soldée
+        </p>
       )}
     </div>
   );

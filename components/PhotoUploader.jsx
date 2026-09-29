@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Camera, X } from "@phosphor-icons/react";
 
 export default function PhotoUploader({ visitId, photos }) {
   const router = useRouter();
@@ -36,9 +37,10 @@ export default function PhotoUploader({ visitId, photos }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted">{photos.length} photo{photos.length > 1 ? "s" : ""}</p>
-        <label className="btn-accent text-sm !py-1.5 !px-3 cursor-pointer">
-          {uploading ? "Envoi..." : "📷 Ajouter une photo"}
+        <p className="text-sm text-pierre tabular-nums">{photos.length} photo{photos.length > 1 ? "s" : ""}</p>
+        <label className="btn-primary text-sm !py-1.5 !px-3 cursor-pointer">
+          {!uploading && <Camera size={20} aria-hidden="true" />}
+          {uploading ? "Envoi..." : "Ajouter une photo"}
           <input
             ref={inputRef}
             type="file"
@@ -51,9 +53,9 @@ export default function PhotoUploader({ visitId, photos }) {
           />
         </label>
       </div>
-      {error && <p className="text-sm text-danger mb-2">{error}</p>}
+      {error && <p className="text-sm text-brique mb-2">{error}</p>}
       {photos.length === 0 ? (
-        <p className="text-sm text-muted">Aucune photo ajoutée pour cette visite.</p>
+        <p className="text-sm text-pierre">Aucune photo ajoutée pour cette visite.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {photos.map((p) => (
@@ -62,14 +64,15 @@ export default function PhotoUploader({ visitId, photos }) {
                 <img
                   src={`/api/photos/${p.id}/file`}
                   alt="Photo de la visite"
-                  className="w-full h-32 object-cover rounded-lg border border-border"
+                  className="w-full h-32 object-cover rounded-lg border border-trait"
                 />
               </a>
               <button
                 onClick={() => removePhoto(p.id)}
-                className="absolute top-1.5 right-1.5 bg-card/90 text-danger rounded-full w-7 h-7 text-xs md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                aria-label="Supprimer cette photo"
+                className="absolute top-1.5 right-1.5 bg-lin/90 text-brique rounded-lg w-8 h-8 flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity"
               >
-                ✕
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
           ))}

@@ -7,6 +7,7 @@ import ClientInfoCard from "@/components/ClientInfoCard";
 import PetManager from "@/components/PetManager";
 import ClientLoginManager from "@/components/ClientLoginManager";
 import DepositManager from "@/components/DepositManager";
+import { ArrowLeft, Camera, CheckSquare, Plus } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -54,11 +55,13 @@ export default async function ClientDetailPage({ params }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <Link href="/admin/clients" className="text-sm text-muted hover:underline">
-          ← Retour aux clients
+        <Link href="/admin/clients" className="text-sm text-pierre hover:underline inline-flex items-center gap-1">
+          <ArrowLeft size={16} aria-hidden="true" />
+          Clients
         </Link>
-        <Link href={`/admin/clients/${id}/visits/new`} className="btn-accent">
-          + Planifier une visite
+        <Link href={`/admin/clients/${id}/visits/new`} className="btn-primary gap-2">
+          <Plus size={20} aria-hidden="true" />
+          Planifier une visite
         </Link>
       </div>
 
@@ -68,24 +71,30 @@ export default async function ClientDetailPage({ params }) {
           <PetManager clientId={id} pets={pets} />
 
           <div className="card p-5">
-            <h2 className="font-semibold text-forest-dark mb-3">Historique des visites</h2>
+            <h2 className="font-display text-xl font-semibold mb-3">Historique des visites</h2>
             {visits.length === 0 ? (
-              <p className="text-sm text-muted">Aucune visite enregistrée pour l'instant.</p>
+              <p className="text-sm text-pierre">Pas encore de visite.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-trait -mx-5 border-t border-trait">
                 {visits.map((v) => (
                   <Link
                     key={v.id}
                     href={`/admin/visits/${v.id}`}
-                    className="flex items-center justify-between border border-border rounded-lg p-3 hover:bg-sand-dark/40 transition-colors"
+                    className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-sable transition-colors"
                   >
                     <div>
-                      <p className="font-medium text-sm">
-                        {formatDateFR(v.date)} {v.start_time ? `· ${v.start_time.slice(0, 5)}` : ""} — {v.pet_name}
+                      <p className="font-medium tabular-nums">
+                        {formatDateFR(v.date)} {v.start_time ? `· ${v.start_time.slice(0, 5)}` : ""} · {v.pet_name}
                       </p>
-                      <p className="text-xs text-muted mt-0.5">
-                        ✅ {v.task_done_count}/{v.task_count} tâches · 📷 {v.photo_count} photo
-                        {v.photo_count > 1 ? "s" : ""}
+                      <p className="text-sm text-pierre mt-0.5 flex items-center gap-3 tabular-nums">
+                        <span className="inline-flex items-center gap-1">
+                          <CheckSquare size={16} aria-hidden="true" />
+                          {v.task_done_count}/{v.task_count} tâches
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Camera size={16} aria-hidden="true" />
+                          {v.photo_count} photo{v.photo_count > 1 ? "s" : ""}
+                        </span>
                       </p>
                     </div>
                     <VisitStatusBadge status={v.status} />
@@ -102,27 +111,28 @@ export default async function ClientDetailPage({ params }) {
 
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-forest-dark">Factures</h2>
-              <Link href={`/admin/accounting/invoices/new?clientId=${id}`} className="text-sm text-forest underline">
-                + Facturer
+              <h2 className="font-display text-xl font-semibold">Factures</h2>
+              <Link href={`/admin/accounting/invoices/new?clientId=${id}`} className="text-sm text-rouille underline inline-flex items-center gap-1">
+                <Plus size={16} aria-hidden="true" />
+                Facturer
               </Link>
             </div>
             {invoices.length === 0 ? (
-              <p className="text-sm text-muted">Aucune facture pour ce client.</p>
+              <p className="text-sm text-pierre">Aucune facture pour ce client.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-trait -mx-5 border-t border-trait">
                 {invoices.map((inv) => (
                   <Link
                     key={inv.id}
                     href={`/admin/accounting/invoices/${inv.id}`}
-                    className="flex items-center justify-between border border-border rounded-lg p-3 hover:bg-sand-dark/40"
+                    className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-sable transition-colors"
                   >
                     <div>
-                      <p className="text-sm font-medium">{inv.number}</p>
-                      <p className="text-xs text-muted">{formatDateFR(inv.issue_date)}</p>
+                      <p className="font-medium">{inv.number}</p>
+                      <p className="text-sm text-pierre tabular-nums">{formatDateFR(inv.issue_date)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold">{formatEUR(inv.total_ttc)}</p>
+                      <p className="font-semibold tabular-nums">{formatEUR(inv.total_ttc)}</p>
                       <InvoiceStatusBadge status={inv.status} />
                     </div>
                   </Link>

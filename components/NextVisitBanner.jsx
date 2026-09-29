@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { NavigationArrow } from "@phosphor-icons/react";
 import { wazeUrl } from "@/lib/utils";
 
 function toMinutes(t) {
@@ -45,10 +46,10 @@ export default function NextVisitBanner({ visits }) {
   if (!visit) return null;
 
   let headline;
-  let tone = "bg-forest text-white";
+  let tone = "text-pierre";
   if (inProgress) {
-    headline = "🐾 Visite en cours";
-    tone = "bg-blue-600 text-white";
+    headline = "Visite en cours";
+    tone = "text-rouille";
   } else {
     const start = toMinutes(visit.start_time);
     if (start === null) headline = "Prochaine visite (sans horaire)";
@@ -56,34 +57,35 @@ export default function NextVisitBanner({ visits }) {
     else if (start - nowMin === 0) headline = "Prochaine visite : maintenant";
     else {
       headline = `En retard de ${formatDuration(nowMin - start)}`;
-      tone = "bg-orange-700 text-white";
+      tone = "text-brique";
     }
   }
 
   return (
-    <div className={`rounded-2xl p-4 sm:p-5 ${tone} shadow-sm`}>
-      <p className="text-xs uppercase tracking-wide font-semibold opacity-80">{headline}</p>
+    <div className="card p-4 sm:p-5">
+      <p className={`text-[13px] font-bold ${tone}`}>{headline}</p>
       <p className="font-display text-xl sm:text-2xl font-semibold mt-1">
         {visit.pet_name} — chez {visit.first_name} {visit.last_name}
       </p>
-      <p className="text-sm opacity-85 mt-0.5">
+      <p className="text-sm text-pierre mt-1 tabular-nums">
         {visit.start_time ? `${visit.start_time.slice(0, 5)}${visit.end_time ? ` – ${visit.end_time.slice(0, 5)}` : ""}` : "Horaire libre"}
         {visit.address ? ` · ${visit.address}` : ""}
       </p>
-      <div className="flex gap-2 mt-3 flex-wrap">
+      <div className="flex gap-2 mt-4 flex-wrap">
         {visit.address && (
           <a
             href={wazeUrl(visit.address)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center min-h-[40px] px-4 rounded-full bg-white/20 hover:bg-white/30 text-sm font-semibold"
+            className="btn-primary text-sm"
           >
-            🧭 Y aller avec Waze
+            <NavigationArrow size={20} aria-hidden="true" />
+            Y aller avec Waze
           </a>
         )}
         <Link
           href={`/admin/visits/${visit.id}`}
-          className="inline-flex items-center min-h-[40px] px-4 rounded-full bg-white/20 hover:bg-white/30 text-sm font-semibold"
+          className="btn-ghost text-sm"
         >
           Ouvrir la visite
         </Link>

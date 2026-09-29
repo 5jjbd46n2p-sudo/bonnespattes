@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, X } from "@phosphor-icons/react";
 import { formatEUR, formatDateFR } from "@/lib/utils";
 
 export default function DepositManager({ clientId, deposits }) {
@@ -56,21 +57,25 @@ export default function DepositManager({ clientId, deposits }) {
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-forest-dark">Acomptes</h2>
-        <button onClick={() => setShowForm((s) => !s)} className="text-sm text-forest underline">
-          {showForm ? "Annuler" : "+ Enregistrer un acompte"}
+        <h2 className="font-display font-semibold text-encre">Acomptes</h2>
+        <button
+          onClick={() => setShowForm((s) => !s)}
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-rouille hover:text-rouille-fonce"
+        >
+          {!showForm && <Plus size={20} aria-hidden="true" />}
+          {showForm ? "Annuler" : "Enregistrer un acompte"}
         </button>
       </div>
 
       {availableTotal > 0 && (
-        <p className="text-sm mb-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          💰 Disponible : <span className="font-semibold">{formatEUR(availableTotal)}</span>
-          <span className="text-muted"> — sera proposé automatiquement à la prochaine facture.</span>
+        <p className="text-sm mb-3 bg-sable rounded-lg px-3 py-2">
+          Disponible : <span className="font-bold tabular-nums">{formatEUR(availableTotal)}</span>
+          <span className="text-pierre"> — sera proposé automatiquement à la prochaine facture.</span>
         </p>
       )}
 
       {showForm && (
-        <form onSubmit={addDeposit} className="space-y-2 mb-4 border border-border rounded-lg p-3">
+        <form onSubmit={addDeposit} className="space-y-2 mb-4 border border-trait rounded-lg p-3">
           <div className="grid grid-cols-2 gap-2">
             <input
               type="number"
@@ -95,7 +100,7 @@ export default function DepositManager({ clientId, deposits }) {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-brique">{error}</p>}
           <button disabled={loading} className="btn-primary text-sm w-full">
             {loading ? "Enregistrement..." : "Enregistrer l'acompte"}
           </button>
@@ -103,28 +108,36 @@ export default function DepositManager({ clientId, deposits }) {
       )}
 
       {deposits.length === 0 ? (
-        <p className="text-sm text-muted">Aucun acompte enregistré pour ce client.</p>
+        <p className="text-sm text-pierre">Aucun acompte enregistré pour ce client.</p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="divide-y divide-trait border-y border-trait">
           {deposits.map((d) => (
-            <div key={d.id} className="flex items-center justify-between text-sm border-b border-border pb-1.5">
+            <div key={d.id} className="flex items-center justify-between gap-3 text-sm py-2.5">
               <div>
-                <span className="text-muted">
+                <span className="text-pierre tabular-nums">
                   {formatDateFR(d.date)} · {d.method}
                 </span>
                 {d.invoice_id ? (
-                  <span className="badge bg-emerald-100 text-emerald-800 text-xs ml-2">
+                  <span className="badge text-mousse ml-2">
+                    <span className="badge-dot bg-mousse" aria-hidden="true" />
                     Appliqué à {d.invoice_number}
                   </span>
                 ) : (
-                  <span className="badge bg-amber-100 text-amber-800 text-xs ml-2">Disponible</span>
+                  <span className="badge text-encre ml-2">
+                    <span className="badge-dot bg-miel" aria-hidden="true" />
+                    Disponible
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-medium">{formatEUR(d.amount)}</span>
+                <span className="font-bold tabular-nums">{formatEUR(d.amount)}</span>
                 {!d.invoice_id && (
-                  <button onClick={() => removeDeposit(d.id)} className="text-xs text-danger hover:underline">
-                    ✕
+                  <button
+                    onClick={() => removeDeposit(d.id)}
+                    className="text-brique p-1 rounded-lg hover:bg-sable"
+                    aria-label="Supprimer cet acompte"
+                  >
+                    <X size={20} aria-hidden="true" />
                   </button>
                 )}
               </div>

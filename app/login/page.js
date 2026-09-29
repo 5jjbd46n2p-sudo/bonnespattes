@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,24 +37,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-forest text-white text-2xl mb-3">
-            🐾
-          </div>
-          <h1 className="font-display text-3xl font-semibold text-forest-dark">
-            Aux Bonnes Pattes
-          </h1>
-          <p className="text-muted text-sm mt-1">Suivi des visites, en toute confiance</p>
+          <Logo size={36} className="text-encre" />
+          <p className="text-pierre mt-3">
+            Les nouvelles de vos compagnons, après chaque visite.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           <div>
-            <label className="text-sm font-medium block mb-1">Email</label>
+            <label htmlFor="login-email" className="text-[13px] font-bold text-pierre block mb-1">
+              Email
+            </label>
             <input
+              id="login-email"
               type="email"
               required
+              autoComplete="email"
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -61,10 +63,14 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium block mb-1">Mot de passe</label>
+            <label htmlFor="login-password" className="text-[13px] font-bold text-pierre block mb-1">
+              Mot de passe
+            </label>
             <input
+              id="login-password"
               type="password"
               required
+              autoComplete="current-password"
               className="input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -72,23 +78,24 @@ export default function LoginPage() {
             />
           </div>
           {error && (
-            <p className="text-sm text-danger bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <p className="text-sm text-brique border border-brique rounded-lg px-3 py-2" role="alert">
               {error}
             </p>
           )}
           <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? "Connexion..." : "Se connecter"}
+            {loading ? "Connexion…" : "Se connecter"}
           </button>
         </form>
-        <p className="text-center text-xs text-muted mt-6">
-          Espace réservé aux clients et à l'administrateur d'Aux Bonnes Pattes.
+        <p className="text-center text-sm text-pierre mt-6">
+          Vos identifiants vous ont été envoyés par email. Un souci pour vous connecter ? Écrivez-moi,
+          je vous aide. — Aurore
         </p>
-        <p className="text-center text-xs text-muted mt-2">
-          <Link href="/mentions-legales" className="underline hover:text-ink">
+        <p className="text-center text-[13px] text-pierre mt-4">
+          <Link href="/mentions-legales" className="underline hover:text-encre">
             Mentions légales
           </Link>
           {" · "}
-          <Link href="/confidentialite" className="underline hover:text-ink">
+          <Link href="/confidentialite" className="underline hover:text-encre">
             Confidentialité
           </Link>
         </p>

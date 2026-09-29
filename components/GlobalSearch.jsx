@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { MagnifyingGlass, User, PawPrint, CaretRight } from "@phosphor-icons/react";
 
 /**
  * Recherche globale (clients, animaux, adresses) accessible partout dans
@@ -90,14 +91,14 @@ export default function GlobalSearch({ variant = "icon" }) {
     ...shown.clients.map((c) => ({
       key: `c-${c.id}`,
       href: `/admin/clients/${c.id}`,
-      icon: "👤",
+      icon: User,
       title: `${c.first_name} ${c.last_name}`,
       sub: c.address || c.phone || "",
     })),
     ...shown.pets.map((p) => ({
       key: `p-${p.id}`,
       href: `/admin/clients/${p.client_id}`,
-      icon: "🐾",
+      icon: PawPrint,
       title: p.name,
       sub: `${p.species ? p.species + " · " : ""}chez ${p.first_name} ${p.last_name}`,
     })),
@@ -109,20 +110,20 @@ export default function GlobalSearch({ variant = "icon" }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-white/75"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-sur-nav/75"
         >
-          <span>🔍</span>
+          <MagnifyingGlass size={20} aria-hidden="true" />
           <span className="flex-1 text-left">Rechercher…</span>
-          <kbd className="text-[10px] font-semibold border border-white/25 rounded px-1.5 py-0.5">⌘K</kbd>
+          <kbd className="text-[11px] font-bold border border-white/25 rounded px-1.5 py-0.5">⌘K</kbd>
         </button>
       ) : (
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Rechercher"
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-lg"
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10"
         >
-          🔍
+          <MagnifyingGlass size={24} aria-hidden="true" />
         </button>
       )}
 
@@ -133,11 +134,11 @@ export default function GlobalSearch({ variant = "icon" }) {
             role="dialog"
             aria-modal="true"
             aria-label="Recherche"
-            className="w-full max-w-lg card shadow-2xl overflow-hidden text-ink"
+            className="w-full max-w-lg modal overflow-hidden text-encre"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2 p-3 border-b border-border">
-              <span className="pl-1">🔍</span>
+            <div className="flex items-center gap-2 p-3 border-b border-trait">
+              <MagnifyingGlass size={20} className="ml-1 text-pierre shrink-0" aria-hidden="true" />
               <input
                 ref={inputRef}
                 className="flex-1 bg-transparent outline-none text-base py-1.5"
@@ -149,32 +150,32 @@ export default function GlobalSearch({ variant = "icon" }) {
                 }}
                 enterKeyHint="search"
               />
-              <button type="button" onClick={() => setOpen(false)} className="text-sm text-forest font-medium px-2">
+              <button type="button" onClick={() => setOpen(false)} className="text-sm text-rouille font-bold px-2">
                 Annuler
               </button>
             </div>
             <div className="max-h-[60vh] overflow-y-auto">
               {term.length < 2 ? (
-                <p className="px-4 py-6 text-sm text-muted text-center">Tape au moins 2 lettres.</p>
+                <p className="px-4 py-6 text-sm text-pierre text-center">Tape au moins 2 lettres.</p>
               ) : loading && items.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-muted text-center">Recherche…</p>
+                <p className="px-4 py-6 text-sm text-pierre text-center">Recherche…</p>
               ) : items.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-muted text-center">Aucun résultat.</p>
+                <p className="px-4 py-6 text-sm text-pierre text-center">Aucun résultat.</p>
               ) : (
-                <ul className="divide-y divide-border">
+                <ul className="divide-y divide-trait">
                   {items.map((it) => (
                     <li key={it.key}>
                       <button
                         type="button"
                         onClick={() => go(it.href)}
-                        className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-sand-dark/60 active:bg-sand-dark"
+                        className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-sable active:bg-sable"
                       >
-                        <span className="text-lg">{it.icon}</span>
+                        <it.icon size={20} className="text-pierre shrink-0" aria-hidden="true" />
                         <span className="min-w-0 flex-1">
-                          <span className="block font-medium truncate">{it.title}</span>
-                          {it.sub && <span className="block text-xs text-muted truncate">{it.sub}</span>}
+                          <span className="block font-bold truncate">{it.title}</span>
+                          {it.sub && <span className="block text-[13px] text-pierre truncate">{it.sub}</span>}
                         </span>
-                        <span className="text-muted">›</span>
+                        <CaretRight size={20} className="text-pierre shrink-0" aria-hidden="true" />
                       </button>
                     </li>
                   ))}

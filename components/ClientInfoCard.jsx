@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Phone, Envelope, CurrencyEur, MapPin, Trash } from "@phosphor-icons/react";
 import WazeLink from "@/components/WazeLink";
 
 export default function ClientInfoCard({ client, invoiceCount = 0 }) {
@@ -38,9 +39,9 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
   async function removeClient() {
     const invoiceWarning =
       invoiceCount > 0
-        ? `\n\n⚠️ Ce client a ${invoiceCount} facture${invoiceCount > 1 ? "s" : ""} enregistrée${
+        ? `\n\nAttention : ce client a ${invoiceCount} facture${invoiceCount > 1 ? "s" : ""} enregistrée${
             invoiceCount > 1 ? "s" : ""
-          }. La loi impose normalement de conserver les documents comptables plusieurs années : exporte-les (Comptabilité → Export CSV, ou le PDF de chaque facture) avant de continuer si tu dois les garder.`
+          }. La loi impose normalement de conserver les documents comptables plusieurs années : exporte-les (Comptabilité, puis Export CSV, ou le PDF de chaque facture) avant de continuer si tu dois les garder.`
         : "";
     const confirmed = confirm(
       `Supprimer définitivement ${client.first_name} ${client.last_name} et toutes ses données (animaux, historique de visites, photos, accès au portail) ? Cette action est irréversible.${invoiceWarning}`
@@ -62,13 +63,30 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
       <div className="card p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-display text-2xl font-semibold text-forest-dark">
+            <h2 className="font-display text-2xl font-semibold text-encre">
               {client.first_name} {client.last_name}
             </h2>
-            <div className="mt-2 space-y-1 text-sm text-muted">
-              {client.phone && <p>📞 {client.phone}</p>}
-              {client.email && <p>✉️ {client.email}</p>}
-              {client.hourly_rate > 0 && <p>💶 Tarif indicatif : {client.hourly_rate} €/h</p>}
+            <div className="mt-2 space-y-1.5 text-sm text-pierre">
+              {client.phone && (
+                <p className="flex items-center gap-2">
+                  <Phone size={20} aria-hidden="true" />
+                  <a href={`tel:${client.phone}`} className="hover:underline tabular-nums">
+                    {client.phone}
+                  </a>
+                </p>
+              )}
+              {client.email && (
+                <p className="flex items-center gap-2">
+                  <Envelope size={20} aria-hidden="true" />
+                  {client.email}
+                </p>
+              )}
+              {client.hourly_rate > 0 && (
+                <p className="flex items-center gap-2">
+                  <CurrencyEur size={20} aria-hidden="true" />
+                  <span className="tabular-nums">Tarif indicatif : {client.hourly_rate} €/h</span>
+                </p>
+              )}
             </div>
           </div>
           <button onClick={() => setEditing(true)} className="btn-ghost text-sm !py-1.5 !px-3 shrink-0">
@@ -77,26 +95,30 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
         </div>
 
         {client.address && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-sm">📍 {client.address}</p>
+          <div className="mt-4 pt-4 border-t border-trait">
+            <p className="text-sm flex items-start gap-2">
+              <MapPin size={20} className="shrink-0 text-pierre" aria-hidden="true" />
+              {client.address}
+            </p>
             <WazeLink address={client.address} className="mt-1.5" />
           </div>
         )}
 
         {client.notes && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Notes</p>
+          <div className="mt-4 pt-4 border-t border-trait">
+            <p className="label mb-1">Notes</p>
             <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
           </div>
         )}
 
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="mt-4 pt-4 border-t border-trait">
           <button
             onClick={removeClient}
             disabled={deleting}
-            className="text-xs text-danger hover:underline"
+            className="inline-flex items-center gap-1.5 text-[13px] font-bold text-brique hover:underline"
           >
-            {deleting ? "Suppression..." : "🗑 Supprimer ce client et toutes ses données"}
+            {!deleting && <Trash size={20} aria-hidden="true" />}
+            {deleting ? "Suppression..." : "Supprimer ce client et toutes ses données"}
           </button>
         </div>
       </div>
@@ -114,7 +136,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
       </div>
       <Field label="Adresse" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
       <div>
-        <label className="text-sm font-medium block mb-1">Notes</label>
+        <label className="label block mb-1">Notes</label>
         <textarea
           className="input"
           rows={3}
@@ -137,7 +159,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
 function Field({ label, value, onChange, type = "text" }) {
   return (
     <div>
-      <label className="text-sm font-medium block mb-1">{label}</label>
+      <label className="label block mb-1">{label}</label>
       <input type={type} className="input" value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   );

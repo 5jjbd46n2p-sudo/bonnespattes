@@ -1,61 +1,65 @@
 // Source unique des couleurs de statut : badges, pastilles du calendrier et
-// liseré des cartes de visite utilisent tous ces mêmes réglages, pour qu'un
-// statut ait exactement la même couleur partout dans l'application.
+// cartes de visite utilisent tous ces mêmes réglages, pour qu'un statut ait
+// exactement la même couleur partout dans l'application.
+// Couleurs (docs/IDENTITE_VISUELLE.md) : Planifiée = miel · En cours = rouille
+// · Terminée = mousse · Annulée = pierre.
+// - badge  : couleur du texte du badge (le miel, trop clair pour du texte,
+//            n'est utilisé que pour la pastille ; le texte reste en encre)
+// - dot    : couleur de la pastille ronde
+// - border : liseré éventuel
 export const VISIT_STATUS = {
   PLANIFIE: {
     label: "Planifiée",
-    badge: "bg-amber-100 text-amber-800",
-    dot: "bg-amber-500",
-    border: "border-l-amber-400",
+    badge: "text-encre",
+    dot: "bg-miel",
+    border: "border-l-miel",
   },
   EN_COURS: {
     label: "En cours",
-    badge: "bg-blue-100 text-blue-800",
-    dot: "bg-blue-500",
-    border: "border-l-blue-400",
+    badge: "text-rouille",
+    dot: "bg-rouille",
+    border: "border-l-rouille",
   },
   FAIT: {
     label: "Terminée",
-    badge: "bg-emerald-100 text-emerald-800",
-    dot: "bg-emerald-500",
-    border: "border-l-emerald-400",
+    badge: "text-mousse",
+    dot: "bg-mousse",
+    border: "border-l-mousse",
   },
   ANNULE: {
     label: "Annulée",
-    badge: "bg-stone-200 text-stone-600",
-    dot: "bg-stone-400",
-    border: "border-l-stone-300",
+    badge: "text-pierre",
+    dot: "bg-pierre",
+    border: "border-l-pierre",
   },
 };
 export const VISIT_STATUS_ORDER = ["PLANIFIE", "EN_COURS", "FAIT", "ANNULE"];
 
-const INVOICE_STYLES = {
-  BROUILLON: "bg-stone-200 text-stone-700",
-  ENVOYEE: "bg-blue-100 text-blue-800",
-  PAYEE: "bg-emerald-100 text-emerald-800",
-  EN_RETARD: "bg-red-100 text-red-800",
-};
-const INVOICE_LABELS = {
-  BROUILLON: "Brouillon",
-  ENVOYEE: "Envoyée",
-  PAYEE: "Payée",
-  EN_RETARD: "En retard",
+const INVOICE_STATUS = {
+  BROUILLON: { label: "Brouillon", badge: "text-pierre", dot: "bg-pierre" },
+  ENVOYEE: { label: "Envoyée", badge: "text-encre", dot: "bg-miel" },
+  PAYEE: { label: "Payée", badge: "text-mousse", dot: "bg-mousse" },
+  EN_RETARD: { label: "En retard", badge: "text-brique", dot: "bg-brique" },
 };
 
-export function VisitStatusBadge({ status }) {
-  const meta = VISIT_STATUS[status];
+const FALLBACK = { badge: "text-pierre", dot: "bg-pierre" };
+
+// Badge : pastille ronde de 8px suivie du texte (13px, gras), sans fond.
+function Badge({ meta, label }) {
   return (
-    <span className={`badge ${meta?.badge || "bg-stone-100 text-stone-700"}`}>
-      {meta && <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} aria-hidden="true" />}
-      {meta?.label || status}
+    <span className={`badge ${meta.badge}`}>
+      <span className={`badge-dot ${meta.dot}`} aria-hidden="true" />
+      {label}
     </span>
   );
 }
 
+export function VisitStatusBadge({ status }) {
+  const meta = VISIT_STATUS[status];
+  return <Badge meta={meta || FALLBACK} label={meta?.label || status} />;
+}
+
 export function InvoiceStatusBadge({ status }) {
-  return (
-    <span className={`badge ${INVOICE_STYLES[status] || "bg-stone-100 text-stone-700"}`}>
-      {INVOICE_LABELS[status] || status}
-    </span>
-  );
+  const meta = INVOICE_STATUS[status];
+  return <Badge meta={meta || FALLBACK} label={meta?.label || status} />;
 }

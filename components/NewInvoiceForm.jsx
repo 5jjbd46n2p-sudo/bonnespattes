@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, Plus, X } from "@phosphor-icons/react";
 import { formatDateFR, computeVisitHours } from "@/lib/utils";
 
 export default function NewInvoiceForm({ clients, settings, preselectedClientId, initialUnbilledVisits }) {
@@ -139,16 +140,17 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <Link href="/admin/accounting" className="text-sm text-muted hover:underline">
-          ← Retour à la comptabilité
+        <Link href="/admin/accounting" className="text-sm text-pierre hover:underline inline-flex items-center gap-1.5">
+          <ArrowLeft size={20} aria-hidden="true" />
+          Retour à la comptabilité
         </Link>
-        <h1 className="font-display text-3xl font-semibold text-forest-dark mt-2">Nouvelle facture</h1>
+        <h1 className="font-display font-semibold text-encre mt-2">Nouvelle facture</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="card p-5 space-y-4">
           <div>
-            <label className="text-sm font-medium block mb-1">Client</label>
+            <label className="label block mb-1">Client</label>
             <select className="input" value={clientId} onChange={(e) => onClientChange(e.target.value)}>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -160,10 +162,10 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
 
           {unbilledVisits.length > 0 && (
             <div>
-              <label className="text-sm font-medium block mb-2">Visites non facturées à inclure</label>
-              <div className="space-y-1.5">
+              <label className="label block mb-2">Visites non facturées à inclure</label>
+              <div className="list-group">
                 {unbilledVisits.map((v) => (
-                  <label key={v.id} className="flex items-center gap-2 border border-border rounded-lg p-2.5 text-sm">
+                  <label key={v.id} className="list-row text-sm cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedVisitIds.has(v.id)}
@@ -172,10 +174,10 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
                     <span className="flex-1">
                       {formatDateFR(v.date)} — {v.pet_name}
                       {computeVisitHours(v.start_time, v.end_time) && (
-                        <span className="text-muted"> ({computeVisitHours(v.start_time, v.end_time)} h)</span>
+                        <span className="text-pierre"> ({computeVisitHours(v.start_time, v.end_time)} h)</span>
                       )}
                     </span>
-                    <span className="font-medium">{Number(v.price).toFixed(2)} €</span>
+                    <span className="font-bold tabular-nums">{Number(v.price).toFixed(2)} €</span>
                   </label>
                 ))}
               </div>
@@ -184,10 +186,10 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
 
           {availableDeposits.length > 0 && (
             <div>
-              <label className="text-sm font-medium block mb-2">Acomptes disponibles à déduire</label>
-              <div className="space-y-1.5">
+              <label className="label block mb-2">Acomptes disponibles à déduire</label>
+              <div className="list-group">
                 {availableDeposits.map((d) => (
-                  <label key={d.id} className="flex items-center gap-2 border border-border rounded-lg p-2.5 text-sm">
+                  <label key={d.id} className="list-row text-sm cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedDepositIds.has(d.id)}
@@ -196,7 +198,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
                     <span className="flex-1">
                       Acompte du {formatDateFR(d.date)} ({d.method})
                     </span>
-                    <span className="font-medium text-forest">- {Number(d.amount).toFixed(2)} €</span>
+                    <span className="font-bold text-mousse tabular-nums">- {Number(d.amount).toFixed(2)} €</span>
                   </label>
                 ))}
               </div>
@@ -204,15 +206,16 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
           )}
 
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Lignes manuelles</label>
+            <label className="label">Lignes manuelles</label>
             <button type="button" onClick={addManualItem} className="btn-ghost text-sm !py-1 !px-3">
-              + Ajouter une ligne
+              <Plus size={20} aria-hidden="true" />
+              Ajouter une ligne
             </button>
           </div>
           {manualItems.map((it, i) => (
             <div
               key={i}
-              className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:items-center border border-border rounded-lg p-3 sm:border-0 sm:p-0"
+              className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:items-center border border-trait rounded-lg p-3 sm:border-0 sm:p-0"
             >
               <div className="flex gap-2 sm:contents">
                 <input
@@ -224,10 +227,10 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
                 <button
                   type="button"
                   onClick={() => removeManualItem(i)}
-                  className="sm:col-span-1 sm:order-last shrink-0 px-2 text-danger text-sm"
+                  className="sm:col-span-1 sm:order-last shrink-0 px-2 text-brique flex items-center justify-center"
                   aria-label="Supprimer la ligne"
                 >
-                  ✕
+                  <X size={20} aria-hidden="true" />
                 </button>
               </div>
               <div className="flex gap-2 sm:contents">
@@ -253,21 +256,21 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <div>
-              <label className="text-sm font-medium block mb-1">Taux de TVA (%)</label>
+              <label className="label block mb-1">Taux de TVA (%)</label>
               <input type="number" step="0.1" className="input" value={tvaRate} onChange={(e) => setTvaRate(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">Échéance</label>
+              <label className="label block mb-1">Échéance</label>
               <input type="date" className="input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium block mb-1">Notes (visibles sur la facture)</label>
+            <label className="label block mb-1">Notes (visibles sur la facture)</label>
             <textarea className="input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
 
-        <div className="card p-5 space-y-1">
+        <div className="card p-5 space-y-1 tabular-nums">
           <div className="flex justify-between text-sm">
             <span>Total HT</span>
             <span>{totalHT.toFixed(2)} €</span>
@@ -276,17 +279,17 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
             <span>TVA ({tvaRate}%)</span>
             <span>{totalTVA.toFixed(2)} €</span>
           </div>
-          <div className="flex justify-between font-semibold text-lg pt-1 border-t border-border mt-1">
+          <div className="flex justify-between font-semibold text-lg pt-1 border-t border-trait mt-1">
             <span>Total TTC</span>
             <span>{totalTTC.toFixed(2)} €</span>
           </div>
           {depositsApplied > 0 && (
             <>
-              <div className="flex justify-between text-sm text-forest">
+              <div className="flex justify-between text-sm text-mousse">
                 <span>Acompte(s) déduit(s)</span>
                 <span>- {depositsApplied.toFixed(2)} €</span>
               </div>
-              <div className="flex justify-between font-semibold text-base pt-1 border-t border-border mt-1">
+              <div className="flex justify-between font-semibold text-base pt-1 border-t border-trait mt-1">
                 <span>Net à payer</span>
                 <span>{netAPayer.toFixed(2)} €</span>
               </div>
@@ -294,7 +297,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
           )}
         </div>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p className="text-sm text-brique">{error}</p>}
 
         <button disabled={loading} className="btn-primary">
           {loading ? "Création..." : "Créer la facture"}

@@ -2,6 +2,7 @@ import { requireClient } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
+import { CheckSquare, DownloadSimple, Square } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -42,40 +43,50 @@ export default async function PortalPage() {
     [clientId]
   );
 
+  const petNames = petsRes.rows.map((p) => p.name);
+  const petLabel =
+    petNames.length === 0
+      ? "vos compagnons"
+      : petNames.length === 1
+      ? petNames[0]
+      : `${petNames.slice(0, -1).join(", ")} et ${petNames[petNames.length - 1]}`;
+
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-forest-dark">
-            Suivi de {petsRes.rows.map((p) => p.name).join(" & ") || "vos animaux"}
-          </h1>
-          <p className="text-muted text-sm mt-1">
-            Retrouvez ici le détail de chaque visite : tâches réalisées et photos.
+          <h1 className="font-display text-3xl font-semibold text-encre">Les nouvelles de {petLabel}</h1>
+          <p className="text-pierre mt-1">
+            Après chaque passage, je vous laisse ici le compte rendu et les photos. — Aurore
           </p>
         </div>
-        <a href="/api/portal/export" className="btn-ghost text-xs !py-1.5 !px-3 shrink-0">
-          ⬇ Télécharger mes données
+        <a href="/api/portal/export" className="btn-ghost text-sm gap-2 !py-1.5 !px-3 shrink-0">
+          <DownloadSimple size={20} aria-hidden="true" />
+          Télécharger mes données
         </a>
       </div>
 
-      <div className="space-y-4">
-        {visitsRes.rows.length === 0 ? (
-          <div className="card p-8 text-center text-muted">Aucune visite enregistrée pour le moment.</div>
-        ) : (
-          visitsRes.rows.map((v) => {
+      {visitsRes.rows.length === 0 ? (
+        <div className="card p-8 text-center text-pierre">
+          Pas encore de visite. Vous retrouverez ici le compte rendu et les photos après chaque passage.
+        </div>
+      ) : (
+        <ul className="card divide-y divide-trait overflow-hidden">
+          {visitsRes.rows.map((v) => {
             const tasks = tasksByVisit[v.id] || [];
             const photos = photosByVisit[v.id] || [];
             const doneCount = tasks.filter((t) => t.done).length;
             return (
-              <div key={v.id} className="card p-5">
+              <li key={v.id} className="p-5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
-                    <p className="font-semibold">
-                      {formatDateFR(v.date)} {v.start_time && `· ${v.start_time.slice(0, 5)}`} — {v.pet_name}
+                    <p className="font-bold tabular-nums">
+                      {formatDateFR(v.date)} {v.start_time && `· ${v.start_time.slice(0, 5)}`} · {v.pet_name}
                     </p>
                     {tasks.length > 0 && (
-                      <p className="text-xs text-muted mt-0.5">
-                        ✅ {doneCount}/{tasks.length} tâches réalisées
+                      <p className="text-sm text-pierre mt-0.5 tabular-nums">
+                        {doneCount} sur {tasks.length} tâche{tasks.length > 1 ? "s" : ""} faite
+                        {doneCount > 1 ? "s" : ""}
                       </p>
                     )}
                   </div>
@@ -85,15 +96,19 @@ export default async function PortalPage() {
                 {tasks.length > 0 && (
                   <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {tasks.map((t) => (
-                      <li key={t.id} className="text-sm flex items-center gap-2">
-                        <span className={t.done ? "text-emerald-600" : "text-stone-300"}>●</span>
-                        <span className={t.done ? "" : "text-muted"}>{t.label}</span>
+                      <li key={t.id} className="flex items-center gap-2">
+                        {t.done ? (
+                          <CheckSquare size={20} weight="regular" className="text-mousse shrink-0" aria-label="Fait" />
+                        ) : (
+                          <Square size={20} className="text-pierre shrink-0" aria-label="Pas fait" />
+                        )}
+                        <span className={t.done ? "" : "text-pierre"}>{t.label}</span>
                       </li>
                     ))}
                   </ul>
                 )}
 
-                {v.notes && <p className="text-sm text-muted mt-3 italic">"{v.notes}"</p>}
+                {v.notes && <p className="mt-3 whitespace-pre-line">{v.notes}</p>}
 
                 {photos.length > 0 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
@@ -101,44 +116,44 @@ export default async function PortalPage() {
                       <a key={p.id} href={`/api/photos/${p.id}/file`} target="_blank" rel="noopener noreferrer">
                         <img
                           src={`/api/photos/${p.id}/file`}
-                          alt="Photo de la visite"
-                          className="w-full h-24 object-cover rounded-lg border border-border"
+                          alt={`Photo de ${v.pet_name}`}
+                          className="w-full h-24 object-cover rounded-lg"
                         />
                       </a>
                     ))}
                   </div>
                 )}
-              </div>
+              </li>
             );
-          })
-        )}
-      </div>
+          })}
+        </ul>
+      )}
 
       {invoicesRes.rows.length > 0 && (
         <div>
-          <h2 className="font-display text-xl font-semibold mb-3">Mes factures</h2>
-          <div className="card divide-y divide-border">
+          <h2 className="font-display text-xl font-semibold mb-3">Vos factures</h2>
+          <ul className="card divide-y divide-trait overflow-hidden">
             {invoicesRes.rows.map((inv) => (
-              <div key={inv.id} className="flex items-center justify-between p-4">
+              <li key={inv.id} className="flex items-center justify-between gap-3 flex-wrap px-5 py-3">
                 <div>
-                  <p className="font-medium text-sm">{inv.number}</p>
-                  <p className="text-xs text-muted">{formatDateFR(inv.issue_date)}</p>
+                  <p className="font-bold">{inv.number}</p>
+                  <p className="text-sm text-pierre tabular-nums">{formatDateFR(inv.issue_date)}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold">{formatEUR(inv.total_ttc)}</span>
+                  <span className="font-bold tabular-nums">{formatEUR(inv.total_ttc)}</span>
                   <InvoiceStatusBadge status={inv.status} />
                   <a
                     href={`/api/invoices/${inv.id}/pdf`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-forest underline"
+                    className="text-sm text-rouille underline"
                   >
                     PDF
                   </a>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
     </div>
