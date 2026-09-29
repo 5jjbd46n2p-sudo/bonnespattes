@@ -21,10 +21,10 @@ export default async function MentionsLegalesPage() {
     <div className="min-h-screen bg-papier">
       <div className="max-w-[720px] mx-auto px-4 md:px-8 py-10 space-y-8">
         <div>
-          <Link href="/login" aria-label="Aux Bonnes Pattes, retour à la connexion" className="inline-block">
+          <Link href="/" aria-label="Aux Bonnes Pattes, retour à l'accueil" className="inline-block">
             <Logo size={28} className="text-encre" />
           </Link>
-          <Link href="/login" className="mt-6 text-sm text-pierre hover:underline flex items-center gap-1 w-fit">
+          <Link href="/" className="mt-6 text-sm text-pierre hover:underline flex items-center gap-1 w-fit">
             <ArrowLeft size={16} aria-hidden="true" />
             Retour
           </Link>
