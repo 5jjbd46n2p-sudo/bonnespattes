@@ -215,6 +215,65 @@ export function PricingSettingsForm({ settings }) {
   );
 }
 
+export function PublicSettingsForm({ settings }) {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    referralCredit: settings.referral_credit ?? 10,
+    serviceArea: settings.service_area || "Viarmes et environs (15 km)",
+  });
+  const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ referralCredit: Number(form.referralCredit), serviceArea: form.serviceArea }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Enregistrement impossible.");
+      return;
+    }
+    setSaved(true);
+    router.refresh();
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <form onSubmit={save} className="card p-5 space-y-4">
+      <div>
+        <h2 className="font-display font-semibold text-encre">Site public &amp; parrainage</h2>
+        <p className="text-[13px] text-pierre mt-1">
+          Le crédit est offert au parrain et au filleul, et déduit de leur prochaine facture. La zone s'affiche
+          sur la page d'accueil.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label="Crédit de parrainage (€)" type="number" step="0.5" min="0" value={form.referralCredit} onChange={(v) => setForm({ ...form, referralCredit: v })} />
+        <Field label="Zone d'intervention" value={form.serviceArea} onChange={(v) => setForm({ ...form, serviceArea: v })} />
+      </div>
+      {error && <p className="text-sm font-bold text-rouille">{error}</p>}
+      <div className="flex items-center gap-3">
+        <button disabled={loading} className="btn-primary text-sm">
+          {loading ? "Enregistrement..." : "Enregistrer"}
+        </button>
+        {saved && (
+          <span className="text-sm font-bold text-mousse inline-flex items-center gap-1.5">
+            <Check size={20} aria-hidden="true" />
+            Enregistré
+          </span>
+        )}
+      </div>
+    </form>
+  );
+}
+
 function Field({ label, value, onChange, type = "text", placeholder, ...rest }) {
   return (
     <div>

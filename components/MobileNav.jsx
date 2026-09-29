@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sun, CalendarBlank, Plus, PawPrint, Receipt, GearSix } from "@phosphor-icons/react";
+import { Sun, CalendarBlank, Plus, PawPrint, Receipt, GearSix, Tray } from "@phosphor-icons/react";
+import useNewLeadsCount from "@/app/admin/leads/useNewLeadsCount";
 import GlobalSearch from "@/components/GlobalSearch";
 import Logo from "@/components/Logo";
 
@@ -17,6 +18,8 @@ const tabs = [
 
 export default function MobileNav() {
   const pathname = usePathname();
+  const newLeads = useNewLeadsCount(pathname);
+  const leadsActive = pathname.startsWith("/admin/leads");
   const settingsActive = pathname.startsWith("/admin/settings");
 
   return (
@@ -29,6 +32,21 @@ export default function MobileNav() {
           </Link>
           <div className="flex items-center">
             <GlobalSearch variant="icon" />
+            <Link
+              href="/admin/leads"
+              aria-label={newLeads > 0 ? `Demandes, ${newLeads} nouvelle${newLeads > 1 ? "s" : ""}` : "Demandes"}
+              aria-current={leadsActive ? "page" : undefined}
+              className={`relative w-10 h-10 flex items-center justify-center rounded-full ${
+                leadsActive ? "text-nav-actif" : "hover:bg-white/10"
+              }`}
+            >
+              <Tray size={24} aria-hidden="true" />
+              {newLeads > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-miel text-encre text-[10px] font-bold tabular-nums flex items-center justify-center">
+                  {newLeads}
+                </span>
+              )}
+            </Link>
             <Link
               href="/admin/settings"
               aria-label="Réglages"

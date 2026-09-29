@@ -5,12 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import GlobalSearch from "@/components/GlobalSearch";
 import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
-import { Sun, CalendarBlank, PawPrint, Receipt, GearSix, Plus } from "@phosphor-icons/react";
+import { Sun, CalendarBlank, PawPrint, Receipt, GearSix, Plus, Tray } from "@phosphor-icons/react";
+import useNewLeadsCount from "@/app/admin/leads/useNewLeadsCount";
 
 const links = [
   { href: "/admin", label: "Aujourd'hui", icon: Sun, exact: true },
   { href: "/admin/planning", label: "Planning", icon: CalendarBlank },
   { href: "/admin/clients", label: "Clients", icon: PawPrint },
+  { href: "/admin/leads", label: "Demandes", icon: Tray },
   { href: "/admin/accounting", label: "Comptabilité", icon: Receipt },
   { href: "/admin/settings", label: "Réglages", icon: GearSix },
 ];
@@ -18,6 +20,7 @@ const links = [
 export default function AdminNav({ email }) {
   const pathname = usePathname();
   const router = useRouter();
+  const newLeads = useNewLeadsCount(pathname);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -56,6 +59,11 @@ export default function AdminNav({ email }) {
             >
               <Icon size={20} aria-hidden="true" />
               {l.label}
+              {l.href === "/admin/leads" && newLeads > 0 && (
+                <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-miel text-encre text-xs font-bold tabular-nums flex items-center justify-center">
+                  {newLeads}
+                </span>
+              )}
             </Link>
           );
         })}

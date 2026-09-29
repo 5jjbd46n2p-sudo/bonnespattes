@@ -21,6 +21,7 @@ const atkinson = Atkinson_Hyperlegible_Next({
 });
 
 export const metadata = {
+  metadataBase: process.env.NEXT_PUBLIC_APP_URL ? new URL(process.env.NEXT_PUBLIC_APP_URL) : undefined,
   title: "Aux Bonnes Pattes — Suivi pet sitting",
   description: "Gestion des visites, clients et comptabilité pour votre activité de pet sitting.",
 };

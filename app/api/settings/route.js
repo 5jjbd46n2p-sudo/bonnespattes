@@ -29,8 +29,10 @@ export async function PATCH(req) {
     rate30: "rate_30",
     rate45: "rate_45",
     rate60: "rate_60",
+    referralCredit: "referral_credit",
+    serviceArea: "service_area",
   };
-  for (const key of ["kmRate", "travelTimeShare", "travelFreeKm", "rate30", "rate45", "rate60"]) {
+  for (const key of ["kmRate", "travelTimeShare", "travelFreeKm", "rate30", "rate45", "rate60", "referralCredit"]) {
     if (body[key] !== undefined) {
       const n = Number(body[key]);
       if (body[key] === "" || body[key] === null || !Number.isFinite(n) || n < 0 || (key === "travelTimeShare" && n > 1)) {
@@ -38,6 +40,12 @@ export async function PATCH(req) {
       }
       body[key] = n;
     }
+  }
+  if (body.serviceArea !== undefined) {
+    if (typeof body.serviceArea !== "string" || body.serviceArea.length > 200) {
+      return NextResponse.json({ error: "Zone d'intervention invalide." }, { status: 400 });
+    }
+    body.serviceArea = body.serviceArea.trim();
   }
   const sets = [];
   const values = [];

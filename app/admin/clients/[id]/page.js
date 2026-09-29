@@ -37,7 +37,20 @@ async function getClientData(id) {
     [id]
   );
 
+  let referral = { code: clientRes.rows[0].referral_code || null, credits: [], balance: 0 };
+  try {
+    const cr = await query(
+      "SELECT amount, reason, used_at, created_at FROM client_credits WHERE client_id = $1 ORDER BY created_at DESC",
+      [id]
+    );
+    referral.credits = cr.rows;
+    referral.balance = cr.rows.filter((c) => !c.used_at).reduce((s, c) => s + Number(c.amount), 0);
+  } catch {
+    // table pas encore créée
+  }
+
   return {
+    referral,
     client: clientRes.rows[0],
     pets: petsRes.rows,
     visits: visitsRes.rows,
@@ -51,7 +64,7 @@ export default async function ClientDetailPage({ params }) {
   const { id } = await params;
   const data = await getClientData(id);
   if (!data) notFound();
-  const { client, pets, visits, invoices, login, deposits } = data;
+  const { client, pets, visits, invoices, login, deposits, referral } = data;
 
   return (
     <div className="space-y-6">
@@ -109,6 +122,38 @@ export default async function ClientDetailPage({ params }) {
         <div className="space-y-6">
           <ClientLoginManager clientId={id} login={login} />
           <DepositManager clientId={id} deposits={deposits} />
+
+          {(referral.code || referral.credits.length > 0) && (
+            <div className="card p-5">
+              <h2 className="font-display text-xl font-semibold mb-3">Parrainage</h2>
+              {referral.code && (
+                <p className="text-sm">
+                  <span className="label">Code : </span>
+                  <span className="font-bold tabular-nums tracking-wide">{referral.code}</span>
+                </p>
+              )}
+              <p className="text-sm mt-1 tabular-nums">
+                <span className="label">Crédit disponible : </span>
+                <span className="font-bold">{formatEUR(referral.balance)}</span>
+              </p>
+              {referral.credits.length > 0 && (
+                <ul className="divide-y divide-trait -mx-5 mt-3 border-t border-trait">
+                  {referral.credits.map((c, i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm">
+                      <span>
+                        {c.reason}
+                        <span className="block text-pierre tabular-nums">
+                          {formatDateFR(c.created_at)}
+                          {c.used_at ? " · utilisé" : ""}
+                        </span>
+                      </span>
+                      <span className="font-bold tabular-nums">{formatEUR(c.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">

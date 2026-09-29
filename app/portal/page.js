@@ -1,8 +1,10 @@
+import { headers } from "next/headers";
 import { requireClient } from "@/lib/auth";
+import CopyLink from "@/components/landing/CopyLink";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
-import { CheckSquare, DownloadSimple, Square } from "@phosphor-icons/react/ssr";
+import { CheckSquare, DownloadSimple, Gift, Square } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +44,31 @@ export default async function PortalPage() {
      FROM invoices i WHERE client_id = $1 ORDER BY issue_date DESC`,
     [clientId]
   );
+
+  // Parrainage : tolérant si les colonnes/tables ne sont pas encore migrées.
+  let referralCode = null;
+  let credit = 10;
+  let balance = 0;
+  try {
+    const c = await query("SELECT referral_code FROM clients WHERE id = $1", [clientId]);
+    referralCode = c.rows[0]?.referral_code || null;
+    const s = await query("SELECT referral_credit FROM settings LIMIT 1");
+    if (s.rows[0]?.referral_credit != null) credit = Number(s.rows[0].referral_credit);
+    const b = await query(
+      "SELECT COALESCE(SUM(amount),0) AS total FROM client_credits WHERE client_id = $1 AND used_at IS NULL",
+      [clientId]
+    );
+    balance = Number(b.rows[0]?.total || 0);
+  } catch {
+    referralCode = null;
+  }
+  let referralLink = "";
+  if (referralCode) {
+    const h = await headers();
+    const host = h.get("x-forwarded-host") || h.get("host");
+    const base = (process.env.NEXT_PUBLIC_APP_URL || (host ? `https://${host}` : "")).replace(/\/$/, "");
+    referralLink = `${base}/?parrain=${referralCode}`;
+  }
 
   const petNames = petsRes.rows.map((p) => p.name);
   const petLabel =
@@ -130,6 +157,23 @@ export default async function PortalPage() {
             );
           })}
         </ul>
+      )}
+
+      {referralCode && (
+        <section className="card p-5 space-y-3" aria-labelledby="parrainage">
+          <h2 id="parrainage" className="font-display text-xl font-semibold flex items-center gap-2">
+            <Gift size={24} className="text-rouille" aria-hidden="true" />
+            Parrainez un proche
+          </h2>
+          <p className="text-pierre leading-relaxed">
+            Un ami ou un voisin a besoin d'une pet sitter ? Partagez-lui votre lien : quand il devient client,
+            vous recevez chacun {formatEUR(credit)} de crédit, déduit de votre prochaine facture.
+          </p>
+          <CopyLink value={referralLink} />
+          <p className="text-sm tabular-nums">
+            Crédit disponible : <span className="font-bold">{formatEUR(balance)}</span>
+          </p>
+        </section>
       )}
 
       {invoicesRes.rows.length > 0 && (

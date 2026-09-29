@@ -164,3 +164,61 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS travel_free_km NUMERIC DEFAULT 4;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_30 NUMERIC DEFAULT 15;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_45 NUMERIC DEFAULT 18;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_60 NUMERIC DEFAULT 22;
+
+-- Migrations idempotentes : vitrine publique, demandes (leads) et parrainage :
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS referral_code TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_referral_code ON clients(referral_code);
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS referral_credit NUMERIC DEFAULT 10;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS service_area TEXT DEFAULT 'Viarmes et environs (15 km)';
+
+CREATE TABLE IF NOT EXISTS leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  commune TEXT,
+  animals TEXT,
+  service TEXT CHECK (service IS NULL OR service IN ('VISITE','PROMENADE','LES_DEUX')),
+  message TEXT,
+  referral_code TEXT,
+  referrer_client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'NOUVEAU' CHECK (status IN ('NOUVEAU','CONTACTE','CLIENT','SANS_SUITE')),
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  ip_hash TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_ip ON leads(ip_hash, created_at);
+
+CREATE TABLE IF NOT EXISTS client_credits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  amount NUMERIC NOT NULL,
+  reason TEXT NOT NULL,
+  lead_id UUID REFERENCES leads(id) ON DELETE SET NULL,
+  used_invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (client_id, lead_id)
+);
+CREATE INDEX IF NOT EXISTS idx_client_credits_client ON client_credits(client_id);
+
+-- Rétro-remplissage des codes de parrainage (8 car. sans ambiguïté, A-Z sauf I/O + 2-9).
+DO $$
+DECLARE
+  r RECORD;
+  alphabet CONSTANT TEXT := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  code TEXT;
+  i INT;
+BEGIN
+  FOR r IN SELECT id FROM clients WHERE referral_code IS NULL LOOP
+    LOOP
+      code := '';
+      FOR i IN 1..8 LOOP
+        code := code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
+      END LOOP;
+      EXIT WHEN NOT EXISTS (SELECT 1 FROM clients WHERE referral_code = code);
+    END LOOP;
+    UPDATE clients SET referral_code = code WHERE id = r.id AND referral_code IS NULL;
+  END LOOP;
+END $$;

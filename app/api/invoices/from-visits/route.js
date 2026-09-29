@@ -81,6 +81,27 @@ export async function POST(req) {
         throw e;
       }
 
+      // Crédits de parrainage non utilisés : ligne négative, jamais au-delà du total.
+      const creditRows = (
+        await client.query(
+          `SELECT id, amount FROM client_credits
+           WHERE client_id = $1 AND used_invoice_id IS NULL AND amount > 0
+           ORDER BY created_at, id FOR UPDATE`,
+          [clientId]
+        )
+      ).rows;
+      let remaining = items.reduce((sum, it) => sum + it.unitPrice, 0);
+      let creditTotal = 0;
+      const usedCreditIds = [];
+      for (const c of creditRows) {
+        const amt = Number(c.amount);
+        if (!(amt > 0) || amt > remaining + 1e-9) continue;
+        usedCreditIds.push(c.id);
+        creditTotal += amt;
+        remaining -= amt;
+      }
+      if (creditTotal > 0) items.push({ description: "Crédit parrainage", unitPrice: -Math.round(creditTotal * 100) / 100 });
+
       const seq = settings.next_invoice_seq;
       const number = `${settings.invoice_prefix}${String(seq).padStart(4, "0")}`;
       await client.query("UPDATE settings SET next_invoice_seq = next_invoice_seq + 1 WHERE id = $1", [settings.id]);
@@ -99,6 +120,12 @@ export async function POST(req) {
         await client.query(
           `INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total) VALUES ($1,$2,1,$3,$3)`,
           [inv.id, it.description, it.unitPrice]
+        );
+      }
+      if (usedCreditIds.length) {
+        await client.query(
+          `UPDATE client_credits SET used_invoice_id = $1, used_at = now() WHERE id = ANY($2::uuid[])`,
+          [inv.id, usedCreditIds]
         );
       }
       await client.query(`UPDATE visits SET invoice_id = $1 WHERE id = ANY($2::uuid[])`, [inv.id, ids]);

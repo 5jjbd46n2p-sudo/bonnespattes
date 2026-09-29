@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { sendClientCredentialsEmail } from "@/lib/email";
+import { ensureReferralCode } from "@/lib/referral";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -55,6 +56,7 @@ export async function POST(req) {
         [firstName, lastName, phone || "", email || "", address || "", notes || "", hourlyRate || 0]
       );
       const newClient = clientRes.rows[0];
+      newClient.referral_code = await ensureReferralCode(client, newClient.id);
 
       for (const pet of pets) {
         if (!pet.name) continue;
