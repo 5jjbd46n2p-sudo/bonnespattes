@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
 
 function durationLabel(min) {
   if (!min || min <= 0) return "";
@@ -20,7 +21,7 @@ export async function POST(req) {
   } catch {
     return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
-  const { clientId, visitIds, tvaRate, dueDate } = body || {};
+  const { clientId, visitIds, tvaRate, dueDate, isTest } = body || {};
   if (!clientId || !Array.isArray(visitIds) || visitIds.length === 0) {
     return NextResponse.json({ error: "Client et au moins une visite requis." }, { status: 400 });
   }
@@ -102,18 +103,16 @@ export async function POST(req) {
       }
       if (creditTotal > 0) items.push({ description: "Crédit parrainage", unitPrice: -Math.round(creditTotal * 100) / 100 });
 
-      const seq = settings.next_invoice_seq;
-      const number = `${settings.invoice_prefix}${String(seq).padStart(4, "0")}`;
-      await client.query("UPDATE settings SET next_invoice_seq = next_invoice_seq + 1 WHERE id = $1", [settings.id]);
+      const number = await allocateInvoiceNumber(client, settings, isTest === true);
 
       const totalHT = items.reduce((sum, it) => sum + it.unitPrice, 0);
       const totalTVA = totalHT * (tva / 100);
       const totalTTC = totalHT + totalTVA;
 
       const invRes = await client.query(
-        `INSERT INTO invoices (client_id, number, due_date, tva_rate, total_ht, total_tva, total_ttc, notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-        [clientId, number, dueDate || null, tva, totalHT, totalTVA, totalTTC, ""]
+        `INSERT INTO invoices (client_id, number, due_date, tva_rate, total_ht, total_tva, total_ttc, notes, is_test)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [clientId, number, dueDate || null, tva, totalHT, totalTVA, totalTTC, "", isTest === true]
       );
       const inv = invRes.rows[0];
       for (const it of items) {

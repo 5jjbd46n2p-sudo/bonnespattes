@@ -102,7 +102,7 @@ export default async function InvoiceDetailPage({ params }) {
 
       <PaymentRecorder invoiceId={id} payments={payments} balance={balance} />
 
-      <DeleteInvoiceButton invoiceId={id} number={invoice.number} status={invoice.status} />
+      <DeleteInvoiceButton invoiceId={id} number={invoice.number} status={invoice.status} isTest={invoice.is_test} />
     </div>
   );
 }

@@ -265,3 +265,7 @@ CREATE TABLE IF NOT EXISTS site_photos (
   url TEXT NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Factures de test (numéro FT, hors comptabilité) :
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS next_test_invoice_seq INTEGER NOT NULL DEFAULT 1;

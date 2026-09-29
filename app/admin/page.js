@@ -27,7 +27,7 @@ async function getDashboardData() {
     ),
     query(
       `SELECT COALESCE(SUM(total_ttc - COALESCE((SELECT SUM(amount) FROM payments p WHERE p.invoice_id = i.id),0)),0) AS total
-       FROM invoices i WHERE status != 'PAYEE'`
+       FROM invoices i WHERE status != 'PAYEE' AND NOT i.is_test`
     ),
     query(`SELECT COUNT(*) AS count FROM clients`),
   ]);

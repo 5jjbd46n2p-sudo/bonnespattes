@@ -24,7 +24,7 @@ export async function GET(req) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
 
-  const conditions = [];
+  const conditions = ["NOT i.is_test"];
   const values = [];
   let i = 1;
   if (from) {

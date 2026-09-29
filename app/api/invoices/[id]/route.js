@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
+import { allocateInvoiceNumber, resyncInvoiceSequences } from "@/lib/invoiceNumber";
 
 export async function GET(req, { params }) {
   const user = await getCurrentUser();
@@ -32,6 +33,28 @@ export async function PATCH(req, { params }) {
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
   const body = await req.json();
+
+  // Passage en facture de test : nouveau numéro FT#### ; la suite des vraies factures se referme.
+  if (body.isTest === true) {
+    try {
+      const inv = await tx(async (client) => {
+        const cur = await client.query("SELECT id, is_test FROM invoices WHERE id = $1 FOR UPDATE", [id]);
+        if (!cur.rows[0]) return null;
+        if (cur.rows[0].is_test) return cur.rows[0];
+        const settings = (await client.query("SELECT * FROM settings LIMIT 1 FOR UPDATE")).rows[0];
+        const number = await allocateInvoiceNumber(client, settings, true);
+        const r = await client.query("UPDATE invoices SET number = $1, is_test = true WHERE id = $2 RETURNING *", [number, id]);
+        await resyncInvoiceSequences(client);
+        return r.rows[0];
+      });
+      if (!inv) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
+      return NextResponse.json({ invoice: inv });
+    } catch (e) {
+      console.error(e);
+      return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
+    }
+  }
+
   const map = { status: "status", notes: "notes", dueDate: "due_date" };
   const sets = [];
   const values = [];
@@ -60,18 +83,12 @@ export async function DELETE(req, { params }) {
     const result = await tx(async (client) => {
       const inv = await client.query("SELECT id, number FROM invoices WHERE id = $1 FOR UPDATE", [id]);
       if (!inv.rows[0]) return null;
-      const st = await client.query("SELECT id, invoice_prefix, next_invoice_seq FROM settings LIMIT 1 FOR UPDATE");
-      const s = st.rows[0];
       await client.query("UPDATE client_credits SET used_at = NULL, used_invoice_id = NULL WHERE used_invoice_id = $1", [id]);
       await client.query("DELETE FROM invoices WHERE id = $1", [id]);
-      let renumbered = false;
-      if (s) {
-        const last = `${s.invoice_prefix}${String(s.next_invoice_seq - 1).padStart(4, "0")}`;
-        if (s.next_invoice_seq > 1 && inv.rows[0].number === last) {
-          await client.query("UPDATE settings SET next_invoice_seq = next_invoice_seq - 1 WHERE id = $1", [s.id]);
-          renumbered = true;
-        }
-      }
+      const before = await client.query("SELECT next_invoice_seq + next_test_invoice_seq AS n FROM settings LIMIT 1");
+      await resyncInvoiceSequences(client);
+      const after = await client.query("SELECT next_invoice_seq + next_test_invoice_seq AS n FROM settings LIMIT 1");
+      const renumbered = Number(after.rows[0]?.n) < Number(before.rows[0]?.n);
       return { number: inv.rows[0].number, renumbered };
     });
     if (!result) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });

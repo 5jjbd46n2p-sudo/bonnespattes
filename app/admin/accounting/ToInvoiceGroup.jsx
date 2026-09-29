@@ -15,6 +15,7 @@ export default function ToInvoiceGroup({ clientId, clientName, visits }) {
   const [selected, setSelected] = useState(new Set(visits.map((v) => v.id)));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isTest, setIsTest] = useState(false);
 
   function toggle(id) {
     setSelected((prev) => {
@@ -38,7 +39,7 @@ export default function ToInvoiceGroup({ clientId, clientName, visits }) {
       const res = await fetch("/api/invoices/from-visits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientId, visitIds: Array.from(selected) }),
+        body: JSON.stringify({ clientId, visitIds: Array.from(selected), isTest }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -80,6 +81,10 @@ export default function ToInvoiceGroup({ clientId, clientName, visits }) {
       <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-t border-trait bg-sable">
         <p className="font-bold tabular-nums">Total : {formatEUR(total)}</p>
         <div className="flex items-center gap-3 flex-wrap">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
+            Facture de test (FT)
+          </label>
           <Link
             href={`/admin/accounting/invoices/new?clientId=${clientId}`}
             className="text-sm text-rouille underline"

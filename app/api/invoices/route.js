@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
 
 export async function GET(req) {
   const admin = await requireAdmin();
@@ -38,7 +39,7 @@ export async function POST(req) {
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
 
   const body = await req.json();
-  const { clientId, items = [], tvaRate = 0, dueDate, notes, visitIds = [], depositIds = [] } = body;
+  const { clientId, items = [], tvaRate = 0, dueDate, notes, visitIds = [], depositIds = [], isTest = false } = body;
 
   if (!clientId || items.length === 0) {
     return NextResponse.json({ error: "Client et au moins une ligne requis." }, { status: 400 });
@@ -46,22 +47,18 @@ export async function POST(req) {
 
   try {
     const result = await tx(async (client) => {
-      const settingsRes = await client.query("SELECT * FROM settings LIMIT 1");
+      const settingsRes = await client.query("SELECT * FROM settings LIMIT 1 FOR UPDATE");
       const settings = settingsRes.rows[0];
-      const seq = settings.next_invoice_seq;
-      const number = `${settings.invoice_prefix}${String(seq).padStart(4, "0")}`;
-      await client.query("UPDATE settings SET next_invoice_seq = next_invoice_seq + 1 WHERE id = $1", [
-        settings.id,
-      ]);
+      const number = await allocateInvoiceNumber(client, settings, isTest === true);
 
       const totalHT = items.reduce((sum, it) => sum + Number(it.quantity) * Number(it.unitPrice), 0);
       const totalTVA = totalHT * (Number(tvaRate) / 100);
       const totalTTC = totalHT + totalTVA;
 
       const invRes = await client.query(
-        `INSERT INTO invoices (client_id, number, due_date, tva_rate, total_ht, total_tva, total_ttc, notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-        [clientId, number, dueDate || null, tvaRate, totalHT, totalTVA, totalTTC, notes || ""]
+        `INSERT INTO invoices (client_id, number, due_date, tva_rate, total_ht, total_tva, total_ttc, notes, is_test)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [clientId, number, dueDate || null, tvaRate, totalHT, totalTVA, totalTTC, notes || "", isTest === true]
       );
       const invoice = invRes.rows[0];
 

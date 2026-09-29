@@ -18,6 +18,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
   const [manualItems, setManualItems] = useState([]);
   const [tvaRate, setTvaRate] = useState(settings.default_tva_rate || 0);
   const [dueDate, setDueDate] = useState("");
+  const [isTest, setIsTest] = useState(false);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -119,6 +120,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
         notes,
         visitIds: Array.from(selectedVisitIds),
         depositIds: Array.from(selectedDepositIds),
+        isTest,
       }),
     });
     const data = await res.json();
@@ -305,6 +307,11 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
         </div>
 
         {error && <p className="text-sm text-brique">{error}</p>}
+
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
+          Facture de test (numéro FT, non comptée)
+        </label>
 
         <button disabled={loading} className="btn-primary">
           {loading ? "Création..." : "Créer la facture"}

@@ -40,7 +40,7 @@ export default async function AccountingPage({ searchParams }) {
       COALESCE(SUM(total_ttc),0) AS total_ttc,
       COALESCE(SUM(total_ttc) FILTER (WHERE status = 'PAYEE'),0) AS total_paid,
       COALESCE(SUM(total_ttc) FILTER (WHERE status != 'PAYEE'),0) AS total_unpaid
-    FROM invoices
+    FROM invoices WHERE NOT is_test
   `);
   const summary = summaryRes.rows[0];
 

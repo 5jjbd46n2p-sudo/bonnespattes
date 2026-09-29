@@ -68,6 +68,9 @@ export async function GET(req, { params }) {
   // Titre facture + numéro, aligné à droite
   drawText(`FACTURE ${invoice.number}`, 350, 800, { size: 14, bold: true, color: accent });
   drawText(`Date d'émission : ${formatDateFR(invoice.issue_date)}`, 350, 782, { size: 9, color: muted });
+  if (invoice.is_test) {
+    drawText("FACTURE DE TEST - sans valeur", 350, 754, { size: 10, bold: true, color: accent });
+  }
   if (invoice.due_date) {
     drawText(`Échéance : ${formatDateFR(invoice.due_date)}`, 350, 768, { size: 9, color: muted });
   }
