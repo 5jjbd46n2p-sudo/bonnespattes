@@ -8,6 +8,7 @@ import PetManager from "@/components/PetManager";
 import ClientLoginManager from "@/components/ClientLoginManager";
 import DepositManager from "@/components/DepositManager";
 import ClientContractCard from "@/components/ClientContractCard";
+import ClientDataExportCard from "@/components/ClientDataExportCard";
 import VisitHistory from "@/components/VisitHistory";
 import { ArrowLeft, Plus } from "@phosphor-icons/react/ssr";
 
@@ -105,6 +106,7 @@ export default async function ClientDetailPage({ params }) {
           <ClientContractCard clientId={id} hasEmail={!!client.email} signatures={contracts} />
           <ClientLoginManager clientId={id} login={login} />
           <DepositManager clientId={id} deposits={deposits} />
+          <ClientDataExportCard clientId={id} email={client.email || ""} />
 
           {(referral.code || referral.credits.length > 0) && (
             <div className="card p-5">
