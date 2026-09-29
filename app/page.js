@@ -157,11 +157,17 @@ export default async function Home({ searchParams }) {
 
         {/* Ce que je fais */}
         <section aria-labelledby="services" className="px-4 py-12 md:py-16 border-t border-trait">
-          <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_2fr] gap-6 md:gap-12">
-            <h2 id="services" className="font-display text-2xl md:text-3xl font-semibold">
-              Ce que je fais
-            </h2>
+          <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_2fr] gap-6 md:gap-12 items-start">
             <div className="space-y-6">
+              <h2 id="services" className="font-display text-2xl md:text-3xl font-semibold">
+                Ce que je fais
+              </h2>
+              <Photo
+                src={photoVersions.services ? sitePhotoSrc("services", photoVersions.services) : null}
+                alt="Aurore avec un animal pendant une visite ou une promenade"
+                className="aspect-square w-full max-w-xs"
+              />
+            </div>
             <ul className="divide-y divide-trait border-y border-trait">
               <Line icon={House} title="Visites à domicile">
                 Repas, eau fraîche, litière, câlins, jeu et un coup d'oeil à la maison. Vos animaux restent dans
@@ -174,12 +180,6 @@ export default async function Home({ searchParams }) {
                 Habituée aux animaux de toutes sortes, je m'adapte au caractère et aux habitudes de chacun.
               </Line>
             </ul>
-            <Photo
-              src={photoVersions.services ? sitePhotoSrc("services", photoVersions.services) : null}
-              alt="Aurore avec un animal pendant une visite ou une promenade"
-              className="aspect-square w-full max-w-xs"
-            />
-            </div>
           </div>
         </section>
 
