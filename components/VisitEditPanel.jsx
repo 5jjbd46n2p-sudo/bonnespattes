@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Repeat } from "@phosphor-icons/react";
 
 export default function VisitEditPanel({ visit }) {
   const router = useRouter();
@@ -44,13 +45,16 @@ export default function VisitEditPanel({ visit }) {
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-forest-dark">Détails de la visite</h2>
+        <h2 className="font-display font-semibold text-encre">Détails de la visite</h2>
         {visit.recurrence_id && (
-          <span className="badge bg-sand-dark/60 text-forest-dark text-xs">🔁 Visite récurrente</span>
+          <span className="badge text-pierre">
+            <Repeat size={20} aria-hidden="true" />
+            Visite récurrente
+          </span>
         )}
       </div>
       <div>
-        <label className="text-sm font-medium block mb-1">Statut</label>
+        <label className="label block mb-1">Statut</label>
         <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
           <option value="PLANIFIE">Planifiée</option>
           <option value="EN_COURS">En cours</option>
@@ -59,7 +63,7 @@ export default function VisitEditPanel({ visit }) {
         </select>
       </div>
       <div>
-        <label className="text-sm font-medium block mb-1.5">Date et horaires</label>
+        <label className="label block mb-1.5">Date et horaires</label>
         <div className="ios-field-group">
           <div className="ios-field-row">
             <span className="ios-field-label">Début</span>
@@ -92,15 +96,15 @@ export default function VisitEditPanel({ visit }) {
         </div>
       </div>
       <div>
-        <label className="text-sm font-medium block mb-1">Prix (€)</label>
+        <label className="label block mb-1">Prix (€)</label>
         <input type="number" step="0.01" className="input" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
       </div>
       <div>
-        <label className="text-sm font-medium block mb-1">Notes</label>
+        <label className="label block mb-1">Notes</label>
         <textarea className="input" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
       </div>
       {visit.recurrence_id && (
-        <label className="flex items-center gap-2 text-xs text-muted">
+        <label className="flex items-center gap-2 text-[13px] text-pierre">
           <input type="checkbox" checked={removeSeries} onChange={(e) => setRemoveSeries(e.target.checked)} />
           Aussi supprimer les prochaines visites planifiées de cette série récurrente
         </label>
@@ -109,8 +113,13 @@ export default function VisitEditPanel({ visit }) {
         <button onClick={save} disabled={loading} className="btn-primary text-sm">
           {loading ? "Enregistrement..." : "Enregistrer"}
         </button>
-        {saved && <span className="text-sm text-forest">✓ Enregistré</span>}
-        <button onClick={remove} className="text-xs text-danger hover:underline ml-auto">
+        {saved && (
+          <span className="text-sm font-bold text-mousse inline-flex items-center gap-1.5">
+            <Check size={20} aria-hidden="true" />
+            Enregistré
+          </span>
+        )}
+        <button onClick={remove} className="text-[13px] font-bold text-brique hover:underline ml-auto">
           Supprimer la visite
         </button>
       </div>

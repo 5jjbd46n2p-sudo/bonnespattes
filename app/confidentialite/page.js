@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
+import { ArrowLeft } from "@phosphor-icons/react/ssr";
+import Logo from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +10,7 @@ export const metadata = {
 };
 
 function Missing() {
-  return <span className="text-ochre-dark">à compléter dans Réglages</span>;
+  return <span className="text-rouille font-bold">à compléter dans Réglages</span>;
 }
 
 export default async function ConfidentialitePage() {
@@ -17,29 +19,34 @@ export default async function ConfidentialitePage() {
   const emailConfigured = !!process.env.RESEND_API_KEY;
 
   return (
-    <div className="min-h-screen bg-sand">
-      <div className="max-w-2xl mx-auto px-4 md:px-8 py-10 space-y-8">
+    <div className="min-h-screen bg-papier">
+      <div className="max-w-[720px] mx-auto px-4 md:px-8 py-10 space-y-8">
         <div>
-          <Link href="/login" className="text-sm text-muted hover:underline">
-            ← Retour
+          <Link href="/login" aria-label="Aux Bonnes Pattes, retour à la connexion" className="inline-block">
+            <Logo size={28} className="text-encre" />
           </Link>
-          <h1 className="font-display text-3xl font-semibold text-forest-dark mt-2">
+          <Link href="/login" className="mt-6 text-sm text-pierre hover:underline flex items-center gap-1 w-fit">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Retour
+          </Link>
+          <h1 className="font-display text-3xl font-semibold text-encre mt-2">
             Politique de confidentialité
           </h1>
-          <p className="text-muted text-sm mt-1">
+          <p className="text-pierre mt-2">
             Cette page explique quelles données personnelles sont traitées par ce site, pourquoi, et
             comment exercer vos droits, conformément au Règlement Général sur la Protection des Données
             (RGPD).
           </p>
         </div>
 
-        <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Responsable de traitement</h2>
+        <div className="card divide-y divide-trait">
+        <section className="p-5 space-y-2 leading-relaxed">
+          <h2 className="font-display text-xl font-semibold text-encre mb-1">Responsable de traitement</h2>
           <p>
             {s.business_name || <Missing />}
             {s.business_address ? `, ${s.business_address}` : ""}. Contact :{" "}
             {s.contact_email ? (
-              <a href={`mailto:${s.contact_email}`} className="text-forest underline">
+              <a href={`mailto:${s.contact_email}`} className="text-rouille underline">
                 {s.contact_email}
               </a>
             ) : (
@@ -49,8 +56,8 @@ export default async function ConfidentialitePage() {
           </p>
         </section>
 
-        <section className="card p-5 space-y-3 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Données collectées et finalités</h2>
+        <section className="p-5 space-y-3 leading-relaxed">
+          <h2 className="font-display text-xl font-semibold text-encre mb-1">Données collectées et finalités</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>
               <strong>Identité et contact du client</strong> (nom, téléphone, email, adresse) : pour organiser
@@ -77,8 +84,8 @@ export default async function ConfidentialitePage() {
           <p>Aucune donnée n'est utilisée à des fins de prospection commerciale ou revendue à un tiers.</p>
         </section>
 
-        <section className="card p-5 space-y-3 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Destinataires des données</h2>
+        <section className="p-5 space-y-3 leading-relaxed">
+          <h2 className="font-display text-xl font-semibold text-encre mb-1">Destinataires des données</h2>
           <p>Les données ne sont accessibles qu'à l'administrateur du site (le prestataire de pet-sitting) et, pour ses propres données, à chaque client via son espace personnel. Elles sont hébergées chez les sous-traitants techniques suivants, qui n'y accèdent que pour assurer le fonctionnement du service :</p>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Vercel Inc.</strong> — hébergement du site et de l'application</li>
@@ -90,8 +97,8 @@ export default async function ConfidentialitePage() {
           </ul>
         </section>
 
-        <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Durée de conservation</h2>
+        <section className="p-5 space-y-2 leading-relaxed">
+          <h2 className="font-display text-xl font-semibold text-encre mb-1">Durée de conservation</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>Données d'un client actif : conservées pendant toute la durée de la relation commerciale.</li>
             <li>
@@ -107,8 +114,8 @@ export default async function ConfidentialitePage() {
           </ul>
         </section>
 
-        <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Sécurité</h2>
+        <section className="p-5 space-y-2 leading-relaxed">
+          <h2 className="font-display text-xl font-semibold text-encre mb-1">Sécurité</h2>
           <p>
             Le site est accessible uniquement en HTTPS (connexion chiffrée). Les mots de passe sont stockés
             sous forme hachée (jamais en clair) et l'accès aux comptes est protégé contre les tentatives de
@@ -116,8 +123,8 @@ export default async function ConfidentialitePage() {
           </p>
         </section>
 
-        <section className="card p-5 space-y-2 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Cookies</h2>
+        <section className="p-5 space-y-2 leading-relaxed">
+          <h2 className="font-display text-xl font-semibold text-encre mb-1">Cookies</h2>
           <p>
             Ce site utilise uniquement un cookie strictement nécessaire à la connexion (maintien de votre
             session). Aucun cookie de mesure d'audience, de publicité ou de traceur tiers n'est utilisé —
@@ -126,12 +133,12 @@ export default async function ConfidentialitePage() {
           </p>
         </section>
 
-        <section className="card p-5 space-y-3 text-sm leading-relaxed">
-          <h2 className="font-semibold text-forest-dark text-base mb-1">Vos droits</h2>
+        <section className="p-5 space-y-3 leading-relaxed">
+          <h2 className="font-display text-xl font-semibold text-encre mb-1">Vos droits</h2>
           <p>Conformément au RGPD, vous disposez des droits suivants sur vos données :</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Droit d'accès et de rectification</li>
-            <li>Droit à l'effacement ("droit à l'oubli")</li>
+            <li>Droit à l'effacement (« droit à l'oubli »)</li>
             <li>
               Droit à la portabilité : depuis votre espace client, un bouton « Télécharger mes données »
               vous permet d'obtenir l'ensemble de vos données dans un fichier structuré.
@@ -141,23 +148,24 @@ export default async function ConfidentialitePage() {
           <p>
             Pour exercer ces droits, contactez :{" "}
             {s.contact_email ? (
-              <a href={`mailto:${s.contact_email}`} className="text-forest underline">
+              <a href={`mailto:${s.contact_email}`} className="text-rouille underline">
                 {s.contact_email}
               </a>
             ) : (
               <Missing />
             )}
             . Vous disposez également du droit d'introduire une réclamation auprès de la CNIL (
-            <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-forest underline">
+            <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-rouille underline">
               www.cnil.fr
             </a>
             ) si vous estimez que vos droits ne sont pas respectés.
           </p>
         </section>
+        </div>
 
-        <p className="text-xs text-muted">
+        <p className="text-sm text-pierre">
           Voir aussi nos{" "}
-          <Link href="/mentions-legales" className="text-forest underline">
+          <Link href="/mentions-legales" className="text-rouille underline">
             mentions légales
           </Link>
           .

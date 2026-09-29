@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, X, MagnifyingGlass, MapPin, CaretRight } from "@phosphor-icons/react";
 import {
   computeVisitHours,
   generateWeeklyRecurrenceDates,
@@ -151,17 +152,19 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
     <div className="max-w-xl space-y-6">
       <div>
         {pickMode ? (
-          <Link href={`/admin/planning?date=${date}`} className="text-sm text-muted hover:underline">
-            ← Retour au planning
+          <Link href={`/admin/planning?date=${date}`} className="text-sm text-pierre hover:underline inline-flex items-center gap-1.5">
+            <ArrowLeft size={20} aria-hidden="true" />
+            Retour au planning
           </Link>
         ) : (
-          <Link href={`/admin/clients/${fixedClient.id}`} className="text-sm text-muted hover:underline">
-            ← Retour à la fiche client
+          <Link href={`/admin/clients/${fixedClient.id}`} className="text-sm text-pierre hover:underline inline-flex items-center gap-1.5">
+            <ArrowLeft size={20} aria-hidden="true" />
+            Retour à la fiche client
           </Link>
         )}
-        <h1 className="font-display text-3xl font-semibold text-forest-dark mt-2">Planifier une visite</h1>
+        <h1 className="font-display font-semibold text-encre mt-2">Planifier une visite</h1>
         {!pickMode && (
-          <p className="text-muted text-sm mt-1">
+          <p className="text-pierre text-sm mt-1">
             Pour {fixedClient.first_name} {fixedClient.last_name}
           </p>
         )}
@@ -170,12 +173,12 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
       <form onSubmit={handleSubmit} className="card p-5 space-y-4">
         {pickMode && (
           <div>
-            <label className="text-sm font-medium block mb-1.5">Client</label>
+            <label className="label block mb-1.5">Client</label>
             {selectedClient ? (
               <div className="ios-field-group">
                 <div className="ios-field-row">
                   <span className="flex items-center gap-2 min-w-0">
-                    <span className="w-8 h-8 rounded-full bg-forest text-white text-xs font-bold flex items-center justify-center shrink-0">
+                    <span className="w-8 h-8 rounded-full bg-sable text-encre text-[13px] font-bold flex items-center justify-center shrink-0">
                       {(selectedClient.first_name?.[0] || "") + (selectedClient.last_name?.[0] || "")}
                     </span>
                     <span className="font-semibold truncate">
@@ -185,7 +188,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   <button
                     type="button"
                     onClick={() => selectClient("")}
-                    className="text-sm text-forest font-medium shrink-0"
+                    className="text-sm text-rouille font-bold shrink-0"
                   >
                     Changer
                   </button>
@@ -205,9 +208,9 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           className={`min-w-0 space-y-4 transition-opacity ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}
         >
           <div>
-            <label className="text-sm font-medium block mb-1">Animal</label>
+            <label className="label block mb-1">Animal</label>
             {selectedClient && clientPets.length === 0 ? (
-              <p className="text-sm text-danger">
+              <p className="text-sm text-brique">
                 Aucun animal enregistré pour ce client —{" "}
                 <Link href={`/admin/clients/${selectedClient.id}`} className="underline">
                   ajoute-en un depuis sa fiche
@@ -227,7 +230,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1.5">Date et horaires</label>
+            <label className="label block mb-1.5">Date et horaires</label>
             <div className="ios-field-group">
               <div className="ios-field-row">
                 <span className="ios-field-label">Début</span>
@@ -262,8 +265,8 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1">
-              Prix prévu (€) {hours ? <span className="text-muted font-normal">— {hours} h</span> : null}
+            <label className="label block mb-1">
+              Prix prévu (€) {hours ? <span className="text-pierre font-normal">— {hours} h</span> : null}
             </label>
             <input
               type="number"
@@ -273,7 +276,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
               onChange={(e) => setManualPrice(e.target.value)}
             />
             {hourlyRate > 0 && (
-              <p className="text-xs text-muted mt-1">
+              <p className="text-[13px] text-pierre mt-1">
                 Calculé automatiquement depuis le tarif horaire ({hourlyRate} €/h) — modifiable.
                 {manualPrice !== null && (
                   <>
@@ -287,20 +290,20 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             )}
           </div>
 
-          <div className="border-t border-border pt-4">
+          <div className="border-t border-trait pt-4">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={recurrenceEnabled}
                 onChange={(e) => toggleRecurrence(e.target.checked)}
               />
-              <span className="text-sm font-medium">Répéter cette visite (semaine type)</span>
+              <span className="text-sm font-bold">Répéter cette visite (semaine type)</span>
             </label>
 
             {recurrenceEnabled && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <p className="text-sm font-medium mb-1.5">Jours de la semaine type</p>
+                  <p className="text-sm font-bold mb-1.5">Jours de la semaine type</p>
                   <div className="flex gap-1.5">
                     {WEEKDAYS_FR.map((d) => {
                       const active = recurrenceDays.includes(d.value);
@@ -321,7 +324,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium">Nombre de semaines</span>
+                  <span className="text-sm font-bold">Nombre de semaines</span>
                   <div className="stepper">
                     <button
                       type="button"
@@ -341,7 +344,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   </div>
                 </div>
 
-                <p className="text-xs text-muted">
+                <p className="text-[13px] text-pierre">
                   {recurrenceDays.length === 0 || recurrenceDates.length === 0
                     ? "Choisis au moins un jour pour construire la semaine type."
                     : `${recurrenceDates.length} visite${
@@ -355,13 +358,18 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-2">Tâches de la visite</label>
+            <label className="label block mb-2">Tâches de la visite</label>
             <div className="space-y-1.5 mb-2">
               {tasks.map((t, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="text-sm flex-1 bg-sand-dark/50 rounded px-2 py-1">{t}</span>
-                  <button type="button" onClick={() => removeTask(i)} className="text-xs text-danger">
-                    ✕
+                  <span className="text-sm flex-1 bg-sable rounded-lg px-3 py-1.5">{t}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeTask(i)}
+                    className="text-brique p-1 rounded-lg hover:bg-sable"
+                    aria-label={`Retirer la tâche « ${t} »`}
+                  >
+                    <X size={20} aria-hidden="true" />
                   </button>
                 </div>
               ))}
@@ -386,16 +394,16 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1">Notes / consignes particulières</label>
+            <label className="label block mb-1">Notes / consignes particulières</label>
             <textarea className="input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </fieldset>
 
         {locked && (
-          <p className="text-sm text-muted text-center">👆 Choisis d'abord un client pour continuer.</p>
+          <p className="text-sm text-pierre text-center">Choisis d'abord un client pour continuer.</p>
         )}
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p className="text-sm text-brique">{error}</p>}
 
         <button disabled={loading || locked || clientPets.length === 0} className="btn-primary w-full sm:w-auto">
           {loading
@@ -428,9 +436,9 @@ function ClientPicker({ clients, onSelect }) {
 
   if (clients.length === 0) {
     return (
-      <p className="text-sm text-muted">
+      <p className="text-sm text-pierre">
         Aucun client pour l'instant.{" "}
-        <Link href="/admin/clients/new" className="text-forest underline">
+        <Link href="/admin/clients/new" className="text-rouille underline">
           Crée ton premier client
         </Link>
         .
@@ -440,11 +448,16 @@ function ClientPicker({ clients, onSelect }) {
 
   return (
     <div className="ios-field-group">
-      <div className="p-2 border-b border-border">
+      <div className="p-2 border-b border-trait relative">
+        <MagnifyingGlass
+          size={20}
+          className="absolute left-5 top-1/2 -translate-y-1/2 text-pierre pointer-events-none"
+          aria-hidden="true"
+        />
         <input
           ref={inputRef}
-          className="input !min-h-[40px]"
-          placeholder="🔍 Rechercher un client…"
+          className="input !min-h-[40px] !pl-10"
+          placeholder="Rechercher un client…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
@@ -455,24 +468,29 @@ function ClientPicker({ clients, onSelect }) {
           }}
         />
       </div>
-      <ul className="max-h-64 overflow-y-auto divide-y divide-border">
+      <ul className="max-h-64 overflow-y-auto divide-y divide-trait">
         {filtered.length === 0 ? (
-          <li className="px-4 py-3 text-sm text-muted">Aucun client ne correspond.</li>
+          <li className="px-4 py-3 text-sm text-pierre">Aucun client ne correspond.</li>
         ) : (
           filtered.map((c) => (
             <li key={c.id}>
               <button
                 type="button"
                 onClick={() => onSelect(c.id)}
-                className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 hover:bg-sand-dark/50 active:bg-sand-dark"
+                className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 hover:bg-sable active:bg-sable"
               >
                 <span className="min-w-0">
-                  <span className="font-medium block truncate">
+                  <span className="font-bold block truncate">
                     {c.first_name} {c.last_name}
                   </span>
-                  {c.address && <span className="text-xs text-muted block truncate">📍 {c.address}</span>}
+                  {c.address && (
+                    <span className="text-[13px] text-pierre flex items-center gap-1 min-w-0">
+                      <MapPin size={20} className="shrink-0" aria-hidden="true" />
+                      <span className="truncate">{c.address}</span>
+                    </span>
+                  )}
                 </span>
-                <span className="text-muted">›</span>
+                <CaretRight size={20} className="text-pierre shrink-0" aria-hidden="true" />
               </button>
             </li>
           ))

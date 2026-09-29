@@ -7,6 +7,7 @@ import WazeLink from "@/components/WazeLink";
 import TaskChecklist from "@/components/TaskChecklist";
 import PhotoUploader from "@/components/PhotoUploader";
 import VisitEditPanel from "@/components/VisitEditPanel";
+import { ArrowLeft, MapPin } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -32,36 +33,40 @@ export default async function VisitDetailPage({ params }) {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <Link href={`/admin/clients/${visit.client_id}`} className="text-sm text-muted hover:underline">
-          ← Retour à {visit.first_name} {visit.last_name}
+        <Link href={`/admin/clients/${visit.client_id}`} className="text-sm text-pierre hover:underline inline-flex items-center gap-1">
+          <ArrowLeft size={16} aria-hidden="true" />
+          {visit.first_name} {visit.last_name}
         </Link>
         <VisitStatusBadge status={visit.status} />
       </div>
 
       <div>
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">
-          {visit.pet_name} — {formatDateFR(visit.date)}
+        <h1 className="font-display text-3xl font-semibold text-encre">
+          {visit.pet_name} · {formatDateFR(visit.date)}
         </h1>
-        <p className="text-muted text-sm mt-1">
+        <p className="text-pierre text-sm mt-1 tabular-nums">
           {visit.first_name} {visit.last_name}
           {visit.start_time && ` · ${visit.start_time.slice(0, 5)}`}
           {visit.end_time && ` – ${visit.end_time.slice(0, 5)}`}
         </p>
         {visit.address && (
           <div className="mt-2 flex items-center gap-3 flex-wrap">
-            <span className="text-sm">📍 {visit.address}</span>
+            <span className="text-sm inline-flex items-center gap-1">
+              <MapPin size={20} aria-hidden="true" className="text-pierre shrink-0" />
+              {visit.address}
+            </span>
             <WazeLink address={visit.address} />
           </div>
         )}
       </div>
 
       <div className="card p-5">
-        <h2 className="font-semibold text-forest-dark mb-3">Suivi des tâches</h2>
+        <h2 className="font-display text-xl font-semibold mb-3">Tâches</h2>
         <TaskChecklist visitId={id} tasks={tasks} />
       </div>
 
       <div className="card p-5">
-        <h2 className="font-semibold text-forest-dark mb-3">Photos</h2>
+        <h2 className="font-display text-xl font-semibold mb-3">Photos</h2>
         <PhotoUploader visitId={id} photos={photos} />
       </div>
 

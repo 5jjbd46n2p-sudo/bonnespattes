@@ -2,6 +2,7 @@ import Link from "next/link";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { InvoiceStatusBadge } from "@/components/StatusBadge";
+import { DownloadSimple, Plus } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -51,46 +52,42 @@ export default async function AccountingPage({ searchParams }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">Comptabilité</h1>
-        <div className="flex gap-2">
+        <h1 className="font-display text-3xl font-semibold text-encre">Comptabilité</h1>
+        <div className="flex gap-2 flex-wrap">
           {/* Téléchargement d'un fichier (route API) : un <a> classique, pas un <Link> */}
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/api/invoices/export" className="btn-ghost text-sm">
-            ⬇ Export comptable (CSV)
+          <a href="/api/invoices/export" className="btn-ghost text-sm gap-2">
+            <DownloadSimple size={20} aria-hidden="true" />
+            Export comptable (CSV)
           </a>
-          <Link href="/admin/accounting/invoices/new" className="btn-accent text-sm">
-            + Nouvelle facture
+          <Link href="/admin/accounting/invoices/new" className="btn-primary text-sm gap-2">
+            <Plus size={20} aria-hidden="true" />
+            Nouvelle facture
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-4">
-          <p className="text-xs font-semibold text-muted uppercase">Total facturé</p>
-          <p className="font-display text-2xl font-semibold text-forest-dark mt-1">{formatEUR(summary.total_ttc)}</p>
-        </div>
-        <div className="card p-4">
-          <p className="text-xs font-semibold text-muted uppercase">Encaissé</p>
-          <p className="font-display text-2xl font-semibold text-forest-dark mt-1">{formatEUR(summary.total_paid)}</p>
-        </div>
-        <div className="card p-4">
-          <p className="text-xs font-semibold text-muted uppercase">En attente</p>
-          <p className="font-display text-2xl font-semibold text-ochre-dark mt-1">{formatEUR(summary.total_unpaid)}</p>
-        </div>
-        <div className="card p-4">
-          <p className="text-xs font-semibold text-muted uppercase">Visites à facturer</p>
-          <p className="font-display text-2xl font-semibold text-forest-dark mt-1">{unbilledRes.rows[0].count}</p>
-          <p className="text-xs text-muted">{formatEUR(unbilledRes.rows[0].total)}</p>
-        </div>
-      </div>
+      {/* Une seule ligne de chiffres, discrète */}
+      <p className="text-sm text-pierre tabular-nums flex flex-wrap gap-x-2 gap-y-1">
+        <span>{formatEUR(summary.total_ttc)} facturés</span>
+        <span aria-hidden="true">·</span>
+        <span>{formatEUR(summary.total_paid)} encaissés</span>
+        <span aria-hidden="true">·</span>
+        <span>{formatEUR(summary.total_unpaid)} en attente</span>
+        <span aria-hidden="true">·</span>
+        <span>
+          {unbilledRes.rows[0].count} visite{Number(unbilledRes.rows[0].count) > 1 ? "s" : ""} à facturer (
+          {formatEUR(unbilledRes.rows[0].total)})
+        </span>
+      </p>
 
       <div className="flex gap-2 flex-wrap">
         {filters.map((f) => (
           <Link
             key={f.value}
             href={f.value ? `/admin/accounting?status=${f.value}` : "/admin/accounting"}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-              status === f.value ? "bg-forest text-white border-forest" : "border-border text-muted hover:bg-sand-dark/50"
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-colors ${
+              status === f.value ? "bg-rouille text-sur-rouille border-rouille" : "border-trait text-pierre hover:bg-sable"
             }`}
           >
             {f.label}
@@ -99,24 +96,24 @@ export default async function AccountingPage({ searchParams }) {
       </div>
 
       {invoicesRes.rows.length === 0 ? (
-        <div className="card p-10 text-center text-muted">Aucune facture pour l'instant.</div>
+        <div className="card p-10 text-center text-pierre">Aucune facture pour l'instant.</div>
       ) : (
         <div className="card overflow-hidden">
           <div className="scroll-x">
-            <table className="w-full text-sm min-w-[560px]">
-              <thead className="bg-sand-dark/50 text-muted text-xs uppercase">
+            <table className="w-full text-sm min-w-[560px] tabular-nums">
+              <thead className="text-pierre text-[13px] font-bold">
                 <tr>
-                  <th className="text-left px-4 py-3">Numéro</th>
-                  <th className="text-left px-4 py-3">Client</th>
-                  <th className="text-left px-4 py-3">Date</th>
-                  <th className="text-right px-4 py-3">Montant</th>
-                  <th className="text-right px-4 py-3">Payé</th>
-                  <th className="text-left px-4 py-3">Statut</th>
+                  <th className="text-left font-bold px-4 py-3">Numéro</th>
+                  <th className="text-left font-bold px-4 py-3">Client</th>
+                  <th className="text-left font-bold px-4 py-3">Date</th>
+                  <th className="text-right font-bold px-4 py-3">Montant</th>
+                  <th className="text-right font-bold px-4 py-3">Payé</th>
+                  <th className="text-left font-bold px-4 py-3">Statut</th>
                 </tr>
               </thead>
               <tbody>
                 {invoicesRes.rows.map((inv) => (
-                  <tr key={inv.id} className="border-t border-border hover:bg-sand-dark/30">
+                  <tr key={inv.id} className="border-t border-trait hover:bg-sable transition-colors">
                     <td className="px-4 py-3">
                       <Link href={`/admin/accounting/invoices/${inv.id}`} className="font-medium hover:underline">
                         {inv.number}
@@ -127,7 +124,7 @@ export default async function AccountingPage({ searchParams }) {
                     </td>
                     <td className="px-4 py-3">{formatDateFR(inv.issue_date)}</td>
                     <td className="px-4 py-3 text-right font-medium">{formatEUR(inv.total_ttc)}</td>
-                    <td className="px-4 py-3 text-right text-muted">{formatEUR(inv.paid_amount)}</td>
+                    <td className="px-4 py-3 text-right text-pierre">{formatEUR(inv.paid_amount)}</td>
                     <td className="px-4 py-3">
                       <InvoiceStatusBadge status={inv.status} />
                     </td>

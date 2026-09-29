@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { formatDateLongFR, todayISO, localISO, toCardVisit } from "@/lib/utils";
 import { VISIT_STATUS, VISIT_STATUS_ORDER } from "@/components/StatusBadge";
 import VisitCard from "@/components/VisitCard";
+import { CaretLeft, CaretRight, Plus } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -112,9 +113,10 @@ export default async function PlanningPage({ searchParams }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">Planning</h1>
-        <Link href={`/admin/visits/new?date=${selected}`} className="btn-accent shrink-0">
-          + Planifier
+        <h1 className="font-display text-3xl font-semibold text-encre">Planning</h1>
+        <Link href={`/admin/visits/new?date=${selected}`} className="btn-primary gap-2 shrink-0">
+          <Plus size={20} aria-hidden="true" />
+          Planifier
         </Link>
       </div>
 
@@ -127,18 +129,18 @@ export default async function PlanningPage({ searchParams }) {
                 ? hrefFor({ date: toISO(prevWeekDate) })
                 : hrefFor({ month: prevMonthKey })
             }
-            className="w-9 h-9 flex items-center justify-center rounded-full text-lg text-muted hover:bg-sand-dark/60 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-lg text-pierre hover:bg-sable transition-colors"
             aria-label="Précédent"
           >
-            ‹
+            <CaretLeft size={20} aria-hidden="true" />
           </Link>
           <div className="flex items-center gap-3">
-            <h2 className="font-display text-lg sm:text-xl font-semibold capitalize">
+            <h2 className="font-display text-xl font-semibold capitalize">
               {view === "week"
                 ? `Semaine du ${weekStartForNav.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}`
                 : monthLabel}
             </h2>
-            <Link href={hrefFor({ month: ymKey(new Date(today + "T00:00:00")), date: today })} className="text-xs text-forest underline shrink-0">
+            <Link href={hrefFor({ month: ymKey(new Date(today + "T00:00:00")), date: today })} className="text-sm text-rouille underline shrink-0">
               Aujourd'hui
             </Link>
           </div>
@@ -148,27 +150,27 @@ export default async function PlanningPage({ searchParams }) {
                 ? hrefFor({ date: toISO(nextWeekDate) })
                 : hrefFor({ month: nextMonthKey })
             }
-            className="w-9 h-9 flex items-center justify-center rounded-full text-lg text-muted hover:bg-sand-dark/60 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-lg text-pierre hover:bg-sable transition-colors"
             aria-label="Suivant"
           >
-            ›
+            <CaretRight size={20} aria-hidden="true" />
           </Link>
         </div>
 
         <div className="flex justify-center mb-3">
-          <div className="inline-flex rounded-full border border-border p-0.5 bg-sand-dark/30 text-sm">
+          <div className="inline-flex rounded-lg border border-trait p-0.5 bg-sable text-sm">
             <Link
               href={hrefFor({ v: "month" })}
-              className={`px-4 py-1 rounded-full font-medium transition-colors ${
-                view === "month" ? "bg-forest text-white" : "text-muted"
+              className={`px-4 py-1 rounded-md font-bold transition-colors ${
+                view === "month" ? "bg-rouille text-sur-rouille" : "text-pierre"
               }`}
             >
               Mois
             </Link>
             <Link
               href={hrefFor({ v: "week" })}
-              className={`px-4 py-1 rounded-full font-medium transition-colors ${
-                view === "week" ? "bg-forest text-white" : "text-muted"
+              className={`px-4 py-1 rounded-md font-bold transition-colors ${
+                view === "week" ? "bg-rouille text-sur-rouille" : "text-pierre"
               }`}
             >
               Semaine
@@ -179,7 +181,7 @@ export default async function PlanningPage({ searchParams }) {
         {/* En-têtes des jours de la semaine */}
         <div className="grid grid-cols-7 mb-1">
           {WEEKDAY_LABELS.map((label) => (
-            <div key={label} className="text-center text-[10px] font-semibold uppercase tracking-wide text-muted">
+            <div key={label} className="text-center text-[13px] font-bold text-pierre">
               {label}
             </div>
           ))}
@@ -204,19 +206,19 @@ export default async function PlanningPage({ searchParams }) {
                     key={iso}
                     href={`/admin/planning?view=${view}&month=${cellMonth}&date=${iso}`}
                     title={total > 0 ? `${total} visite${total > 1 ? "s" : ""}` : undefined}
-                    className={`relative flex flex-col items-center justify-start rounded-xl transition-colors ${
+                    className={`relative flex flex-col items-center justify-start rounded-lg transition-colors ${
                       view === "week" ? "py-3" : "py-1.5"
-                    } ${isSelected ? "" : "hover:bg-sand-dark/50"}`}
+                    } ${isSelected ? "" : "hover:bg-sable"}`}
                   >
                     <span
-                      className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                      className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold tabular-nums transition-colors ${
                         isSelected
-                          ? "bg-forest text-white"
+                          ? "bg-rouille text-sur-rouille"
                           : isToday
-                          ? "text-ochre-dark font-bold ring-1 ring-ochre/50"
+                          ? "text-rouille font-bold ring-1 ring-rouille"
                           : isCurrentMonth
-                          ? "text-ink"
-                          : "text-muted/40"
+                          ? "text-encre"
+                          : "text-pierre/40"
                       }`}
                     >
                       {date.getDate()}
@@ -238,21 +240,23 @@ export default async function PlanningPage({ searchParams }) {
       <div>
         <h2 className="font-display text-xl font-semibold mb-3 capitalize">{formatDateLongFR(selected)}</h2>
         {visitsRes.rows.length === 0 ? (
-          <div className="card p-8 text-center text-muted">
+          <div className="card p-8 text-center text-pierre">
             Aucune visite ce jour-là.{" "}
-            <Link href={`/admin/visits/new?date=${selected}`} className="text-forest underline">
+            <Link href={`/admin/visits/new?date=${selected}`} className="text-rouille underline">
               Planifier une visite
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            {visitsRes.rows.map((v) => (
-              <VisitCard key={`${v.id}-${v.status}-${v.photo_count}`} visit={toCardVisit(v)} />
-            ))}
-            <p className="text-xs text-muted md:hidden text-center pt-1">
-              Astuce : glisse une visite vers la droite pour la démarrer, vers la gauche pour la terminer.
+          <>
+            <div className="list-group">
+              {visitsRes.rows.map((v) => (
+                <VisitCard key={`${v.id}-${v.status}-${v.photo_count}`} visit={toCardVisit(v)} />
+              ))}
+            </div>
+            <p className="text-sm text-pierre md:hidden text-center pt-3">
+              Glisse une visite vers la droite pour la démarrer, vers la gauche pour la terminer.
             </p>
-          </div>
+          </>
         )}
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { NavigationArrow } from "@phosphor-icons/react/ssr";
 import { wazeUrl } from "@/lib/utils";
 
 export default function WazeLink({ address, className = "" }) {
@@ -8,9 +9,10 @@ export default function WazeLink({ address, className = "" }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-1.5 text-sm font-semibold text-forest hover:text-forest-dark underline decoration-dotted underline-offset-4 ${className}`}
+      className={`inline-flex items-center gap-1.5 text-sm font-bold text-rouille hover:text-rouille-fonce underline underline-offset-4 ${className}`}
     >
-      🧭 Ouvrir dans Waze
+      <NavigationArrow size={20} aria-hidden="true" />
+      Ouvrir dans Waze
     </a>
   );
 }

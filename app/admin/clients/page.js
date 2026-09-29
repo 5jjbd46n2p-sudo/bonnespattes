@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
+import { MapPin, Phone, Plus } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -19,47 +20,62 @@ export default async function ClientsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-3xl font-semibold text-forest-dark">Clients</h1>
-        <Link href="/admin/clients/new" className="btn-accent">
-          + Nouveau client
+        <h1 className="font-display text-3xl font-semibold text-encre">Clients</h1>
+        <Link href="/admin/clients/new" className="btn-primary gap-2">
+          <Plus size={20} aria-hidden="true" />
+          Nouveau client
         </Link>
       </div>
 
       {clients.length === 0 ? (
-        <div className="card p-10 text-center text-muted">
+        <div className="card p-10 text-center text-pierre">
           Aucun client pour l'instant.{" "}
-          <Link href="/admin/clients/new" className="text-forest underline">
-            Créer votre premier client
+          <Link href="/admin/clients/new" className="text-rouille underline">
+            Créer ton premier client
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ul className="card divide-y divide-trait overflow-hidden">
           {clients.map((c) => (
-            <Link
-              key={c.id}
-              href={`/admin/clients/${c.id}`}
-              className="card p-5 hover:shadow-md hover:-translate-y-0.5 transition-transform block"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-lg">
+            <li key={c.id}>
+              <Link
+                href={`/admin/clients/${c.id}`}
+                className="flex items-start justify-between gap-4 px-4 py-3 hover:bg-sable transition-colors"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold">
                     {c.first_name} {c.last_name}
+                    <span className="font-normal text-pierre">
+                      {" "}
+                      · {c.pet_count} animal{c.pet_count > 1 ? "aux" : ""}
+                    </span>
                   </p>
-                  <p className="text-sm text-muted mt-0.5">
-                    {c.pet_count} animal{c.pet_count > 1 ? "aux" : ""}
-                  </p>
+                  <div className="text-sm text-pierre mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5">
+                    {c.address && (
+                      <span className="inline-flex items-center gap-1 min-w-0 max-w-full">
+                        <MapPin size={16} aria-hidden="true" className="shrink-0" />
+                        <span className="truncate">{c.address}</span>
+                      </span>
+                    )}
+                    {c.phone && (
+                      <span className="inline-flex items-center gap-1 tabular-nums">
+                        <Phone size={16} aria-hidden="true" className="shrink-0" />
+                        {c.phone}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {c.login_email ? (
-                  <span className="badge bg-emerald-100 text-emerald-800">Accès actif</span>
-                ) : (
-                  <span className="badge bg-stone-200 text-stone-600">Pas d'accès</span>
-                )}
-              </div>
-              {c.address && <p className="text-sm text-muted mt-3 truncate">📍 {c.address}</p>}
-              {c.phone && <p className="text-sm text-muted mt-1">📞 {c.phone}</p>}
-            </Link>
+                <span className="inline-flex items-center gap-2 text-[13px] font-bold text-pierre shrink-0 mt-0.5">
+                  <span
+                    className={`w-2 h-2 rounded-full ${c.login_email ? "bg-mousse" : "bg-muted"}`}
+                    aria-hidden="true"
+                  />
+                  {c.login_email ? "Accès actif" : "Pas d'accès"}
+                </span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

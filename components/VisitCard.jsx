@@ -3,8 +3,9 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Play, Check, CheckSquare, Camera, NavigationArrow } from "@phosphor-icons/react";
 import { wazeUrl } from "@/lib/utils";
-import { VisitStatusBadge, VISIT_STATUS } from "@/components/StatusBadge";
+import { VisitStatusBadge } from "@/components/StatusBadge";
 
 const SWIPE_THRESHOLD = 90; // px à parcourir pour valider l'action du glissement
 const SWIPE_MAX = 160;
@@ -14,7 +15,9 @@ const SWIPE_MAX = 160;
  * - boutons rapides "Démarrer" / "Terminer" sans ouvrir la visite,
  * - glisser vers la droite = démarrer, vers la gauche = terminer (mobile),
  * - bouton appareil photo pour ajouter une photo en un geste,
- * - couleur de statut identique partout (liseré + badge).
+ * - couleur de statut identique partout (badge à pastille).
+ * La carte est une ligne sur fond lin : à placer de préférence dans une
+ * liste groupée (.list-group) pour obtenir des lignes séparées par un filet.
  */
 export default function VisitCard({ visit }) {
   const router = useRouter();
@@ -123,29 +126,40 @@ export default function VisitCard({ visit }) {
     }
   }
 
-  const meta = VISIT_STATUS[status];
   const time = visit.start_time
     ? `${visit.start_time.slice(0, 5)}${visit.end_time ? `–${visit.end_time.slice(0, 5)}` : ""}`
     : "—";
   const pastThreshold = Math.abs(dx) >= SWIPE_THRESHOLD;
 
   return (
-    <div className="relative rounded-[14px] overflow-hidden">
+    <div className="relative overflow-hidden">
       {dx !== 0 && (
         <div
           aria-hidden="true"
-          className={`absolute inset-0 flex items-center px-5 text-white font-semibold text-sm ${
-            dx > 0 ? "justify-start bg-blue-500" : "justify-end bg-emerald-500"
+          className={`absolute inset-0 flex items-center gap-2 px-5 text-lin font-bold text-sm ${
+            dx > 0 ? "justify-start bg-rouille" : "justify-end bg-mousse"
           } ${pastThreshold ? "" : "opacity-70"}`}
         >
-          {dx > 0 ? (canStart ? "▶ Démarrer" : "") : canFinish ? "✓ Terminer" : ""}
+          {dx > 0 ? (
+            canStart && (
+              <>
+                <Play size={20} aria-hidden="true" />
+                Démarrer
+              </>
+            )
+          ) : (
+            canFinish && (
+              <>
+                <Check size={20} aria-hidden="true" />
+                Terminer
+              </>
+            )
+          )}
         </div>
       )}
 
       <div
-        className={`card border-l-4 ${meta?.border || "border-l-stone-300"} p-4 relative ${
-          status === "ANNULE" ? "opacity-70" : ""
-        }`}
+        className={`bg-lin p-4 relative ${status === "ANNULE" ? "opacity-70" : ""}`}
         style={{
           transform: dx ? `translateX(${dx}px)` : undefined,
           transition: dragging ? "none" : "transform 0.2s ease",
@@ -159,31 +173,34 @@ export default function VisitCard({ visit }) {
       >
         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
           <div className="flex md:block items-center gap-3 md:w-24 shrink-0">
-            <span className="font-semibold text-forest-dark tabular-nums">{time}</span>
+            <span className="font-bold text-encre tabular-nums">{time}</span>
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <Link href={`/admin/visits/${visit.id}`} className="font-semibold hover:underline">
+              <Link href={`/admin/visits/${visit.id}`} className="font-bold hover:underline">
                 {visit.pet_name} — {visit.first_name} {visit.last_name}
               </Link>
               <VisitStatusBadge status={status} />
             </div>
-            <div className="text-sm text-muted mt-0.5 flex items-center gap-3 flex-wrap">
-              <span>
-                ✅ {visit.task_done_count}/{visit.task_count} tâches
+            <div className="text-sm text-pierre mt-1 flex items-center gap-4 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 tabular-nums">
+                <CheckSquare size={20} aria-hidden="true" />
+                {visit.task_done_count}/{visit.task_count} tâches
               </span>
-              <span>
-                📷 {photoCount} photo{photoCount > 1 ? "s" : ""}
+              <span className="inline-flex items-center gap-1.5 tabular-nums">
+                <Camera size={20} aria-hidden="true" />
+                {photoCount} photo{photoCount > 1 ? "s" : ""}
               </span>
               {visit.address && (
                 <a
                   href={wazeUrl(visit.address)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-forest underline decoration-dotted underline-offset-4"
+                  className="inline-flex items-center gap-1.5 font-bold text-rouille hover:text-rouille-fonce underline underline-offset-4"
                 >
-                  🧭 Waze
+                  <NavigationArrow size={20} aria-hidden="true" />
+                  Waze
                 </a>
               )}
             </div>
@@ -197,7 +214,8 @@ export default function VisitCard({ visit }) {
                 onClick={() => changeStatus("EN_COURS")}
                 className="btn-ghost !py-1.5 !px-3 text-sm"
               >
-                ▶ Démarrer
+                <Play size={20} aria-hidden="true" />
+                Démarrer
               </button>
             )}
             {canFinish && (
@@ -207,7 +225,8 @@ export default function VisitCard({ visit }) {
                 onClick={() => changeStatus("FAIT")}
                 className="btn-primary !py-1.5 !px-3 text-sm"
               >
-                ✓ Terminer
+                <Check size={20} aria-hidden="true" />
+                Terminer
               </button>
             )}
             {canPhoto && (
@@ -215,7 +234,7 @@ export default function VisitCard({ visit }) {
                 className={`btn-ghost !py-1.5 !px-3 text-sm cursor-pointer ${uploading ? "opacity-60" : ""}`}
                 title="Ajouter une photo"
               >
-                {uploading ? "Envoi…" : "📷"}
+                {uploading ? "Envoi…" : <Camera size={20} aria-hidden="true" />}
                 <span className="sr-only">Ajouter une photo</span>
                 <input
                   ref={fileRef}
@@ -234,7 +253,7 @@ export default function VisitCard({ visit }) {
             </Link>
           </div>
         </div>
-        {error && <p className="text-sm text-danger mt-2">{error}</p>}
+        {error && <p className="text-sm text-brique mt-2">{error}</p>}
       </div>
     </div>
   );
