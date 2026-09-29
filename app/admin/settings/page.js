@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import SettingsForm, { LegalSettingsForm, PricingSettingsForm } from "@/components/SettingsForm";
+import SettingsForm, { LegalSettingsForm, PricingSettingsForm, ContractSettingsForm } from "@/components/SettingsForm";
 import ThemeToggle from "@/components/ThemeToggle";
 import LogoutButton from "@/components/LogoutButton";
 
@@ -22,6 +22,7 @@ export default async function SettingsPage() {
       <SettingsForm settings={rows[0]} />
       <PricingSettingsForm settings={rows[0]} />
       <LegalSettingsForm settings={rows[0]} />
+      <ContractSettingsForm settings={rows[0]} />
 
       <div className="card p-5 flex items-center justify-between gap-3">
         <div>

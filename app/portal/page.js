@@ -2,7 +2,7 @@ import { requireClient } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { formatDateFR, formatEUR } from "@/lib/utils";
 import { VisitStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
-import { CheckSquare, DownloadSimple, Square } from "@phosphor-icons/react/ssr";
+import { CheckSquare, DownloadSimple, FileText, Square } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +42,17 @@ export default async function PortalPage() {
      FROM invoices i WHERE client_id = $1 ORDER BY issue_date DESC`,
     [clientId]
   );
+
+  let signedContract = null;
+  try {
+    const cRes = await query(
+      "SELECT id, version, signed_at FROM contract_signatures WHERE client_id = $1 AND status = 'SIGNE' ORDER BY signed_at DESC LIMIT 1",
+      [clientId]
+    );
+    signedContract = cRes.rows[0] || null;
+  } catch {
+    signedContract = null;
+  }
 
   const petNames = petsRes.rows.map((p) => p.name);
   const petLabel =
@@ -130,6 +141,21 @@ export default async function PortalPage() {
             );
           })}
         </ul>
+      )}
+
+      {signedContract && (
+        <div className="card p-5 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="font-display text-xl font-semibold">Votre contrat</h2>
+            <p className="text-sm text-pierre tabular-nums">
+              Signé le {formatDateFR(signedContract.signed_at)} (version {signedContract.version})
+            </p>
+          </div>
+          <a href={`/api/contracts/${signedContract.id}/pdf`} className="btn-ghost text-sm gap-2 !py-1.5 !px-3">
+            <FileText size={20} aria-hidden="true" />
+            Télécharger le PDF
+          </a>
+        </div>
       )}
 
       {invoicesRes.rows.length > 0 && (

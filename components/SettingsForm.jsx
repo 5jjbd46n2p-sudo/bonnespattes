@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "@phosphor-icons/react";
+import { DEFAULT_CONTRACT_TEMPLATE } from "@/lib/contractTemplate";
 
 export default function SettingsForm({ settings }) {
   const router = useRouter();
@@ -203,6 +204,105 @@ export function PricingSettingsForm({ settings }) {
       <div className="flex items-center gap-3">
         <button disabled={loading} className="btn-primary text-sm">
           {loading ? "Enregistrement..." : "Enregistrer"}
+        </button>
+        {saved && (
+          <span className="text-sm font-bold text-mousse inline-flex items-center gap-1.5">
+            <Check size={20} aria-hidden="true" />
+            Enregistré
+          </span>
+        )}
+      </div>
+    </form>
+  );
+}
+
+export function ContractSettingsForm({ settings }) {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    insuranceInfo: settings.insurance_info || "",
+    mediatorInfo: settings.mediator_info || "",
+    contractTemplate: settings.contract_template || DEFAULT_CONTRACT_TEMPLATE,
+  });
+  const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const version = settings.contract_version ?? 1;
+
+  async function save(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        insuranceInfo: form.insuranceInfo,
+        mediatorInfo: form.mediatorInfo,
+        // null = modèle par défaut
+        contractTemplate: form.contractTemplate.trim() === DEFAULT_CONTRACT_TEMPLATE.trim() ? null : form.contractTemplate,
+      }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Enregistrement impossible.");
+      return;
+    }
+    setSaved(true);
+    router.refresh();
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  function reset() {
+    if (!confirm("Rétablir le modèle par défaut ? Ton texte actuel sera remplacé (après enregistrement).")) return;
+    setForm({ ...form, contractTemplate: DEFAULT_CONTRACT_TEMPLATE });
+  }
+
+  return (
+    <form onSubmit={save} className="card p-5 space-y-4">
+      <div>
+        <h2 className="font-display font-semibold text-encre">Contrat</h2>
+        <p className="text-[13px] text-pierre mt-1">
+          Version courante du modèle : <span className="tabular-nums">{version}</span>. Un contrat déjà envoyé ou signé
+          n'est jamais modifié : la version augmente à chaque changement du modèle.
+        </p>
+      </div>
+      <Field
+        label="Assurance RC pro (compagnie et n° de contrat)"
+        value={form.insuranceInfo}
+        onChange={(v) => setForm({ ...form, insuranceInfo: v })}
+      />
+      <Field
+        label="Médiateur de la consommation (nom, adresse, site)"
+        value={form.mediatorInfo}
+        onChange={(v) => setForm({ ...form, mediatorInfo: v })}
+      />
+      <div>
+        <label className="label block mb-1">Modèle de contrat</label>
+        <textarea
+          className="input font-mono text-[13px] leading-relaxed"
+          rows={18}
+          value={form.contractTemplate}
+          onChange={(e) => setForm({ ...form, contractTemplate: e.target.value })}
+        />
+        <p className="text-[13px] text-pierre mt-1">
+          Une ligne commençant par « ## » est un titre d'article. Variables disponibles : {"{{business_name}}"},{" "}
+          {"{{legal_form}}"}, {"{{siret}}"}, {"{{business_address}}"}, {"{{contact_email}}"}, {"{{client_name}}"},{" "}
+          {"{{client_address}}"}, {"{{client_email}}"}, {"{{client_phone}}"}, {"{{insurance_info}}"},{" "}
+          {"{{mediator_info}}"}, {"{{animals}}"}, {"{{tva_mention}}"}.
+        </p>
+        <p className="text-[13px] text-pierre mt-1">
+          Le modèle par défaut est indicatif : fais-le relire par un professionnel (assureur, CCI, juriste) avant de
+          l'utiliser.
+        </p>
+      </div>
+      {error && <p className="text-sm font-bold text-brique">{error}</p>}
+      <div className="flex items-center gap-3 flex-wrap">
+        <button disabled={loading} className="btn-primary text-sm">
+          {loading ? "Enregistrement..." : "Enregistrer"}
+        </button>
+        <button type="button" onClick={reset} className="btn-ghost text-sm">
+          Rétablir le modèle par défaut
         </button>
         {saved && (
           <span className="text-sm font-bold text-mousse inline-flex items-center gap-1.5">

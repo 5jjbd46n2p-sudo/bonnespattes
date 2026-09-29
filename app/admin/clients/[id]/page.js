@@ -7,6 +7,7 @@ import ClientInfoCard from "@/components/ClientInfoCard";
 import PetManager from "@/components/PetManager";
 import ClientLoginManager from "@/components/ClientLoginManager";
 import DepositManager from "@/components/DepositManager";
+import ClientContractCard from "@/components/ClientContractCard";
 import { ArrowLeft, Camera, CheckSquare, Plus } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +38,19 @@ async function getClientData(id) {
     [id]
   );
 
+  let contracts = [];
+  try {
+    const contractsRes = await query(
+      "SELECT id, version, status, sent_at, sent_to, signed_at, expires_at FROM contract_signatures WHERE client_id = $1 ORDER BY created_at DESC",
+      [id]
+    );
+    contracts = contractsRes.rows;
+  } catch {
+    contracts = [];
+  }
+
   return {
+    contracts,
     client: clientRes.rows[0],
     pets: petsRes.rows,
     visits: visitsRes.rows,
@@ -51,7 +64,7 @@ export default async function ClientDetailPage({ params }) {
   const { id } = await params;
   const data = await getClientData(id);
   if (!data) notFound();
-  const { client, pets, visits, invoices, login, deposits } = data;
+  const { client, pets, visits, invoices, login, deposits, contracts } = data;
 
   return (
     <div className="space-y-6">
@@ -107,6 +120,7 @@ export default async function ClientDetailPage({ params }) {
         </div>
 
         <div className="space-y-6">
+          <ClientContractCard clientId={id} hasEmail={!!client.email} signatures={contracts} />
           <ClientLoginManager clientId={id} login={login} />
           <DepositManager clientId={id} deposits={deposits} />
 

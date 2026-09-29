@@ -164,3 +164,35 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS travel_free_km NUMERIC DEFAULT 4;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_30 NUMERIC DEFAULT 15;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_45 NUMERIC DEFAULT 18;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_60 NUMERIC DEFAULT 22;
+
+-- Migrations idempotentes : contrat à signature électronique :
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS contract_template TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS contract_version INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS insurance_info TEXT DEFAULT '';
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS mediator_info TEXT DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS contract_signatures (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  version INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  sent_to TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ENVOYE' CHECK (status IN ('ENVOYE','SIGNE','ANNULE')),
+  sent_at TIMESTAMPTZ DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  otp_hash TEXT,
+  otp_expires_at TIMESTAMPTZ,
+  otp_attempts INTEGER NOT NULL DEFAULT 0,
+  otp_sent_count INTEGER NOT NULL DEFAULT 0,
+  signed_at TIMESTAMPTZ,
+  signer_name TEXT,
+  signer_ip TEXT,
+  signer_user_agent TEXT,
+  checkboxes JSONB,
+  emergency_contact TEXT,
+  vet_info TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_contract_signatures_client ON contract_signatures(client_id);
