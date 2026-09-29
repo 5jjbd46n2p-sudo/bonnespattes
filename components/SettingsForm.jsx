@@ -220,7 +220,7 @@ export function PublicSettingsForm({ settings }) {
   const router = useRouter();
   const [form, setForm] = useState({
     referralCredit: settings.referral_credit ?? 10,
-    serviceArea: settings.service_area || "Viarmes et environs (15 km)",
+    serviceArea: settings.service_area || "Viarmes et environs (15 km, au-delà sur devis)",
   });
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);

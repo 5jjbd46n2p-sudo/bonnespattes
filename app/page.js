@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Aux Bonnes Pattes — Visites à domicile et promenades pour chiens et chats à Viarmes";
 const DESCRIPTION =
-  "Aurore, ancienne assistante vétérinaire, s'occupe de vos chiens et de vos chats : visites à domicile et promenades à Viarmes (95) et dans un rayon d'environ 15 km. Compte rendu et photos après chaque passage.";
+  "Aurore, ancienne assistante vétérinaire, s'occupe de vos chiens et de vos chats : visites à domicile et promenades à Viarmes (95) et dans un rayon d'environ 15 km (au-delà sur devis). Compte rendu et photos après chaque passage.";
 
 export const metadata = {
   title: { absolute: TITLE },
@@ -88,7 +88,7 @@ export default async function Home({ searchParams }) {
   const sp = await searchParams;
   const rawCode = Array.isArray(sp?.parrain) ? sp.parrain[0] : sp?.parrain;
   const [s, referrer] = await Promise.all([loadSettings(), loadReferrer(rawCode)]);
-  const area = s.service_area || "Viarmes et environs (15 km)";
+  const area = s.service_area || "Viarmes et environs (15 km, au-delà sur devis)";
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
 
   const rates = [

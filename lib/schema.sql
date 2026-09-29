@@ -169,7 +169,7 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_60 NUMERIC DEFAULT 22;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS referral_code TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_referral_code ON clients(referral_code);
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS referral_credit NUMERIC DEFAULT 10;
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS service_area TEXT DEFAULT 'Viarmes et environs (15 km)';
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS service_area TEXT DEFAULT 'Viarmes et environs (15 km, au-delà sur devis)';
 
 CREATE TABLE IF NOT EXISTS leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
