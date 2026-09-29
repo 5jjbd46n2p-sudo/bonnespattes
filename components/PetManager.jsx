@@ -25,6 +25,40 @@ export default function PetManager({ clientId, pets }) {
     router.refresh();
   }
 
+  const [editId, setEditId] = useState(null);
+  const [edit, setEdit] = useState({ name: "", species: "", breed: "", notes: "" });
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  function startEdit(p) {
+    setEditId(p.id);
+    setEditError("");
+    setEdit({ name: p.name || "", species: p.species || "", breed: p.breed || "", notes: p.notes || "" });
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault();
+    if (!edit.name.trim()) {
+      setEditError("Le nom est requis.");
+      return;
+    }
+    setSaving(true);
+    setEditError("");
+    const res = await fetch(`/api/pets/${editId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(edit),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setEditError(data.error || "Enregistrement impossible.");
+      return;
+    }
+    setEditId(null);
+    router.refresh();
+  }
+
   async function removePet(petId) {
     if (!confirm("Supprimer cet animal et tout son historique de visites ?")) return;
     await fetch(`/api/pets/${petId}`, { method: "DELETE" });
@@ -80,22 +114,43 @@ export default function PetManager({ clientId, pets }) {
         <p className="text-sm text-pierre">Aucun animal enregistré.</p>
       ) : (
         <div className="list-group">
-          {pets.map((p) => (
-            <div key={p.id} className="list-row justify-between">
-              <div>
-                <p className="font-bold">
-                  {p.name}{" "}
-                  <span className="text-pierre text-sm font-normal">
-                    {[p.species, p.breed].filter(Boolean).join(" · ")}
-                  </span>
-                </p>
-                {p.notes && <p className="text-sm text-pierre mt-0.5">{p.notes}</p>}
+          {pets.map((p) =>
+            editId === p.id ? (
+              <form key={p.id} onSubmit={saveEdit} className="p-4 space-y-3 bg-sable rounded-lg my-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <input className="input" aria-label="Nom" placeholder="Nom *" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
+                  <input className="input" aria-label="Espèce" placeholder="Espèce (chien, chat…)" value={edit.species} onChange={(e) => setEdit({ ...edit, species: e.target.value })} />
+                  <input className="input" aria-label="Race" placeholder="Race" value={edit.breed} onChange={(e) => setEdit({ ...edit, breed: e.target.value })} />
+                </div>
+                <textarea className="input" aria-label="Notes" placeholder="Notes (santé, habitudes, allergies…)" rows={3} value={edit.notes} onChange={(e) => setEdit({ ...edit, notes: e.target.value })} />
+                {editError && <p role="alert" className="text-sm font-bold text-brique">{editError}</p>}
+                <div className="flex gap-2">
+                  <button disabled={saving} className="btn-primary text-sm">{saving ? "Enregistrement..." : "Enregistrer"}</button>
+                  <button type="button" onClick={() => setEditId(null)} className="btn-ghost text-sm">Annuler</button>
+                </div>
+              </form>
+            ) : (
+              <div key={p.id} className="list-row justify-between">
+                <div>
+                  <p className="font-bold">
+                    {p.name}{" "}
+                    <span className="text-pierre text-sm font-normal">
+                      {[p.species, p.breed].filter(Boolean).join(" · ")}
+                    </span>
+                  </p>
+                  {p.notes && <p className="text-sm text-pierre mt-0.5 whitespace-pre-line">{p.notes}</p>}
+                </div>
+                <div className="flex items-center gap-3 shrink-0 ml-3">
+                  <button onClick={() => startEdit(p)} className="text-[13px] font-bold text-rouille hover:underline min-h-[44px]">
+                    Modifier
+                  </button>
+                  <button onClick={() => removePet(p.id)} className="text-[13px] font-bold text-brique hover:underline min-h-[44px]">
+                    Supprimer
+                  </button>
+                </div>
               </div>
-              <button onClick={() => removePet(p.id)} className="text-[13px] font-bold text-brique hover:underline shrink-0 ml-3">
-                Supprimer
-              </button>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
     </div>
