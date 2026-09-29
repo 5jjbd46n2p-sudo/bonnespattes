@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "@phosphor-icons/react";
-import { formatEUR, formatDateFR } from "@/lib/utils";
+import { formatEUR, formatDateFR, todayISO } from "@/lib/utils";
 
 export default function DepositManager({ clientId, deposits }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayISO());
   const [method, setMethod] = useState("Virement");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");

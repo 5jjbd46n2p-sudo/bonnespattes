@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { generateTemporaryPassword } from "@/lib/password";
 import { ArrowLeft, ArrowsClockwise, Plus } from "@phosphor-icons/react";
 
 export default function NewClientPage() {
@@ -19,17 +20,12 @@ export default function NewClientPage() {
   const [pets, setPets] = useState([{ name: "", species: "", breed: "", notes: "" }]);
   const [createLogin, setCreateLogin] = useState(true);
   const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState(generatePassword());
+  // Vide au départ : un mot de passe aléatoire généré pendant le rendu serait
+  // différent côté serveur et côté navigateur (erreur d'hydratation React).
+  const [loginPassword, setLoginPassword] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  function generatePassword() {
-    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-    // Générateur aléatoire cryptographique (Math.random est prévisible)
-    const bytes = crypto.getRandomValues(new Uint32Array(14));
-    return Array.from(bytes, (n) => chars[n % chars.length]).join("");
-  }
 
   function updatePet(i, field, value) {
     setPets((prev) => prev.map((p, idx) => (idx === i ? { ...p, [field]: value } : p)));
@@ -50,6 +46,8 @@ export default function NewClientPage() {
       setError("Renseigne un email pour l'accès client, ou décoche la création d'accès.");
       return;
     }
+    const password = createLogin ? loginPassword || generateTemporaryPassword() : "";
+    if (createLogin) setLoginPassword(password);
     setLoading(true);
     const res = await fetch("/api/clients", {
       method: "POST",
@@ -60,7 +58,7 @@ export default function NewClientPage() {
         pets: pets.filter((p) => p.name.trim()),
         createLogin,
         loginEmail,
-        loginPassword,
+        loginPassword: password,
         sendEmail: createLogin && sendEmail,
       }),
     });
@@ -70,9 +68,9 @@ export default function NewClientPage() {
       setLoading(false);
       return;
     }
-    if (data.emailWarning) {
+    if (createLogin && (!sendEmail || data.emailWarning)) {
       alert(
-        `Le client a bien été créé, mais l'email des identifiants n'a pas pu être envoyé : ${data.emailWarning}`
+        `Client créé.${data.emailWarning ? ` L'email des identifiants n'a pas pu être envoyé (${data.emailWarning}).` : ""}\n\nMot de passe provisoire à transmettre au client : ${password}\n(il devra le changer à sa première connexion)`
       );
     }
     router.push(`/admin/clients/${data.client.id}`);
@@ -171,10 +169,15 @@ export default function NewClientPage() {
               <div>
                 <label className="text-[13px] font-bold text-pierre block mb-1">Mot de passe</label>
                 <div className="flex gap-2">
-                  <input className="input" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+                  <input
+                    className="input"
+                    value={loginPassword}
+                    placeholder="Généré automatiquement"
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                  />
                   <button
                     type="button"
-                    onClick={() => setLoginPassword(generatePassword())}
+                    onClick={() => setLoginPassword(generateTemporaryPassword())}
                     className="btn-ghost !px-3 text-sm shrink-0"
                     aria-label="Générer un autre mot de passe"
                     title="Générer un autre mot de passe"
@@ -183,7 +186,7 @@ export default function NewClientPage() {
                   </button>
                 </div>
                 <p className="text-sm text-pierre mt-1">
-                  Note ce mot de passe pour le transmettre au client, il ne sera plus affiché ensuite.
+                  Mot de passe provisoire : le client le remplacera à sa première connexion.
                 </p>
               </div>
             </div>

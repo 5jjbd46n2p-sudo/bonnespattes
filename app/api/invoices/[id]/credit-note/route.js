@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
+import { isUuid } from "@/lib/api";
 
 // Annulation d'une facture émise par un avoir : nouvelle facture numérotée
 // dans la même suite, aux montants opposés, qui référence la facture annulée.
@@ -12,7 +13,7 @@ export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
 
   try {
     const result = await tx(async (db) => {

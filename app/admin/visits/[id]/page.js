@@ -9,6 +9,7 @@ import TaskChecklist from "@/components/TaskChecklist";
 import PhotoUploader from "@/components/PhotoUploader";
 import VisitEditPanel from "@/components/VisitEditPanel";
 import { ArrowLeft, MapPin } from "@phosphor-icons/react/ssr";
+import { isUuid } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ async function getVisit(id) {
 export default async function VisitDetailPage({ params }) {
   await adminPageGuard();
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const data = await getVisit(id);
   if (!data) notFound();
   const { visit, tasks, photos } = data;

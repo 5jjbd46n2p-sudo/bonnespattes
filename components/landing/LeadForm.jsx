@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle } from "@phosphor-icons/react";
+import { todayISO } from "@/lib/utils";
 
 const SERVICES = [
   { value: "VISITE", label: "Visites à domicile" },
@@ -45,7 +46,7 @@ export default function LeadForm({ initialCode = "", referrerName = "" }) {
   const setQuote = (k) => (e) => setQ((v) => ({ ...v, [k]: e.target.value }));
   const toggleDay = (d) =>
     setQ((v) => ({ ...v, weekdays: v.weekdays.includes(d) ? v.weekdays.filter((x) => x !== d) : [...v.weekdays, d] }));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
 
   async function submit(e) {
     e.preventDefault();

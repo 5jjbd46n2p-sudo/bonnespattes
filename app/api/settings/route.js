@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { alertAdmin } from "@/lib/security";
+import { readJson } from "@/lib/api";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -13,7 +14,7 @@ export async function GET() {
 export async function PATCH(req) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
-  const body = await req.json();
+  const body = await readJson(req);
   const map = {
     businessName: "business_name",
     businessAddress: "business_address",
@@ -48,10 +49,37 @@ export async function PATCH(req) {
     templateChanged = (cur.rows[0]?.contract_template ?? null) !== tpl;
     body.contractTemplate = tpl;
   }
-  for (const key of ["insuranceInfo", "mediatorInfo"]) {
-    if (body[key] !== undefined && typeof body[key] !== "string") {
+  // Champs texte : type et longueur maximale
+  const TEXT_MAX = {
+    businessName: 120, businessAddress: 300, siret: 20, tvaNumber: 20, iban: 40, legalForm: 120,
+    contactEmail: 200, insuranceInfo: 1000, mediatorInfo: 1000,
+  };
+  for (const [key, max] of Object.entries(TEXT_MAX)) {
+    if (body[key] === undefined) continue;
+    if (typeof body[key] !== "string" || body[key].length > max) {
       return NextResponse.json({ error: "Valeur invalide." }, { status: 400 });
     }
+    body[key] = body[key].trim();
+  }
+  if (body.iban && !/^[A-Z]{2}\d{2}[A-Z0-9 ]{10,34}$/i.test(body.iban)) {
+    return NextResponse.json({ error: "IBAN invalide." }, { status: 400 });
+  }
+  if (body.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.contactEmail)) {
+    return NextResponse.json({ error: "Email de contact invalide." }, { status: 400 });
+  }
+  // Le préfixe entre dans chaque numéro de facture : lettres et chiffres uniquement
+  if (body.invoicePrefix !== undefined) {
+    if (typeof body.invoicePrefix !== "string" || !/^[A-Za-z]{1,5}$/.test(body.invoicePrefix.trim())) {
+      return NextResponse.json({ error: "Préfixe de facture invalide (1 à 5 lettres)." }, { status: 400 });
+    }
+    body.invoicePrefix = body.invoicePrefix.trim();
+  }
+  if (body.defaultTvaRate !== undefined) {
+    const n = Number(body.defaultTvaRate);
+    if (body.defaultTvaRate === "" || !Number.isFinite(n) || n < 0 || n > 100) {
+      return NextResponse.json({ error: "Taux de TVA invalide." }, { status: 400 });
+    }
+    body.defaultTvaRate = n;
   }
   for (const key of ["kmRate", "travelTimeShare", "travelFreeKm", "rate30", "rate45", "rate60", "referralCredit"]) {
     if (body[key] !== undefined) {

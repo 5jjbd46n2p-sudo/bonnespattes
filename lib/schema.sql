@@ -147,6 +147,7 @@ ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_status_check;
 ALTER TABLE visits ADD CONSTRAINT visits_status_check CHECK (status IN ('PLANIFIE','EN_COURS','FAIT','ANNULE'));
 
 -- Migrations idempotentes pour le durcissement sécurité / RGPD :
+-- (obsolètes : le blocage passe désormais par rate_limit_hits, par compte + IP)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS legal_form TEXT DEFAULT '';
@@ -302,6 +303,9 @@ CREATE INDEX IF NOT EXISTS idx_rate_limit_hits ON rate_limit_hits(bucket, key_ha
 -- RGPD : client anonymisé (droit à l'effacement ou fin de la durée de
 -- conservation) tout en gardant ses factures, que la loi impose de conserver.
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS anonymized_at TIMESTAMPTZ;
+-- Date de la dernière prestation, figée à l'anonymisation (les visites sont
+-- alors effacées) : sert au calcul de la conservation des contrats signés.
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ;
 
 -- Obligation comptable : une facture ne doit jamais disparaître avec la fiche
 -- client. La suppression d'un client ayant des factures passe par

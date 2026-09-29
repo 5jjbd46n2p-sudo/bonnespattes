@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
+import { isUuid, parseDateISO, readJson } from "@/lib/api";
 
 function durationLabel(min) {
   if (!min || min <= 0) return "";
@@ -15,17 +16,13 @@ export async function POST(req) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
 
-  let body;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
-  }
-  const { clientId, visitIds, tvaRate, dueDate, isTest } = body || {};
-  if (!clientId || !Array.isArray(visitIds) || visitIds.length === 0) {
+  const { clientId, visitIds, tvaRate, dueDate, isTest } = await readJson(req);
+  if (!isUuid(clientId) || !Array.isArray(visitIds) || visitIds.length === 0 || visitIds.length > 500 || !visitIds.every(isUuid)) {
     return NextResponse.json({ error: "Client et au moins une visite requis." }, { status: 400 });
   }
   const ids = [...new Set(visitIds)];
+  const due = dueDate ? parseDateISO(dueDate) : null;
+  if (dueDate && !due) return NextResponse.json({ error: "Date d'échéance invalide." }, { status: 400 });
 
   try {
     const invoice = await tx(async (client) => {
@@ -76,7 +73,7 @@ export async function POST(req) {
       }
 
       const tva = tvaRate !== undefined && tvaRate !== null && tvaRate !== "" ? Number(tvaRate) : Number(settings.default_tva_rate) || 0;
-      if (!Number.isFinite(tva) || tva < 0) {
+      if (!Number.isFinite(tva) || tva < 0 || tva > 100) {
         const e = new Error("Taux de TVA invalide.");
         e.status = 400;
         throw e;
@@ -105,22 +102,23 @@ export async function POST(req) {
 
       const number = await allocateInvoiceNumber(client, settings, isTest === true);
 
-      const totalHT = items.reduce((sum, it) => sum + it.unitPrice, 0);
-      const totalTVA = totalHT * (tva / 100);
-      const totalTTC = totalHT + totalTVA;
+      const cents = (n) => Math.round(n * 100) / 100;
+      const totalHT = cents(items.reduce((sum, it) => sum + it.unitPrice, 0));
+      const totalTVA = cents(totalHT * (tva / 100));
+      const totalTTC = cents(totalHT + totalTVA);
 
       const invRes = await client.query(
         `INSERT INTO invoices (client_id, number, due_date, tva_rate, total_ht, total_tva, total_ttc, notes, is_test)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-        [clientId, number, dueDate || null, tva, totalHT, totalTVA, totalTTC, "", isTest === true]
+        [clientId, number, due, tva, totalHT, totalTVA, totalTTC, "", isTest === true]
       );
       const inv = invRes.rows[0];
-      for (const it of items) {
-        await client.query(
-          `INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total) VALUES ($1,$2,1,$3,$3)`,
-          [inv.id, it.description, it.unitPrice]
-        );
-      }
+      // Toutes les lignes en une seule requête
+      await client.query(
+        `INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total)
+         SELECT $1, d, 1, u, u FROM unnest($2::text[], $3::numeric[]) AS x(d, u)`,
+        [inv.id, items.map((it) => it.description), items.map((it) => cents(it.unitPrice))]
+      );
       if (usedCreditIds.length) {
         await client.query(
           `UPDATE client_credits SET used_invoice_id = $1, used_at = now() WHERE id = ANY($2::uuid[])`,

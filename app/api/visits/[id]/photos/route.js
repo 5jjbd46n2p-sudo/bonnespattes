@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { isUuid } from "@/lib/api";
 
 // Types et taille acceptés pour une photo de visite : on ne fait pas confiance
 // au nom de fichier envoyé par le navigateur (facilement falsifiable), on
@@ -19,6 +20,7 @@ export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
 
   const form = await req.formData();
   const file = form.get("file");
@@ -62,6 +64,7 @@ export async function GET(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
   const { rows } = await query("SELECT * FROM photos WHERE visit_id = $1 ORDER BY created_at DESC", [id]);
   return NextResponse.json({ photos: rows });
 }

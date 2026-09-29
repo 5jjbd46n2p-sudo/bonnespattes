@@ -12,6 +12,7 @@ import ClientContractCard from "@/components/ClientContractCard";
 import ClientDataExportCard from "@/components/ClientDataExportCard";
 import VisitHistory from "@/components/VisitHistory";
 import { ArrowLeft, Plus } from "@phosphor-icons/react/ssr";
+import { isUuid } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,7 @@ async function getClientData(id) {
 export default async function ClientDetailPage({ params }) {
   await adminPageGuard();
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const data = await getClientData(id);
   if (!data) notFound();
   const { client, pets, visits, invoices, login, deposits, referral, contracts } = data;

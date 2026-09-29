@@ -4,6 +4,7 @@ import { requireAdmin, hashPassword } from "@/lib/auth";
 import { passwordProblem } from "@/lib/security";
 import { sendClientCredentialsEmail } from "@/lib/email";
 import { ensureReferralCode } from "@/lib/referral";
+import { readJson } from "@/lib/api";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -24,7 +25,7 @@ export async function POST(req) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
 
-  const body = await req.json();
+  const body = await readJson(req);
   const {
     firstName,
     lastName,

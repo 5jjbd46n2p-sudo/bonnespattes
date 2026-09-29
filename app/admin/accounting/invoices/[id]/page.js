@@ -8,6 +8,7 @@ import InvoiceStatusControl from "@/components/InvoiceStatusControl";
 import PaymentRecorder from "@/components/PaymentRecorder";
 import DeleteInvoiceButton from "@/components/DeleteInvoiceButton";
 import { ArrowLeft, DownloadSimple } from "@phosphor-icons/react/ssr";
+import { isUuid } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ async function getInvoice(id) {
 export default async function InvoiceDetailPage({ params }) {
   await adminPageGuard();
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  if (!isUuid(id)) notFound();
   const data = await getInvoice(id);
   if (!data) notFound();
   const { invoice, items, payments } = data;

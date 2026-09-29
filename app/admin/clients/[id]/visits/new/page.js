@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
 import NewVisitForm from "@/components/NewVisitForm";
 import { getPricingSettings } from "@/app/admin/visits/pricingSettings";
+import { isUuid } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewVisitPage({ params, searchParams }) {
   await adminPageGuard();
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const sp = await searchParams;
   const clientRes = await query("SELECT * FROM clients WHERE id = $1", [id]);
   if (!clientRes.rows[0]) notFound();

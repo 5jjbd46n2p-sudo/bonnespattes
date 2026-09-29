@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowsClockwise, Check, Warning } from "@phosphor-icons/react";
+import { generateTemporaryPassword } from "@/lib/password";
 
 export default function ClientLoginManager({ clientId, login }) {
   const router = useRouter();
@@ -16,18 +17,11 @@ export default function ClientLoginManager({ clientId, login }) {
   const [emailWarning, setEmailWarning] = useState("");
   const [emailSent, setEmailSent] = useState(false);
 
-  function generatePassword() {
-    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-    // Générateur aléatoire cryptographique (Math.random est prévisible)
-    const bytes = crypto.getRandomValues(new Uint32Array(14));
-    return Array.from(bytes, (n) => chars[n % chars.length]).join("");
-  }
-
   async function save(e) {
     e.preventDefault();
     setError("");
     setEmailWarning("");
-    const pw = password || generatePassword();
+    const pw = password || generateTemporaryPassword();
     setLoading(true);
     const res = await fetch(`/api/clients/${clientId}/login`, {
       method: "POST",
@@ -120,7 +114,7 @@ export default function ClientLoginManager({ clientId, login }) {
             />
             <button
               type="button"
-              onClick={() => setPassword(generatePassword())}
+              onClick={() => setPassword(generateTemporaryPassword())}
               className="btn-ghost !px-3 text-sm shrink-0"
               aria-label="Générer un mot de passe"
               title="Générer un mot de passe"

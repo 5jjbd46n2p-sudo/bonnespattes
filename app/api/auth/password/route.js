@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getCurrentUser, verifyPassword, hashPassword, createSessionCookie, redirectFor } from "@/lib/auth";
 import { isRateLimited, recordHit, passwordProblem, alertAdmin } from "@/lib/security";
+import { readJson } from "@/lib/api";
 
 // Changement de mot de passe par l'utilisateur connecté (admin ou client).
 // Obligatoire à la première connexion d'un client dont l'accès a été créé par
@@ -10,7 +11,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
 
-  const body = await req.json().catch(() => null);
+  const body = await readJson(req);
   const current = typeof body?.currentPassword === "string" ? body.currentPassword : "";
   const next = typeof body?.newPassword === "string" ? body.newPassword : "";
 
@@ -30,7 +31,7 @@ export async function POST(req) {
   // Nouvelle version de session : tous les autres appareils sont déconnectés.
   const { rows } = await query(
     `UPDATE users SET password_hash = $2, must_change_password = false, password_changed_at = now(),
-            session_version = session_version + 1, failed_login_attempts = 0, locked_until = NULL
+            session_version = session_version + 1
       WHERE id = $1 RETURNING *`,
     [user.id, await hashPassword(next)]
   );

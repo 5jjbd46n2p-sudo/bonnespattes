@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { hashToken, buildContractPdf, pdfResponse } from "@/lib/contract";
+import { hashToken, buildContractPdf, pdfResponse, SIGNED_PDF_LINK_DAYS } from "@/lib/contract";
 
 export async function GET(_req, { params }) {
   const { token } = await params;
@@ -8,10 +8,8 @@ export async function GET(_req, { params }) {
     return NextResponse.json({ error: "Lien invalide." }, { status: 404 });
   }
   const { rows } = await query(
-    // Le lien reçu par email ne donne accès au PDF que 30 jours après la
-    // signature (ensuite, le contrat reste consultable depuis l'espace client).
-    "SELECT * FROM contract_signatures WHERE token_hash = $1 AND status = 'SIGNE' AND signed_at > now() - interval '30 days'",
-    [hashToken(token)]
+    "SELECT * FROM contract_signatures WHERE token_hash = $1 AND status = 'SIGNE' AND signed_at > now() - make_interval(days => $2)",
+    [hashToken(token), SIGNED_PDF_LINK_DAYS]
   );
   const sig = rows[0];
   if (!sig) return NextResponse.json({ error: "Contrat introuvable ou non signé." }, { status: 404 });

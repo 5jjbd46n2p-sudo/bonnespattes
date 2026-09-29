@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { eraseClient } from "@/lib/privacy";
+import { isUuid, readJson } from "@/lib/api";
 
 export async function GET(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
 
   const clientRes = await query("SELECT * FROM clients WHERE id = $1", [id]);
   if (!clientRes.rows[0]) {
@@ -45,7 +46,8 @@ export async function PATCH(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  const body = await req.json();
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
+  const body = await readJson(req);
   const fields = ["first_name", "last_name", "phone", "email", "address", "notes", "hourly_rate"];
   const map = {
     firstName: "first_name",
@@ -93,7 +95,7 @@ export async function DELETE(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
 
   // Droit à l'effacement (RGPD) : suppression complète, ou anonymisation si des
   // factures existent (elles doivent légalement être conservées 10 ans).

@@ -6,6 +6,7 @@ import {
 import { CONTRACT_CHECKBOXES } from "@/lib/contractTemplate";
 import { sendSignedContractEmail } from "@/lib/email";
 import { isRateLimited, recordHit } from "@/lib/security";
+import { readJson } from "@/lib/api";
 
 const bad = (error, status = 400) => NextResponse.json({ error }, { status });
 
@@ -13,12 +14,7 @@ export async function POST(req, { params }) {
   const { token } = await params;
   if (!token || typeof token !== "string" || token.length > 200) return bad("Lien invalide.", 404);
 
-  let body;
-  try {
-    body = await req.json();
-  } catch {
-    return bad("Requête invalide.");
-  }
+  const body = await readJson(req);
   const name = typeof body?.name === "string" ? body.name.trim().slice(0, 200) : "";
   const code = typeof body?.code === "string" ? body.code.trim() : "";
   const emergency = typeof body?.emergencyContact === "string" ? body.emergencyContact.trim().slice(0, 500) : "";

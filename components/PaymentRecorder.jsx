@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "@phosphor-icons/react";
-import { formatEUR, formatDateFR } from "@/lib/utils";
+import { formatEUR, formatDateFR, todayISO } from "@/lib/utils";
 
 export default function PaymentRecorder({ invoiceId, payments, balance }) {
   const router = useRouter();
   const [amount, setAmount] = useState(balance > 0 ? balance.toFixed(2) : "");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayISO());
   const [method, setMethod] = useState("Virement");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

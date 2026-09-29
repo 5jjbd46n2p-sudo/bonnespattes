@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { cleanText, isUuid, readJson } from "@/lib/api";
 
 export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
-  const { label } = await req.json();
-  if (!label || !label.trim()) return NextResponse.json({ error: "Libellé requis." }, { status: 400 });
-  const posRes = await query(
-    "SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM tasks WHERE visit_id = $1",
-    [id]
-  );
+  if (!isUuid(id)) return NextResponse.json({ error: "Introuvable." }, { status: 404 });
+  const label = cleanText((await readJson(req)).label, 200);
+  if (!label) return NextResponse.json({ error: "Libellé requis." }, { status: 400 });
+  // Une seule requête : position calculée à l'insertion, visite vérifiée au passage
   const { rows } = await query(
-    "INSERT INTO tasks (visit_id, label, position) VALUES ($1,$2,$3) RETURNING *",
-    [id, label.trim(), posRes.rows[0].next_pos]
+    `INSERT INTO tasks (visit_id, label, position)
+     SELECT v.id, $2, COALESCE((SELECT MAX(position) + 1 FROM tasks WHERE visit_id = v.id), 0)
+       FROM visits v WHERE v.id = $1
+     RETURNING *`,
+    [id, label]
   );
+  if (!rows[0]) return NextResponse.json({ error: "Visite introuvable." }, { status: 404 });
   return NextResponse.json({ task: rows[0] });
 }
