@@ -133,10 +133,23 @@ export default async function Home({ searchParams }) {
               <h1 className="font-display text-[32px] md:text-5xl font-semibold leading-tight">
                 Vos compagnons entre de bonnes mains, en votre absence.
               </h1>
-              <p className="mt-4 text-lg leading-relaxed text-pierre">
-                Je m'appelle Aurore. Ancienne assistante vétérinaire, je viens chez vous nourrir, câliner et
-                promener vos chiens et vos chats, et je vous donne des nouvelles après chaque passage.
-              </p>
+              <h2 className="mt-6 font-display text-xl md:text-2xl font-semibold">À propos de moi…</h2>
+              <div className="mt-2 space-y-3 leading-relaxed text-pierre">
+                <p>
+                  Je m'appelle Aurore et ma passion pour les animaux remonte à ma plus tendre enfance. J'ai choisi
+                  de transformer cette passion en réalité quotidienne en travaillant à leurs côtés.
+                </p>
+                <p>
+                  Forte de mon diplôme d'assistante vétérinaire et de trois années d'expérience en clinique, j'ai
+                  acquis les compétences nécessaires pour prendre soin de vos compagnons, qu'il s'agisse de chiens,
+                  de chats ou de nouveaux animaux de compagnie (NAC).
+                </p>
+                <p>
+                  En tant que pet sitter, je me déplace à votre domicile pour m'assurer que vos animaux reçoivent
+                  toute l'attention et les soins dont ils ont besoin en votre absence. Vous pouvez ainsi partir
+                  l'esprit tranquille, sachant que vos amis à quatre pattes sont entre de bonnes mains.
+                </p>
+              </div>
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
                 <a href="#contact" className="btn-primary text-base">
                   Demander un rendez-vous
