@@ -35,6 +35,7 @@ export async function PATCH(req) {
     serviceArea: "service_area",
     insuranceInfo: "insurance_info",
     mediatorInfo: "mediator_info",
+    socialRate: "social_rate",
   };
   let templateChanged = false;
   if (body.contractTemplate !== undefined) {
@@ -89,6 +90,13 @@ export async function PATCH(req) {
       }
       body[key] = n;
     }
+  }
+  if (body.socialRate !== undefined) {
+    const n = Number(body.socialRate);
+    if (body.socialRate === "" || body.socialRate === null || !Number.isFinite(n) || n < 0 || n > 100) {
+      return NextResponse.json({ error: "Taux de cotisations invalide (0 à 100)." }, { status: 400 });
+    }
+    body.socialRate = n;
   }
   if (body.serviceArea !== undefined) {
     if (typeof body.serviceArea !== "string" || body.serviceArea.length > 200) {

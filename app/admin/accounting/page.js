@@ -5,6 +5,7 @@ import { formatDateFR, formatEUR } from "@/lib/utils";
 import { InvoiceStatusBadge } from "@/components/StatusBadge";
 import { DownloadSimple, Plus } from "@phosphor-icons/react/ssr";
 import ToInvoiceGroup from "./ToInvoiceGroup";
+import ChargesTab from "./ChargesTab";
 import MarkPaidButton from "./MarkPaidButton";
 import { SETTLED_BY_CREDIT_NOTE_SQL } from "@/lib/invoiceNumber";
 
@@ -14,6 +15,7 @@ const TABS = [
   { id: "a-facturer", label: "À facturer" },
   { id: "a-encaisser", label: "À encaisser" },
   { id: "payees", label: "Payées" },
+  { id: "charges", label: "Charges" },
 ];
 
 export default async function AccountingPage({ searchParams }) {
@@ -194,7 +196,7 @@ export default async function AccountingPage({ searchParams }) {
                   }`}
                 >
                   {t.label}
-                  <span className="tabular-nums font-normal">({counts[t.id]})</span>
+                  {counts[t.id] !== undefined && <span className="tabular-nums font-normal">({counts[t.id]})</span>}
                 </Link>
               </li>
             );
@@ -214,6 +216,7 @@ export default async function AccountingPage({ searchParams }) {
         ))}
       {tab === "a-encaisser" && renderInvoiceTable({ rows: toCollect, collect: true })}
       {tab === "payees" && renderInvoiceTable({ rows: paid })}
+      {tab === "charges" && <ChargesTab mois={sp.mois} />}
     </div>
   );
 }

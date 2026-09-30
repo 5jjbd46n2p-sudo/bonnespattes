@@ -318,3 +318,16 @@ ALTER TABLE invoices ADD CONSTRAINT invoices_client_id_fkey
 -- négatifs, même suite de numéros), jamais par suppression.
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS credit_note_of UUID REFERENCES invoices(id) ON DELETE RESTRICT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_credit_note_of ON invoices(credit_note_of) WHERE credit_note_of IS NOT NULL;
+
+-- Charges (dépenses professionnelles) et taux de cotisations sociales estimé.
+CREATE TABLE IF NOT EXISTS expenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  label TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Autre',
+  amount NUMERIC NOT NULL CHECK (amount > 0),
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS social_rate NUMERIC DEFAULT 21.2;
