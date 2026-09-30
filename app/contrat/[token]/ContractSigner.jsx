@@ -33,7 +33,10 @@ function parseContent(content) {
   return blocks;
 }
 
-export default function ContractSigner({ token, content, version, maskedEmail, expiresAt }) {
+// Deux modes : par lien email (token + code envoyé par email) ou depuis l'espace client (signatureId : la connexion
+// confirme l'identité, pas de code).
+export default function ContractSigner({ token, signatureId, content, version, maskedEmail, expiresAt }) {
+  const account = !!signatureId;
   const router = useRouter();
   const blocks = parseContent(content);
 
@@ -81,13 +84,13 @@ export default function ContractSigner({ token, content, version, maskedEmail, e
       setError("Renseignez votre nom, la personne à prévenir en cas d'urgence et cochez l'acceptation du contrat.");
       return;
     }
-    if (!/^\d{6}$/.test(code.trim())) {
+    if (!account && !/^\d{6}$/.test(code.trim())) {
       setError("Saisissez le code à 6 chiffres reçu par email.");
       return;
     }
     setSigning(true);
     try {
-      const res = await fetch(`/api/contract/${token}/sign`, {
+      const res = await fetch(account ? `/api/portal/contract/${signatureId}/sign` : `/api/contract/${token}/sign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -104,6 +107,7 @@ export default function ContractSigner({ token, content, version, maskedEmail, e
         setSigning(false);
         return;
       }
+      if (account) router.push("/portal");
       router.refresh();
     } catch {
       setError("Connexion impossible. Vérifiez votre réseau et réessayez.");
@@ -116,7 +120,7 @@ export default function ContractSigner({ token, content, version, maskedEmail, e
       <div>
         <p className="text-sm text-pierre">
           Bonjour, voici votre contrat (version {version}). Lisez-le, puis signez-le en bas de page.
-          Ce lien est valable jusqu'au <span className="tabular-nums">{expiresAt}</span>. Aurore
+          {account ? "À signer avant le" : "Ce lien est valable jusqu'au"} <span className="tabular-nums">{expiresAt}</span>. Aurore
         </p>
       </div>
 
@@ -197,6 +201,11 @@ export default function ContractSigner({ token, content, version, maskedEmail, e
           />
         </div>
 
+        {account ? (
+          <p className="text-sm text-pierre border-t border-trait pt-5">
+            Vous êtes connecté à votre espace personnel : cette connexion confirme votre identité. Un exemplaire PDF signé vous sera envoyé par email.
+          </p>
+        ) : (
         <div className="border-t border-trait pt-5 space-y-4">
           <p className="text-pierre">
             Pour confirmer votre identité, un code à usage unique est envoyé à votre adresse email
@@ -224,6 +233,7 @@ export default function ContractSigner({ token, content, version, maskedEmail, e
             </div>
           )}
         </div>
+        )}
 
         <div aria-live="polite" className="space-y-1">
           {info && (
@@ -235,7 +245,7 @@ export default function ContractSigner({ token, content, version, maskedEmail, e
           {error && <p className="text-sm font-bold text-brique">{error}</p>}
         </div>
 
-        {codeSent && (
+        {(codeSent || account) && (
           <button disabled={signing} className="btn-primary w-full sm:w-auto gap-2">
             <PenNib size={20} aria-hidden="true" />
             {signing ? "Signature en cours..." : "Signer le contrat"}

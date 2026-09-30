@@ -47,6 +47,10 @@ export async function POST(_req, { params }) {
   const petsRes = await query("SELECT * FROM pets WHERE client_id = $1 ORDER BY created_at", [id]);
   const content = renderContract({ settings, client, pets: petsRes.rows });
 
+  // Client avec un espace client : il signe après connexion. Sinon : lien par email + code.
+  const loginRes = await query("SELECT 1 FROM users WHERE client_id = $1 AND role = 'CLIENT' LIMIT 1", [id]);
+  const inAccount = loginRes.rows.length > 0;
+
   const token = newToken();
   const signature = await tx(async (db) => {
     await db.query("UPDATE contract_signatures SET status = 'ANNULE' WHERE client_id = $1 AND status = 'ENVOYE'", [id]);
@@ -63,13 +67,14 @@ export async function POST(_req, { params }) {
     await sendContractEmail({
       to: email,
       clientName: `${client.first_name} ${client.last_name}`,
-      link: `${base}/contrat/${token}`,
+      link: inAccount ? `${base}/login` : `${base}/contrat/${token}`,
       expiresAt: signature.expires_at,
+      inAccount,
     });
   } catch (e) {
     console.error("Envoi du contrat échoué :", e);
     await query("UPDATE contract_signatures SET status = 'ANNULE' WHERE id = $1 AND status = 'ENVOYE'", [signature.id]);
     return NextResponse.json({ error: "Échec de l'envoi de l'email, réessaie plus tard." }, { status: 502 });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, mode: inAccount ? "account" : "email" });
 }

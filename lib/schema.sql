@@ -331,3 +331,5 @@ CREATE TABLE IF NOT EXISTS expenses (
 );
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS social_rate NUMERIC DEFAULT 21.2;
+-- Contrat : méthode d'authentification de la signature (espace client ou code par email) :
+ALTER TABLE contract_signatures ADD COLUMN IF NOT EXISTS auth_method TEXT NOT NULL DEFAULT 'EMAIL_OTP';

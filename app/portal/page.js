@@ -76,6 +76,17 @@ export default async function PortalPage() {
     referralLink = `${base}/?parrain=${referralCode}`;
   }
 
+  let pendingContract = null;
+  try {
+    const pRes = await query(
+      "SELECT id, version, expires_at FROM contract_signatures WHERE client_id = $1 AND status = 'ENVOYE' AND expires_at > now() ORDER BY created_at DESC LIMIT 1",
+      [clientId]
+    );
+    pendingContract = pRes.rows[0] || null;
+  } catch {
+    pendingContract = null;
+  }
+
   let signedContract = null;
   try {
     const cRes = await query(
@@ -109,6 +120,21 @@ export default async function PortalPage() {
           Télécharger mes données
         </a>
       </div>
+
+      {pendingContract && (
+        <div className="card p-5 flex items-center justify-between gap-3 flex-wrap border-rouille">
+          <div>
+            <h2 className="font-display text-xl font-semibold">Contrat à signer</h2>
+            <p className="text-sm text-pierre tabular-nums">
+              À signer avant le {formatDateFR(pendingContract.expires_at)}. Une minute suffit, sans code à recopier.
+            </p>
+          </div>
+          <a href="/portal/contrat" className="btn-primary text-sm gap-2">
+            <FileText size={20} aria-hidden="true" />
+            Lire et signer
+          </a>
+        </div>
+      )}
 
       {visitsRes.rows.length === 0 ? (
         <div className="card p-8 text-center text-pierre">
