@@ -1,39 +1,44 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 
 // Première barrière, exécutée avant tout rendu (Next.js 16 : "proxy" remplace
-// "middleware"). Les pages et routes refont leurs propres vérifications
-// complètes (session révoquée, propriétaire des données…) : ceci n'est qu'un
-// filet de sécurité supplémentaire, jamais la seule protection.
+// "middleware"). Volontairement sans dépendance (pas de bibliothèque JWT) pour
+// fonctionner quel que soit l'environnement d'exécution choisi par l'hébergeur.
+// La vérification complète de la session (signature, révocation, rôle) est
+// faite par chaque page (adminPageGuard / clientPageGuard) et chaque route.
 
 const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const PRIVATE_PREFIXES = ["/admin", "/portal", "/compte", "/contrat", "/api", "/login"];
 
-function sessionRole(request) {
-  const token = request.cookies.get("petsitter_session")?.value;
-  const secret = process.env.JWT_SECRET;
-  if (!token || !secret) return null;
-  try {
-    return jwt.verify(token, secret, { audience: "session" }).role || null;
-  } catch {
-    return null;
+// Hôtes sous lesquels le site est servi. Derrière Vercel, l'en-tête Host peut
+// différer du domaine public : on retient aussi X-Forwarded-Host (comme le fait
+// Next.js pour ses propres protections) et l'URL publique configurée.
+function siteHosts(request) {
+  const hosts = new Set();
+  for (const h of [request.headers.get("x-forwarded-host"), request.headers.get("host")]) {
+    if (h) hosts.add(h.split(",")[0].trim().toLowerCase());
   }
+  try {
+    if (process.env.NEXT_PUBLIC_APP_URL) hosts.add(new URL(process.env.NEXT_PUBLIC_APP_URL).host.toLowerCase());
+  } catch {
+    // URL publique mal renseignée : ignorée
+  }
+  return hosts;
 }
 
-// Protection CSRF : une requête d'écriture doit venir de ce site. Les
-// navigateurs envoient toujours l'en-tête Origin (ou Sec-Fetch-Site) sur ces
-// requêtes ; un site tiers ne peut pas les falsifier.
+// Protection CSRF : une requête d'écriture doit venir de ce site.
+// 1. Sec-Fetch-Site est posé par le navigateur lui-même (impossible à falsifier
+//    depuis un autre site) : seules "same-origin" et "none" sont acceptées.
+// 2. Navigateurs plus anciens : l'en-tête Origin doit correspondre au site.
 function isCrossSite(request) {
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      return new URL(origin).host !== request.headers.get("host");
-    } catch {
-      return true;
-    }
-  }
   const site = request.headers.get("sec-fetch-site");
-  return site === "cross-site" || site === "same-site";
+  if (site) return site !== "same-origin" && site !== "none";
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return !siteHosts(request).has(new URL(origin).host.toLowerCase());
+  } catch {
+    return true;
+  }
 }
 
 export function proxy(request) {
@@ -43,13 +48,11 @@ export function proxy(request) {
     return NextResponse.json({ error: "Requête refusée." }, { status: 403 });
   }
 
-  const needsAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
-  const needsClient = pathname === "/portal" || pathname.startsWith("/portal/");
-  if (needsAdmin || needsClient) {
-    const role = sessionRole(request);
-    if (role !== (needsAdmin ? "ADMIN" : "CLIENT")) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+  // Espaces privés : sans cookie de session, inutile d'aller plus loin.
+  const isPrivateArea =
+    pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/portal" || pathname.startsWith("/portal/");
+  if (isPrivateArea && !request.cookies.get("petsitter_session")?.value) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   const response = NextResponse.next();
