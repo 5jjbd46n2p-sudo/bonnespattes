@@ -318,3 +318,6 @@ ALTER TABLE invoices ADD CONSTRAINT invoices_client_id_fkey
 -- négatifs, même suite de numéros), jamais par suppression.
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS credit_note_of UUID REFERENCES invoices(id) ON DELETE RESTRICT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_credit_note_of ON invoices(credit_note_of) WHERE credit_note_of IS NOT NULL;
+
+-- Contrat : méthode d'authentification de la signature (espace client ou code par email) :
+ALTER TABLE contract_signatures ADD COLUMN IF NOT EXISTS auth_method TEXT NOT NULL DEFAULT 'EMAIL_OTP';

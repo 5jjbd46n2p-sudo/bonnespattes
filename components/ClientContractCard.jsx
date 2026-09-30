@@ -8,7 +8,7 @@ function fmt(d) {
   return new Date(d).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "long", year: "numeric" });
 }
 
-export default function ClientContractCard({ clientId, hasEmail, signatures = [] }) {
+export default function ClientContractCard({ clientId, hasEmail, hasLogin = false, signatures = [] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +46,13 @@ export default function ClientContractCard({ clientId, hasEmail, signatures = []
       <h2 className="font-display font-semibold text-encre mb-2">Contrat</h2>
       <p className="text-sm text-pierre">{statusText}</p>
       {!hasEmail && <p className="text-sm text-pierre mt-1">Ajoute d'abord l'email du client pour envoyer le contrat.</p>}
+      {hasEmail && (
+        <p className="text-sm text-pierre mt-1">
+          {hasLogin
+            ? "Le client signera depuis son espace client (connexion habituelle), sans code à recopier."
+            : "Sans espace client, il signera via un lien reçu par email, avec un code de confirmation. Crée-lui d'abord un accès pour une signature plus simple."}
+        </p>
+      )}
       {error && <p className="text-sm font-bold text-brique mt-2">{error}</p>}
       {done && <p className="text-sm font-bold text-mousse mt-2">Contrat envoyé.</p>}
       <div className="flex flex-wrap gap-2 mt-3">

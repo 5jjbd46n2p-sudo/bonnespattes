@@ -107,7 +107,7 @@ export default async function ClientDetailPage({ params }) {
         </div>
 
         <div className="space-y-6">
-          <ClientContractCard clientId={id} hasEmail={!!client.email} signatures={contracts} />
+          <ClientContractCard clientId={id} hasEmail={!!client.email} hasLogin={!!login} signatures={contracts} />
           <ClientLoginManager clientId={id} login={login} />
           <DepositManager clientId={id} deposits={deposits} />
           <ClientDataExportCard clientId={id} email={client.email || ""} />
