@@ -4,6 +4,7 @@ import { query } from "@/lib/db";
 import { formatDateLongFR, todayISO, localISO, toCardVisit } from "@/lib/utils";
 import { VISIT_STATUS, VISIT_STATUS_ORDER } from "@/components/StatusBadge";
 import VisitCard from "@/components/VisitCard";
+import AdminEventsPanel from "@/components/AdminEventsPanel";
 import { CaretLeft, CaretRight, Plus } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
@@ -87,6 +88,25 @@ export default async function PlanningPage({ searchParams }) {
     if (!statusByDate[r.date]) statusByDate[r.date] = {};
     statusByDate[r.date][r.status] = Number(r.count);
   }
+
+  // Rendez-vous et tâches administratives : pastille sur le calendrier + liste du jour
+  const adminCountsRes = await query(
+    `SELECT date::text, COUNT(*) AS count FROM admin_events WHERE date = ANY($1::date[]) GROUP BY date`,
+    [cellISOs]
+  );
+  const adminByDate = {};
+  for (const r of adminCountsRes.rows) adminByDate[r.date] = Number(r.count);
+  const [adminEventsRes, clientsRes] = await Promise.all([
+    query(
+      `SELECT e.*, NULLIF(TRIM(c.first_name || ' ' || c.last_name), '') AS client_name
+       FROM admin_events e LEFT JOIN clients c ON c.id = e.client_id
+       WHERE e.date = $1 ORDER BY e.start_time ASC NULLS LAST, e.created_at`,
+      [selected]
+    ),
+    query(
+      "SELECT id, first_name, last_name, address, distance_km, travel_minutes FROM clients WHERE anonymized_at IS NULL ORDER BY last_name, first_name"
+    ),
+  ]);
 
   const visitsRes = await query(
     `SELECT v.*, p.name AS pet_name, c.first_name, c.last_name, c.address, i.status AS invoice_status,
@@ -203,6 +223,7 @@ export default async function PlanningPage({ searchParams }) {
                 const total = Object.values(dayStatuses).reduce((s, n) => s + n, 0);
                 const activeDots = VISIT_STATUS_ORDER.filter((s) => dayStatuses[s] > 0);
                 const cellMonth = ymKey(date);
+                const adminCount = adminByDate[iso] || 0;
 
                 return (
                   <Link
@@ -230,6 +251,7 @@ export default async function PlanningPage({ searchParams }) {
                       {activeDots.map((s) => (
                         <span key={s} className={`w-1.5 h-1.5 rounded-full ${VISIT_STATUS[s].dot}`} />
                       ))}
+                      {adminCount > 0 && <span className="w-1.5 h-1.5 rounded-[2px] bg-pierre" title="Administratif" />}
                     </span>
                   </Link>
                 );
@@ -262,6 +284,13 @@ export default async function PlanningPage({ searchParams }) {
           </>
         )}
       </div>
+
+      <AdminEventsPanel
+        key={selected}
+        date={selected}
+        events={adminEventsRes.rows.map(({ date: _d, created_at: _c, ...rest }) => rest)}
+        clients={clientsRes.rows}
+      />
     </div>
   );
 }

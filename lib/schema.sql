@@ -366,3 +366,22 @@ CREATE TABLE IF NOT EXISTS quote_items (
 );
 CREATE INDEX IF NOT EXISTS idx_quotes_client ON quotes(client_id);
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS next_quote_seq INTEGER NOT NULL DEFAULT 1;
+
+-- Rendez-vous et tâches administratives au planning (rencontre client, devis, facturation,
+-- courses...), avec le trajet éventuel (aller-retour) pour organiser les journées.
+CREATE TABLE IF NOT EXISTS admin_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  kind TEXT NOT NULL DEFAULT 'AUTRE',
+  title TEXT NOT NULL,
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  place TEXT DEFAULT '',
+  travel_km NUMERIC DEFAULT 0,
+  travel_minutes INTEGER DEFAULT 0,
+  notes TEXT DEFAULT '',
+  done BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_admin_events_date ON admin_events(date);
