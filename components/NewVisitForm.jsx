@@ -334,7 +334,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   <span className="label block">Tarif conseillé</span>
                   <span className="text-[13px] text-pierre tabular-nums block">
                     Prestation {eur(suggestedBase)}
-                    {Number(selectedClient?.hourly_rate) > 0 ? ` (tarif client ${Number(selectedClient.hourly_rate)} €/h)` : ""}
+                    {Number(selectedClient?.hourly_rate) > 0 ? ` (tarif client ${Number(selectedClient.hourly_rate)} €/h, grille proportionnelle)` : ""}
                     {distanceKnown ? ` + Déplacement ${eur(suggestedTravel)}` : ""}
                     {hours ? ` (${hours} h)` : ""}
                   </span>
