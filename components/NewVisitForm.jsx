@@ -93,7 +93,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
       ? { km: calc.km, min: calc.min }
       : { km: selectedClient?.distance_km, min: selectedClient?.travel_minutes };
   const distanceKnown = dist.km !== null && dist.km !== undefined && dist.km !== "";
-  const suggestedBase = Number(basePrice(minutes, settings)) || 0;
+  const suggestedBase = Number(basePrice(minutes, settings, selectedClient?.hourly_rate)) || 0;
   const suggestedTravel = distanceKnown
     ? Number(computeTravelFee({ distanceKm: Number(dist.km), travelMinutes: Number(dist.min) || 0 }, settings)) || 0
     : 0;
@@ -334,6 +334,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   <span className="label block">Tarif conseillé</span>
                   <span className="text-[13px] text-pierre tabular-nums block">
                     Prestation {eur(suggestedBase)}
+                    {Number(selectedClient?.hourly_rate) > 0 ? ` (tarif client ${Number(selectedClient.hourly_rate)} €/h, grille proportionnelle)` : ""}
                     {distanceKnown ? ` + Déplacement ${eur(suggestedTravel)}` : ""}
                     {hours ? ` (${hours} h)` : ""}
                   </span>
