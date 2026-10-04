@@ -8,6 +8,10 @@ export default async function NewInvoicePage({ searchParams }) {
   await adminPageGuard();
   const sp = await searchParams;
   const preselectedClientId = sp.clientId || "";
+  const ref = (v) => (typeof v === "string" && /^[A-Za-z0-9]{1,20}$/.test(v) ? v : "");
+  const remplace = ref(sp.remplace);
+  const avoir = ref(sp.avoir);
+  const initialNotes = remplace ? `Remplace la facture ${remplace}${avoir ? `, annulée par l'avoir ${avoir}` : ""}.` : "";
 
   const clientsRes = await query("SELECT id, first_name, last_name FROM clients WHERE anonymized_at IS NULL ORDER BY last_name");
   const settingsRes = await query("SELECT * FROM settings LIMIT 1");
@@ -29,6 +33,7 @@ export default async function NewInvoicePage({ searchParams }) {
       settings={settingsRes.rows[0]}
       preselectedClientId={preselectedClientId}
       initialUnbilledVisits={unbilledVisits}
+      initialNotes={initialNotes}
     />
   );
 }

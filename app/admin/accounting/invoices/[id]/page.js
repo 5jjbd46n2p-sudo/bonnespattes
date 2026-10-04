@@ -110,6 +110,7 @@ export default async function InvoiceDetailPage({ params }) {
 
       <DeleteInvoiceButton
         invoiceId={id}
+        clientId={invoice.client_id}
         number={invoice.number}
         status={invoice.status}
         isTest={invoice.is_test}
