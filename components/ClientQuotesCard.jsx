@@ -111,7 +111,7 @@ export default function ClientQuotesCard({ clientId, email, plannedVisits, quote
           </ul>
           <p className="text-right font-bold tabular-nums">Total : {formatEUR(total)}</p>
           <label className="block">
-            <span className="label">Message pour le client (facultatif)</span>
+            <span className="label">Message pour le client (facultatif, dans l'e-mail seulement, pas sur le devis)</span>
             <textarea className="input mt-1" rows={3} maxLength={3000} value={message} onChange={(e) => setMessage(e.target.value)} />
           </label>
           <label className="flex items-center gap-2">
