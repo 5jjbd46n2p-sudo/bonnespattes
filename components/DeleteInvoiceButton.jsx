@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash } from "@phosphor-icons/react";
 
-export default function DeleteInvoiceButton({ invoiceId, number, status, isTest, isCreditNote = false, creditNoteNumber = null }) {
+export default function DeleteInvoiceButton({ invoiceId, clientId = null, number, status, isTest, isCreditNote = false, creditNoteNumber = null }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -65,6 +65,22 @@ export default function DeleteInvoiceButton({ invoiceId, number, status, isTest,
     setBusy(false);
   }
 
+  // Annule et remplace : avoir sur la facture erronée, puis nouvelle facture préremplie pour ce client.
+  async function replace() {
+    if (!confirm(`Annuler et remplacer la facture ${number} ?\n\n1. Un avoir annule la facture ${number} (elle reste conservée).\n2. Ses visites redeviennent « à facturer » et tu arrives sur une nouvelle facture à corriger.\n\nSi le client avait déjà payé, le remboursement ou le report du paiement se gère à part.`)) return;
+    setBusy(true);
+    setError("");
+    const res = await fetch(`/api/invoices/${invoiceId}/credit-note`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.creditNote) {
+      router.push(`/admin/accounting/invoices/new?clientId=${clientId}&remplace=${encodeURIComponent(number)}&avoir=${encodeURIComponent(data.creditNote.number)}`);
+      router.refresh();
+      return;
+    }
+    setError(data.error || "Création de l'avoir impossible.");
+    setBusy(false);
+  }
+
   // Facture émise : ni suppression ni passage en test (obligation légale).
   if (!isTest && status !== "BROUILLON") {
     return (
@@ -81,9 +97,16 @@ export default function DeleteInvoiceButton({ invoiceId, number, status, isTest,
           {error && <p role="alert" className="text-sm font-bold text-brique mt-1">{error}</p>}
         </div>
         {!isCreditNote && !creditNoteNumber && (
-          <button type="button" onClick={creditNote} disabled={busy} className="btn-ghost text-sm">
-            {busy ? "..." : "Annuler par un avoir"}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {clientId && (
+              <button type="button" onClick={replace} disabled={busy} className="btn-primary text-sm">
+                {busy ? "..." : "Annuler et remplacer"}
+              </button>
+            )}
+            <button type="button" onClick={creditNote} disabled={busy} className="btn-ghost text-sm">
+              {busy ? "..." : "Annuler par un avoir"}
+            </button>
+          </div>
         )}
       </div>
     );

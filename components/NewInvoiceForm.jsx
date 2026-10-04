@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, X } from "@phosphor-icons/react";
 import { formatDateFR, computeVisitHours } from "@/lib/utils";
 
-export default function NewInvoiceForm({ clients, settings, preselectedClientId, initialUnbilledVisits }) {
+export default function NewInvoiceForm({ clients, settings, preselectedClientId, initialUnbilledVisits, initialNotes = "" }) {
   const router = useRouter();
   const [clientId, setClientId] = useState(preselectedClientId || clients[0]?.id || "");
   const [unbilledVisits, setUnbilledVisits] = useState(initialUnbilledVisits || []);
@@ -19,7 +19,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
   const [tvaRate, setTvaRate] = useState(settings.default_tva_rate || 0);
   const [dueDate, setDueDate] = useState("");
   const [isTest, setIsTest] = useState(false);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(initialNotes);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
