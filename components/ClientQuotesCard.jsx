@@ -112,7 +112,7 @@ export default function ClientQuotesCard({ clientId, email, plannedVisits, quote
           <p className="text-right font-bold tabular-nums">Total : {formatEUR(total)}</p>
           <label className="block">
             <span className="label">Message pour le client (facultatif)</span>
-            <textarea className="input mt-1" rows={3} maxLength={800} value={message} onChange={(e) => setMessage(e.target.value)} />
+            <textarea className="input mt-1" rows={3} maxLength={3000} value={message} onChange={(e) => setMessage(e.target.value)} />
           </label>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={send} disabled={!email} onChange={(e) => setSend(e.target.checked)} />
