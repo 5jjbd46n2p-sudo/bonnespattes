@@ -11,6 +11,7 @@ import DepositManager from "@/components/DepositManager";
 import ClientContractCard from "@/components/ClientContractCard";
 import ClientDataExportCard from "@/components/ClientDataExportCard";
 import VisitHistory from "@/components/VisitHistory";
+import ClientQuotesCard from "@/components/ClientQuotesCard";
 import { ArrowLeft, Plus } from "@phosphor-icons/react/ssr";
 import { isUuid } from "@/lib/api";
 
@@ -65,7 +66,18 @@ async function getClientData(id) {
     contracts = [];
   }
 
+  const plannedRes = await query(
+    `SELECT v.id, v.date, v.start_time, v.price, v.travel_fee, v.is_free, p.name AS pet_name
+     FROM visits v JOIN pets p ON p.id = v.pet_id
+     WHERE v.client_id = $1 AND v.status = 'PLANIFIE' AND v.invoice_id IS NULL
+     ORDER BY v.date, v.start_time NULLS LAST LIMIT 200`,
+    [id]
+  );
+  const quotesRes = await query("SELECT * FROM quotes WHERE client_id = $1 ORDER BY created_at DESC LIMIT 20", [id]);
+
   return {
+    plannedVisits: plannedRes.rows,
+    quotes: quotesRes.rows,
     referral,
     contracts,
     client: clientRes.rows[0],
@@ -83,7 +95,7 @@ export default async function ClientDetailPage({ params }) {
   if (!isUuid(id)) notFound();
   const data = await getClientData(id);
   if (!data) notFound();
-  const { client, pets, visits, invoices, login, deposits, referral, contracts } = data;
+  const { client, pets, visits, invoices, login, deposits, referral, contracts, plannedVisits, quotes } = data;
 
   return (
     <div className="space-y-6">
@@ -102,6 +114,7 @@ export default async function ClientDetailPage({ params }) {
         <div className="lg:col-span-2 space-y-6">
           <ClientInfoCard client={client} invoiceCount={invoices.length} />
           <PetManager clientId={id} pets={pets} />
+          <ClientQuotesCard clientId={id} email={client.email || ""} plannedVisits={plannedVisits} quotes={quotes} />
 
           <VisitHistory visits={visits} />
         </div>
