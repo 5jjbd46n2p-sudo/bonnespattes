@@ -4,7 +4,8 @@ import { query } from "@/lib/db";
 import { formatDateLongFR, todayISO, localISO, toCardVisit } from "@/lib/utils";
 import { VISIT_STATUS, VISIT_STATUS_ORDER } from "@/components/StatusBadge";
 import VisitCard from "@/components/VisitCard";
-import AdminEventsPanel from "@/components/AdminEventsPanel";
+import AdminEventAdd, { AdminEventRow } from "@/components/AdminEvents";
+import { ADMIN_EVENT_KINDS, VISIT_COLOR, adminKindColor } from "@/lib/adminEvents";
 import { CaretLeft, CaretRight, Plus } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
@@ -91,11 +92,11 @@ export default async function PlanningPage({ searchParams }) {
 
   // Rendez-vous et tâches administratives : pastille sur le calendrier + liste du jour
   const adminCountsRes = await query(
-    `SELECT date::text, COUNT(*) AS count FROM admin_events WHERE date = ANY($1::date[]) GROUP BY date`,
+    `SELECT date::text, kind, COUNT(*) AS count FROM admin_events WHERE date = ANY($1::date[]) GROUP BY date, kind`,
     [cellISOs]
   );
   const adminByDate = {};
-  for (const r of adminCountsRes.rows) adminByDate[r.date] = Number(r.count);
+  for (const r of adminCountsRes.rows) (adminByDate[r.date] ||= []).push(r.kind);
   const [adminEventsRes, clientsRes] = await Promise.all([
     query(
       `SELECT e.*, NULLIF(TRIM(c.first_name || ' ' || c.last_name), '') AS client_name
@@ -118,6 +119,14 @@ export default async function PlanningPage({ searchParams }) {
      WHERE v.date = $1 ORDER BY v.start_time ASC NULLS LAST`,
     [selected]
   );
+
+  const adminEvents = adminEventsRes.rows.map(({ date: _d, created_at: _c, ...rest }) => rest);
+  const timeKey = (t) => (t ? String(t).slice(0, 5) : "99:99");
+  const agenda = [
+    ...visitsRes.rows.map((v) => ({ type: "visit", v, t: timeKey(v.start_time) })),
+    ...adminEvents.map((e) => ({ type: "admin", e, t: timeKey(e.start_time) })),
+  ].sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+  const adminTravelKm = adminEvents.reduce((sum, e) => sum + (Number(e.travel_km) || 0), 0);
 
   const prevMonthKey = ymKey(addMonths(monthDate, -1));
   const nextMonthKey = ymKey(addMonths(monthDate, 1));
@@ -223,7 +232,8 @@ export default async function PlanningPage({ searchParams }) {
                 const total = Object.values(dayStatuses).reduce((s, n) => s + n, 0);
                 const activeDots = VISIT_STATUS_ORDER.filter((s) => dayStatuses[s] > 0);
                 const cellMonth = ymKey(date);
-                const adminCount = adminByDate[iso] || 0;
+                const adminKinds = adminByDate[iso] || [];
+                const adminCount = adminKinds.length;
 
                 return (
                   <Link
@@ -251,7 +261,9 @@ export default async function PlanningPage({ searchParams }) {
                       {activeDots.map((s) => (
                         <span key={s} className={`w-1.5 h-1.5 rounded-full ${VISIT_STATUS[s].dot}`} />
                       ))}
-                      {adminCount > 0 && <span className="w-1.5 h-1.5 rounded-[2px] bg-pierre" title="Administratif" />}
+                      {adminKinds.map((k) => (
+                        <span key={k} className="w-1.5 h-1.5 rounded-[2px]" style={{ background: adminKindColor(k) }} />
+                      ))}
                     </span>
                   </Link>
                 );
@@ -259,14 +271,24 @@ export default async function PlanningPage({ searchParams }) {
             </div>
           ))}
         </div>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3 text-xs text-pierre">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ background: VISIT_COLOR }} /> Visite
+          </span>
+          {ADMIN_EVENT_KINDS.map((k) => (
+            <span key={k.id} className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-[2px]" style={{ background: adminKindColor(k.id) }} /> {k.label}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Agenda du jour sélectionné, comme le volet du bas dans l'app Calendrier */}
       <div>
         <h2 className="font-display text-xl font-semibold mb-3 capitalize">{formatDateLongFR(selected)}</h2>
-        {visitsRes.rows.length === 0 ? (
+        {agenda.length === 0 ? (
           <div className="card p-8 text-center text-pierre">
-            Aucune visite ce jour-là.{" "}
+            Rien de prévu ce jour-là.{" "}
             <Link href={`/admin/visits/new?date=${selected}`} className="text-rouille underline">
               Planifier une visite
             </Link>
@@ -274,23 +296,33 @@ export default async function PlanningPage({ searchParams }) {
         ) : (
           <>
             <div className="list-group">
-              {visitsRes.rows.map((v) => (
-                <VisitCard key={`${v.id}-${v.status}-${v.photo_count}`} visit={toCardVisit(v)} />
-              ))}
+              {agenda.map((item) =>
+                item.type === "visit" ? (
+                  <div key={`v-${item.v.id}-${item.v.status}-${item.v.photo_count}`} className="border-l-4" style={{ borderLeftColor: VISIT_COLOR }}>
+                    <VisitCard visit={toCardVisit(item.v)} />
+                  </div>
+                ) : (
+                  <AdminEventRow key={`e-${item.e.id}-${item.e.done}`} event={item.e} />
+                )
+              )}
             </div>
-            <p className="text-sm text-pierre md:hidden text-center pt-3">
-              Glisse une visite vers la droite pour la démarrer, vers la gauche pour la terminer.
-            </p>
+            {visitsRes.rows.length > 0 && (
+              <p className="text-sm text-pierre md:hidden text-center pt-3">
+                Glisse une visite vers la droite pour la démarrer, vers la gauche pour la terminer.
+              </p>
+            )}
           </>
         )}
+        {adminTravelKm > 0 && (
+          <p className="text-sm text-pierre mt-3">
+            Déplacements administratifs du jour : {adminTravelKm.toLocaleString("fr-FR")} km
+          </p>
+        )}
+        <div className="mt-4">
+          <AdminEventAdd key={selected} date={selected} clients={clientsRes.rows} />
+        </div>
       </div>
 
-      <AdminEventsPanel
-        key={selected}
-        date={selected}
-        events={adminEventsRes.rows.map(({ date: _d, created_at: _c, ...rest }) => rest)}
-        clients={clientsRes.rows}
-      />
     </div>
   );
 }

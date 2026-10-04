@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash, MapPin, Car } from "@phosphor-icons/react";
-import { ADMIN_EVENT_KINDS, adminKindLabel } from "@/lib/adminEvents";
+import { ADMIN_EVENT_KINDS, adminKindLabel, adminKindColor } from "@/lib/adminEvents";
 
 const hhmm = (t) => (t ? String(t).slice(0, 5) : "");
 
-export default function AdminEventsPanel({ date, events, clients }) {
+export default function AdminEventAdd({ date, clients }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState("RENCONTRE");
@@ -75,46 +75,14 @@ export default function AdminEventsPanel({ date, events, clients }) {
     setBusy(false);
   }
 
-  async function toggleDone(ev) {
-    setBusy(true);
-    await fetch(`/api/admin-events/${ev.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ done: !ev.done }),
-    });
-    router.refresh();
-    setBusy(false);
-  }
-
-  async function remove(ev) {
-    if (!confirm(`Supprimer « ${ev.title} » ?`)) return;
-    setBusy(true);
-    await fetch(`/api/admin-events/${ev.id}`, { method: "DELETE" });
-    router.refresh();
-    setBusy(false);
-  }
-
-  const totalKm = events.reduce((s, e) => s + (Number(e.travel_km) || 0), 0);
-  const totalMin = events.reduce((s, e) => s + (Number(e.travel_minutes) || 0), 0);
-
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h2 className="font-display text-xl font-semibold">Administratif et déplacements</h2>
-          {events.length > 0 && (totalKm > 0 || totalMin > 0) && (
-            <p className="text-sm text-pierre tabular-nums">
-              Trajets du jour : {Math.round(totalKm * 10) / 10} km, {totalMin} min (aller-retour)
-            </p>
-          )}
-        </div>
-        {!open && (
-          <button type="button" onClick={() => setOpen(true)} className="btn-ghost text-sm gap-2">
-            <Plus size={20} aria-hidden="true" />
-            Ajouter
-          </button>
-        )}
-      </div>
+      {!open && (
+        <button type="button" onClick={() => setOpen(true)} className="btn-ghost text-sm gap-2">
+          <Plus size={20} aria-hidden="true" />
+          Ajouter un rendez-vous ou une tâche
+        </button>
+      )}
 
       {open && (
         <form onSubmit={add} className="card p-4 space-y-3">
@@ -184,59 +152,84 @@ export default function AdminEventsPanel({ date, events, clients }) {
           </div>
         </form>
       )}
+    </div>
+  );
+}
 
-      {events.length === 0 && !open ? (
-        <div className="card p-5 text-center text-pierre text-sm">Rien d'administratif ce jour-là.</div>
-      ) : (
-        events.length > 0 && (
-          <ul className="card divide-y divide-trait">
-            {events.map((ev) => (
-              <li key={ev.id} className="p-4 flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={ev.done}
-                  disabled={busy}
-                  onChange={() => toggleDone(ev)}
-                  aria-label={`Marquer « ${ev.title} » comme fait`}
-                  className="mt-1.5"
-                />
-                <div className={`flex-1 min-w-0 ${ev.done ? "opacity-60" : ""}`}>
-                  <p className={`font-bold ${ev.done ? "line-through" : ""}`}>{ev.title}</p>
-                  <p className="text-sm text-pierre tabular-nums">
-                    {adminKindLabel(ev.kind)}
-                    {ev.start_time ? ` · ${hhmm(ev.start_time)}${ev.end_time ? `-${hhmm(ev.end_time)}` : ""}` : ""}
-                    {ev.client_name ? ` · ${ev.client_name}` : ""}
-                  </p>
-                  {ev.place && (
-                    <p className="text-sm text-pierre flex items-center gap-1">
-                      <MapPin size={16} aria-hidden="true" className="shrink-0" />
-                      <span className="truncate">{ev.place}</span>
-                    </p>
-                  )}
-                  {(Number(ev.travel_km) > 0 || Number(ev.travel_minutes) > 0) && (
-                    <p className="text-sm text-pierre flex items-center gap-1 tabular-nums">
-                      <Car size={16} aria-hidden="true" className="shrink-0" />
-                      {Number(ev.travel_km) > 0 ? `${Number(ev.travel_km)} km` : ""}
-                      {Number(ev.travel_km) > 0 && Number(ev.travel_minutes) > 0 ? ", " : ""}
-                      {Number(ev.travel_minutes) > 0 ? `${ev.travel_minutes} min` : ""} (aller-retour)
-                    </p>
-                  )}
-                  {ev.notes && <p className="text-sm mt-1 whitespace-pre-line">{ev.notes}</p>}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => remove(ev)}
-                  disabled={busy}
-                  aria-label={`Supprimer ${ev.title}`}
-                  className="text-brique p-1 rounded-lg hover:bg-sable"
-                >
-                  <Trash size={20} aria-hidden="true" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )
-      )}
+// Ligne d'un rendez-vous ou d'une tâche administrative dans l'agenda du jour.
+export function AdminEventRow({ event: ev }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+
+  async function toggleDone() {
+    setBusy(true);
+    await fetch(`/api/admin-events/${ev.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: !ev.done }),
+    });
+    router.refresh();
+    setBusy(false);
+  }
+
+  async function remove() {
+    if (!confirm(`Supprimer « ${ev.title} » ?`)) return;
+    setBusy(true);
+    await fetch(`/api/admin-events/${ev.id}`, { method: "DELETE" });
+    router.refresh();
+    setBusy(false);
+  }
+
+  return (
+    <div className="bg-lin p-4 flex items-start gap-3 border-l-4" style={{ borderLeftColor: adminKindColor(ev.kind) }}>
+      <input
+        type="checkbox"
+        checked={ev.done}
+        disabled={busy}
+        onChange={toggleDone}
+        aria-label={`Marquer « ${ev.title} » comme fait`}
+        className="mt-1.5"
+      />
+      <div className={`flex-1 min-w-0 ${ev.done ? "opacity-60" : ""}`}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-bold tabular-nums">{ev.start_time ? hhmm(ev.start_time) : "Sans heure"}</span>
+          <span
+            className="inline-flex items-center gap-1.5 text-[13px] font-bold px-2 py-0.5 rounded-full border border-trait"
+          >
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: adminKindColor(ev.kind) }} aria-hidden="true" />
+            {adminKindLabel(ev.kind)}
+          </span>
+        </div>
+        <p className={`font-bold mt-1 ${ev.done ? "line-through" : ""}`}>
+          {ev.title}
+          {ev.end_time ? <span className="font-normal text-pierre tabular-nums"> (jusqu'à {hhmm(ev.end_time)})</span> : null}
+        </p>
+        {ev.client_name && <p className="text-sm text-pierre">{ev.client_name}</p>}
+        {ev.place && (
+          <p className="text-sm text-pierre flex items-center gap-1">
+            <MapPin size={16} aria-hidden="true" className="shrink-0" />
+            <span className="truncate">{ev.place}</span>
+          </p>
+        )}
+        {(Number(ev.travel_km) > 0 || Number(ev.travel_minutes) > 0) && (
+          <p className="text-sm text-pierre flex items-center gap-1 tabular-nums">
+            <Car size={16} aria-hidden="true" className="shrink-0" />
+            {Number(ev.travel_km) > 0 ? `${Number(ev.travel_km)} km` : ""}
+            {Number(ev.travel_km) > 0 && Number(ev.travel_minutes) > 0 ? ", " : ""}
+            {Number(ev.travel_minutes) > 0 ? `${ev.travel_minutes} min` : ""} (aller-retour)
+          </p>
+        )}
+        {ev.notes && <p className="text-sm mt-1 whitespace-pre-line">{ev.notes}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={remove}
+        disabled={busy}
+        aria-label={`Supprimer ${ev.title}`}
+        className="text-brique p-1 rounded-lg hover:bg-sable"
+      >
+        <Trash size={20} aria-hidden="true" />
+      </button>
     </div>
   );
 }
