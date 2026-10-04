@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatEUR, formatDateFR } from "@/lib/utils";
 import { isUuid } from "@/lib/api";
+import { pdfSafe } from "@/lib/pdfText";
 
 export async function GET(req, { params }) {
   const user = await getCurrentUser();
@@ -52,7 +53,7 @@ export async function GET(req, { params }) {
   const right = 545;
 
   const drawText = (text, x, yy, opts = {}) => {
-    page.drawText(String(text ?? ""), {
+    page.drawText(pdfSafe(text, opts.bold ? bold : font), {
       x,
       y: yy,
       size: opts.size || 10,
