@@ -17,7 +17,7 @@ export async function POST(req, { params }) {
   if (visitIds.length === 0 || visitIds.length > 200 || !visitIds.every(isUuid)) {
     return NextResponse.json({ error: "Choisis au moins une visite." }, { status: 400 });
   }
-  const message = cleanText(body.message, 800);
+  const message = cleanText(body.message, 3000);
   const send = body.send !== false;
 
   try {
