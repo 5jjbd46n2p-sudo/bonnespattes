@@ -336,3 +336,33 @@ ALTER TABLE contract_signatures ADD COLUMN IF NOT EXISTS auth_method TEXT NOT NU
 
 -- Remise commerciale (ex. première visite) : pourcentage appliqué à la prestation.
 ALTER TABLE visits ADD COLUMN IF NOT EXISTS discount_percent NUMERIC NOT NULL DEFAULT 0;
+
+-- Devis envoyés aux clients (lignes figées à la création, numérotation D0001...).
+CREATE TABLE IF NOT EXISTS quotes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  number TEXT UNIQUE NOT NULL,
+  issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  valid_until DATE,
+  status TEXT NOT NULL DEFAULT 'EN_ATTENTE' CHECK (status IN ('EN_ATTENTE','ACCEPTE','REFUSE')),
+  tva_rate NUMERIC DEFAULT 0,
+  total_ht NUMERIC DEFAULT 0,
+  total_tva NUMERIC DEFAULT 0,
+  total_ttc NUMERIC DEFAULT 0,
+  message TEXT DEFAULT '',
+  sent_to TEXT,
+  sent_at TIMESTAMPTZ,
+  accepted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS quote_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_id UUID NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  quantity NUMERIC NOT NULL DEFAULT 1,
+  unit_price NUMERIC NOT NULL DEFAULT 0,
+  total NUMERIC NOT NULL DEFAULT 0,
+  position INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_quotes_client ON quotes(client_id);
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS next_quote_seq INTEGER NOT NULL DEFAULT 1;
