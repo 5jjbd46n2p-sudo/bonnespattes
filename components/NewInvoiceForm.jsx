@@ -83,7 +83,10 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
       const hours = computeVisitHours(v.start_time, v.end_time);
       const label = `Visite du ${formatDateFR(v.date)} — ${v.pet_name}${hours ? ` (${hours} h)` : ""}`;
       if (v.is_free) return [{ description: `${label} — offerte`, quantity: 1, unitPrice: 0 }];
-      const rows = [{ description: label, quantity: 1, unitPrice: Number(v.price) || 0 }];
+      const disc = Number(v.discount_percent) || 0;
+      const rows = [
+        { description: disc > 0 ? `${label} — remise première visite −${disc} %` : label, quantity: 1, unitPrice: Number(v.price) || 0 },
+      ];
       if (Number(v.travel_fee) > 0) rows.push({ description: "Déplacement", quantity: 1, unitPrice: Number(v.travel_fee) });
       return rows;
     });

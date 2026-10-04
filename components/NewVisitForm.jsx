@@ -74,6 +74,8 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
   const [calcLoading, setCalcLoading] = useState(false);
   const [calcError, setCalcError] = useState("");
   const [notes, setNotes] = useState("");
+  const [firstVisit, setFirstVisit] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState("20");
   const [tasks, setTasks] = useState([...DEFAULT_TASKS]);
   const [newTask, setNewTask] = useState("");
   const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
@@ -99,6 +101,11 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
   const price = manualPrice !== null ? manualPrice : suggestedBase.toFixed(2);
   const travelFee = manualTravel !== null ? manualTravel : suggestedTravel.toFixed(2);
   const isApplied = manualPrice === null && manualTravel === null;
+  // Remise « première visite » : sur la prestation de la première visite (le déplacement reste dû).
+  const discountValue = firstVisit ? Math.min(100, Math.max(0, Number(String(discountPercent).replace(",", ".")) || 0)) : 0;
+  const priceNum = Number(price) || 0;
+  const discountedPrice = Math.round(priceNum * (1 - discountValue / 100) * 100) / 100;
+  const discountAmount = Math.round((priceNum - discountedPrice) * 100) / 100;
 
   async function calculateDistance() {
     if (!selectedClient) return;
@@ -184,6 +191,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
         startTime: startTime || null,
         endTime: endTime || null,
         price: price ? Number(price) : 0,
+        discountPercent: discountValue,
         travelFee: travelFee ? Number(travelFee) : 0,
         notes,
         tasks,
@@ -390,6 +398,36 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                 />
               </div>
             </div>
+          </div>
+
+          <div className="border-t border-trait pt-4 space-y-2">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={firstVisit} onChange={(e) => setFirstVisit(e.target.checked)} />
+              <span className="text-sm font-bold">Première visite : remise</span>
+            </label>
+            {firstVisit && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="1"
+                  inputMode="decimal"
+                  aria-label="Remise en pourcentage"
+                  className="input !w-24"
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(e.target.value)}
+                />
+                <span className="text-sm">%</span>
+                <span className="text-[13px] text-pierre tabular-nums">
+                  {discountValue > 0
+                    ? `Prestation ${eur(priceNum)} → ${eur(discountedPrice)} (− ${eur(discountAmount)})${
+                        recurrenceEnabled ? ", sur la première visite seulement" : ""
+                      }. Le déplacement reste dû.`
+                    : "Indique un pourcentage (20 % ou plus)."}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-trait pt-4">

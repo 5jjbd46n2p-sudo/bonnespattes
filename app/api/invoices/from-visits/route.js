@@ -28,7 +28,7 @@ export async function POST(req) {
     const invoice = await tx(async (client) => {
       const settings = (await client.query("SELECT * FROM settings LIMIT 1 FOR UPDATE")).rows[0];
       const visitsRes = await client.query(
-        `SELECT v.id, v.client_id, v.status, v.invoice_id, v.price, v.travel_fee, v.is_free,
+        `SELECT v.id, v.client_id, v.status, v.invoice_id, v.price, v.travel_fee, v.is_free, v.discount_percent,
                 to_char(v.date, 'DD/MM/YYYY') AS date_fr, p.name AS pet_name,
                 CASE WHEN v.start_time IS NOT NULL AND v.end_time IS NOT NULL
                      THEN EXTRACT(EPOCH FROM (v.end_time - v.start_time)) / 60 END AS minutes
@@ -66,7 +66,11 @@ export async function POST(req) {
           items.push({ description: `${label} — offerte`, unitPrice: 0 });
           continue;
         }
-        items.push({ description: label, unitPrice: Number(v.price) || 0 });
+        const disc = Number(v.discount_percent) || 0;
+        items.push({
+          description: disc > 0 ? `${label} — remise première visite −${disc} %` : label,
+          unitPrice: Number(v.price) || 0,
+        });
         if (Number(v.travel_fee) > 0) {
           items.push({ description: `Déplacement — visite du ${v.date_fr}`, unitPrice: Number(v.travel_fee) });
         }

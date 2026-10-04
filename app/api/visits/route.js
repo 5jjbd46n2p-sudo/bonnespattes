@@ -76,6 +76,11 @@ export async function POST(req) {
   const notes = typeof body.notes === "string" ? body.notes.slice(0, 2000) : "";
   const price = body.price === undefined || body.price === null || body.price === "" ? 0 : Number(body.price);
   const fee = body.travelFee === undefined || body.travelFee === null || body.travelFee === "" ? 0 : Number(body.travelFee);
+  // Remise (ex. première visite) : appliquée à la prestation de la première visite seulement.
+  const discount =
+    body.discountPercent === undefined || body.discountPercent === null || body.discountPercent === ""
+      ? 0
+      : Number(body.discountPercent);
   const tasks = (Array.isArray(body.tasks) ? body.tasks : [])
     .filter((t) => typeof t === "string" && t.trim())
     .map((t) => t.trim().slice(0, 200))
@@ -86,6 +91,8 @@ export async function POST(req) {
   if ((startTime && !TIME_RE.test(startTime)) || (endTime && !TIME_RE.test(endTime))) return bad("Horaire invalide.");
   if (!Number.isFinite(price) || price < 0) return bad("Prix invalide.");
   if (!Number.isFinite(fee) || fee < 0) return bad("Frais de déplacement invalides.");
+  if (!Number.isFinite(discount) || discount < 0 || discount > 100) return bad("Remise invalide (0 à 100 %).");
+  const discountedPrice = Math.round(price * (1 - discount / 100) * 100) / 100;
 
   // L'animal doit bien appartenir au client choisi (cohérence des données).
   const petCheck = await query("SELECT 1 FROM pets WHERE id = $1 AND client_id = $2", [petId, clientId]);
@@ -107,10 +114,13 @@ export async function POST(req) {
   // tâches (au lieu d'une requête par visite et par tâche).
   const visits = await tx(async (db) => {
     const { rows: created } = await db.query(
-      `INSERT INTO visits (pet_id, client_id, date, start_time, end_time, notes, price, recurrence_id, travel_fee)
-       SELECT $1, $2, d::date, $4, $5, $6, $7, $8, $9 FROM unnest($3::text[]) AS d
+      `INSERT INTO visits (pet_id, client_id, date, start_time, end_time, notes, price, recurrence_id, travel_fee, discount_percent)
+       SELECT $1, $2, t.d::date, $4, $5, $6,
+              CASE WHEN t.o = 1 THEN $10::numeric ELSE $7::numeric END, $8, $9,
+              CASE WHEN t.o = 1 THEN $11::numeric ELSE 0 END
+         FROM unnest($3::text[]) WITH ORDINALITY AS t(d, o)
        RETURNING *`,
-      [petId, clientId, visitDates, startTime, endTime, notes, price, recurrenceId, fee]
+      [petId, clientId, visitDates, startTime, endTime, notes, price, recurrenceId, fee, discountedPrice, discount]
     );
     if (tasks.length) {
       await db.query(
