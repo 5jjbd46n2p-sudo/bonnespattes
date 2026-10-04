@@ -385,3 +385,6 @@ CREATE TABLE IF NOT EXISTS admin_events (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_admin_events_date ON admin_events(date);
+
+-- Récurrence des tâches administratives
+ALTER TABLE admin_events ADD COLUMN IF NOT EXISTS recurrence_id uuid;

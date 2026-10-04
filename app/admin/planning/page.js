@@ -99,7 +99,7 @@ export default async function PlanningPage({ searchParams }) {
   for (const r of adminCountsRes.rows) (adminByDate[r.date] ||= []).push(r.kind);
   const [adminEventsRes, clientsRes] = await Promise.all([
     query(
-      `SELECT e.*, NULLIF(TRIM(c.first_name || ' ' || c.last_name), '') AS client_name
+      `SELECT e.*, e.date::text AS date_text, NULLIF(TRIM(c.first_name || ' ' || c.last_name), '') AS client_name
        FROM admin_events e LEFT JOIN clients c ON c.id = e.client_id
        WHERE e.date = $1 ORDER BY e.start_time ASC NULLS LAST, e.created_at`,
       [selected]
@@ -120,7 +120,7 @@ export default async function PlanningPage({ searchParams }) {
     [selected]
   );
 
-  const adminEvents = adminEventsRes.rows.map(({ date: _d, created_at: _c, ...rest }) => rest);
+  const adminEvents = adminEventsRes.rows.map(({ created_at: _c, date_text, ...rest }) => ({ ...rest, date: date_text }));
   const timeKey = (t) => (t ? String(t).slice(0, 5) : "99:99");
   const agenda = [
     ...visitsRes.rows.map((v) => ({ type: "visit", v, t: timeKey(v.start_time) })),
@@ -302,7 +302,7 @@ export default async function PlanningPage({ searchParams }) {
                     <VisitCard visit={toCardVisit(item.v)} />
                   </div>
                 ) : (
-                  <AdminEventRow key={`e-${item.e.id}-${item.e.done}`} event={item.e} />
+                  <AdminEventRow key={`e-${item.e.id}-${item.e.done}`} event={item.e} clients={clientsRes.rows} />
                 )
               )}
             </div>
