@@ -103,7 +103,7 @@ export default function NewClientPage() {
             placeholder="12 rue des Lilas, 75011 Paris"
           />
           <Field
-            label="Tarif horaire indicatif (€)"
+            label="Tarif horaire spécifique (€/h, vide = tarifs des réglages)"
             type="number"
             value={form.hourlyRate}
             onChange={(v) => setForm({ ...form, hourlyRate: v })}

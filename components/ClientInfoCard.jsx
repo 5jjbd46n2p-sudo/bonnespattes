@@ -104,7 +104,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
               {client.hourly_rate > 0 && (
                 <p className="flex items-center gap-2">
                   <CurrencyEur size={20} aria-hidden="true" />
-                  <span className="tabular-nums">Tarif indicatif : {client.hourly_rate} €/h</span>
+                  <span className="tabular-nums">Tarif horaire spécifique : {client.hourly_rate} €/h</span>
                 </p>
               )}
             </div>
@@ -171,7 +171,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
         <Field label="Nom" value={form.lastName} onChange={(v) => setForm({ ...form, lastName: v })} />
         <Field label="Téléphone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
         <Field label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-        <Field label="Tarif horaire (€)" type="number" value={form.hourlyRate} onChange={(v) => setForm({ ...form, hourlyRate: v })} />
+        <Field label="Tarif horaire spécifique (€/h, vide = tarifs des réglages)" type="number" value={form.hourlyRate} onChange={(v) => setForm({ ...form, hourlyRate: v })} />
       </div>
       <Field label="Adresse" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
       <div>
