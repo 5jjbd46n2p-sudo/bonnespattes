@@ -93,11 +93,9 @@ export default async function Home({ searchParams }) {
   const area = s.service_area || "Viarmes et environs (15 km, au-delà sur devis)";
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
 
-  const rates = [
-    { label: "Visite de 30 minutes", price: s.rate_30 ?? 15 },
-    { label: "Visite de 45 minutes", price: s.rate_45 ?? 18 },
-    { label: "Visite ou balade d'une heure", price: s.rate_60 ?? 22 },
-  ];
+  const rateList = [s.rate_30, s.rate_45, s.rate_60].map(Number).filter((n) => Number.isFinite(n) && n > 0);
+  const fromPrice = rateList.length ? Math.min(...rateList) : 15;
+
 
   return (
     <div className="bg-papier text-encre">
@@ -236,20 +234,20 @@ export default async function Home({ searchParams }) {
               <h2 id="tarifs-titre" className="font-display text-2xl md:text-3xl font-semibold">
                 Tarifs
               </h2>
-              <p className="text-pierre mt-2">À partir de</p>
+              <p className="text-pierre mt-2">Un devis adapté à vous et à vos animaux</p>
             </div>
             <div>
-              <ul className="divide-y divide-trait border-y border-trait">
-                {rates.map((r) => (
-                  <li key={r.label} className="flex items-baseline justify-between gap-4 py-3.5">
-                    <span>{r.label}</span>
-                    <span className="font-bold tabular-nums whitespace-nowrap">{formatEUR(r.price)}</span>
-                  </li>
-                ))}
+              <p className="font-display text-2xl md:text-3xl font-semibold">
+                À partir de {formatEUR(fromPrice)} la visite ou balade
+              </p>
+              <ul className="mt-4 space-y-2 list-disc pl-5 marker:text-rouille">
+                <li>Un compte rendu avec photos après chaque visite</li>
+                <li>Une première rencontre gratuite, chez vous</li>
+                <li>Un devis personnalisé sous 24 h, avant toute prestation</li>
               </ul>
               <p className="text-pierre mt-4 leading-relaxed">
-                Un frais de déplacement s'ajoute selon la distance depuis Viarmes. Je me déplace sur le secteur
-                suivant : {area}. Le tarif exact vous est confirmé avant la première visite.
+                Le tarif dépend de la durée, du nombre d'animaux et de la distance depuis Viarmes. Je me déplace sur
+                le secteur suivant : {area}. Le prix exact vous est confirmé avant la première visite.
               </p>
             </div>
           </div>
