@@ -131,24 +131,11 @@ export default async function Home({ searchParams }) {
               <h1 className="font-display text-[32px] md:text-5xl font-semibold leading-tight">
                 Vos compagnons entre de bonnes mains, en votre absence.
               </h1>
-              <h2 className="mt-6 font-display text-xl md:text-2xl font-semibold">À propos de moi…</h2>
-              <div className="mt-2 space-y-3 leading-relaxed text-pierre">
-                <p>
-                  Je m'appelle Aurore et ma passion pour les animaux remonte à ma plus tendre enfance. J'ai choisi
-                  de transformer cette passion en réalité quotidienne en travaillant à leurs côtés.
-                </p>
-                <p>
-                  Forte de mon diplôme d'assistante vétérinaire et de trois années d'expérience en clinique, j'ai
-                  acquis les compétences nécessaires pour prendre soin de vos compagnons, qu'il s'agisse de chiens,
-                  de chats ou de nouveaux animaux de compagnie (NAC).
-                </p>
-                <p>
-                  En tant que pet sitter, je me déplace à votre domicile pour m'assurer que vos animaux reçoivent
-                  toute l'attention et les soins dont ils ont besoin en votre absence. Vous pouvez ainsi partir
-                  l'esprit tranquille, sachant que vos amis à quatre pattes sont entre de bonnes mains.
-                </p>
-              </div>
-              <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <p className="mt-5 text-lg leading-relaxed text-pierre">
+                Aurore, ancienne assistante vétérinaire : visites à domicile et promenades pour vos chiens, vos chats et
+                vos NAC, avec compte rendu et photos après chaque passage.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <a href="#contact" className="btn-primary text-base">
                   Demander un rendez-vous
                 </a>
@@ -163,6 +150,29 @@ export default async function Home({ searchParams }) {
               eager
               className="aspect-[4/3] md:aspect-[4/5]"
             />
+          </div>
+        </section>
+
+        {/* À propos */}
+        <section aria-labelledby="a-propos" className="px-4 py-12 md:py-16 border-t border-trait">
+          <div className="max-w-3xl mx-auto">
+                <h2 id="a-propos" className="font-display text-2xl md:text-3xl font-semibold">À propos de moi…</h2>
+                <div className="mt-4 space-y-3 leading-relaxed text-pierre">
+                  <p>
+                    Je m'appelle Aurore et ma passion pour les animaux remonte à ma plus tendre enfance. J'ai choisi
+                    de transformer cette passion en réalité quotidienne en travaillant à leurs côtés.
+                  </p>
+                  <p>
+                    Forte de mon diplôme d'assistante vétérinaire et de trois années d'expérience en clinique, j'ai
+                    acquis les compétences nécessaires pour prendre soin de vos compagnons, qu'il s'agisse de chiens,
+                    de chats ou de nouveaux animaux de compagnie (NAC).
+                  </p>
+                  <p>
+                    En tant que pet sitter, je me déplace à votre domicile pour m'assurer que vos animaux reçoivent
+                    toute l'attention et les soins dont ils ont besoin en votre absence. Vous pouvez ainsi partir
+                    l'esprit tranquille, sachant que vos amis à quatre pattes sont entre de bonnes mains.
+                  </p>
+                </div>
           </div>
         </section>
 
