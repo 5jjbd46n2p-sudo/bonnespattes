@@ -388,3 +388,13 @@ CREATE INDEX IF NOT EXISTS idx_admin_events_date ON admin_events(date);
 
 -- Récurrence des tâches administratives
 ALTER TABLE admin_events ADD COLUMN IF NOT EXISTS recurrence_id uuid;
+
+-- Avis clients affichés sur la page d'accueil
+CREATE TABLE IF NOT EXISTS testimonials (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author TEXT NOT NULL,
+  detail TEXT DEFAULT '',
+  body TEXT NOT NULL,
+  published BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);

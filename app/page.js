@@ -5,6 +5,7 @@ import { query } from "@/lib/db";
 import { formatEUR } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import Photo from "@/components/landing/Photo";
+import { loadPublishedTestimonials } from "@/lib/testimonials";
 import { loadSitePhotos, sitePhotoSrc, SITE_PHOTO_SLOTS } from "@/lib/sitePhotos";
 import Gallery from "@/components/landing/Gallery";
 import LeadForm from "@/components/landing/LeadForm";
@@ -88,7 +89,7 @@ export default async function Home({ searchParams }) {
 
   const sp = await searchParams;
   const rawCode = Array.isArray(sp?.parrain) ? sp.parrain[0] : sp?.parrain;
-  const [s, referrer, photoVersions] = await Promise.all([loadSettings(), loadReferrer(rawCode), loadSitePhotos()]);
+  const [s, referrer, photoVersions, testimonials] = await Promise.all([loadSettings(), loadReferrer(rawCode), loadSitePhotos(), loadPublishedTestimonials()]);
   const galleryPhotos = SITE_PHOTO_SLOTS.filter((x) => x.slot.startsWith("gallery-") && photoVersions[x.slot]).map((x) => ({ src: sitePhotoSrc(x.slot, photoVersions[x.slot]), alt: x.alt }));
   const area = s.service_area || "Viarmes et environs (15 km, au-delà sur devis)";
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
@@ -236,6 +237,28 @@ export default async function Home({ searchParams }) {
             </div>
           </div>
         </section>
+
+        {/* Avis (affichés seulement s'il y en a) */}
+        {testimonials.length > 0 && (
+          <section aria-labelledby="avis" className="px-4 py-12 md:py-16 border-t border-trait">
+            <div className="max-w-5xl mx-auto">
+              <h2 id="avis" className="font-display text-2xl md:text-3xl font-semibold mb-8">
+                Ils me font confiance
+              </h2>
+              <ul className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {testimonials.map((t) => (
+                  <li key={t.id} className="card p-5 flex flex-col">
+                    <blockquote className="leading-relaxed whitespace-pre-line flex-1">« {t.body} »</blockquote>
+                    <p className="mt-4 text-sm text-pierre">
+                      <span className="font-bold text-encre">{t.author}</span>
+                      {t.detail ? `, ${t.detail}` : ""}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
 
         {/* Tarifs */}
         <section id="tarifs" aria-labelledby="tarifs-titre" className="px-4 py-12 md:py-16 scroll-mt-4">

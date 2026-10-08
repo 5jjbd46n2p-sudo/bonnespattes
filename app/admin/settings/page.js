@@ -33,6 +33,16 @@ export default async function SettingsPage() {
         </Link>
       </div>
 
+      <div className="card p-5 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="font-display text-xl font-semibold">Avis clients</h2>
+          <p className="text-sm text-pierre">Les témoignages affichés sur la page d'accueil.</p>
+        </div>
+        <Link href="/admin/avis" className="btn-primary text-sm">
+          Gérer les avis
+        </Link>
+      </div>
+
       <SettingsForm settings={rows[0]} />
       <PricingSettingsForm settings={rows[0]} />
       <PublicSettingsForm settings={rows[0]} />
