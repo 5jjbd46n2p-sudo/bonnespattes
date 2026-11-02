@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { allocateInvoiceNumber, resyncInvoiceSequences } from "@/lib/invoiceNumber";
-import { isUuid, readJson } from "@/lib/api";
+import { isUuid, readJson, parseDateISO } from "@/lib/api";
 
 // Code de commerce / CGI : une facture émise se conserve 10 ans et la
 // numérotation doit rester continue. On corrige par un avoir, jamais en supprimant.
@@ -65,7 +65,7 @@ export async function PATCH(req, { params }) {
       if (inv.issued) return NextResponse.json({ error: ISSUED_ERROR }, { status: 409 });
       return NextResponse.json({ invoice: inv });
     } catch (e) {
-      console.error(e);
+      console.error("Passage en facture de test :", e?.message);
       return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
     }
   }
@@ -80,6 +80,18 @@ export async function PATCH(req, { params }) {
         return NextResponse.json({ error: "Une facture émise ne peut pas redevenir un brouillon. Pour l'annuler, établis un avoir." }, { status: 409 });
       }
     }
+  }
+
+  if (body.notes !== undefined) {
+    if (body.notes === null) body.notes = "";
+    if (typeof body.notes !== "string" || body.notes.length > 2000) {
+      return NextResponse.json({ error: "Notes invalides (2000 caractères maximum)." }, { status: 400 });
+    }
+  }
+  if (body.dueDate !== undefined && body.dueDate !== null && body.dueDate !== "") {
+    if (!parseDateISO(body.dueDate)) return NextResponse.json({ error: "Date d'échéance invalide." }, { status: 400 });
+  } else if (body.dueDate === "") {
+    body.dueDate = null;
   }
 
   const map = { status: "status", notes: "notes", dueDate: "due_date" };
@@ -123,7 +135,7 @@ export async function DELETE(req, { params }) {
     if (result.issued) return NextResponse.json({ error: ISSUED_ERROR }, { status: 409 });
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
-    console.error(e);
+    console.error("Suppression d'une facture :", e?.message);
     return NextResponse.json({ error: "Suppression impossible, réessaie dans un instant." }, { status: 500 });
   }
 }

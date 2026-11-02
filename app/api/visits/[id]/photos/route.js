@@ -3,6 +3,7 @@ import { put } from "@vercel/blob";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { isUuid } from "@/lib/api";
+import { sniffImageType, matchesDeclaredType } from "@/lib/imageMagic";
 
 // Types et taille acceptés pour une photo de visite : on ne fait pas confiance
 // au nom de fichier envoyé par le navigateur (facilement falsifiable), on
@@ -36,6 +37,14 @@ export async function POST(req, { params }) {
   if (file.size > MAX_SIZE_BYTES) {
     return NextResponse.json({ error: "Photo trop volumineuse (15 Mo maximum)." }, { status: 400 });
   }
+  // Contenu réel du fichier (octets magiques), pas seulement le type annoncé.
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  if (!matchesDeclaredType(sniffImageType(head), file.type)) {
+    return NextResponse.json(
+      { error: "Format non pris en charge : seules les photos (JPEG, PNG, WEBP, HEIC) sont acceptées." },
+      { status: 400 }
+    );
+  }
 
   try {
     const blob = await put(`visits/${id}/${Date.now()}.${ext}`, file, {
@@ -49,7 +58,7 @@ export async function POST(req, { params }) {
     );
     return NextResponse.json({ photo: rows[0] });
   } catch (e) {
-    console.error(e);
+    console.error("/api/visits/[id]/photos :", e?.message);
     return NextResponse.json(
       {
         error:

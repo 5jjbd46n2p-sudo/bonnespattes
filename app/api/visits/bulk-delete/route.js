@@ -41,7 +41,7 @@ export async function POST(req) {
     return NextResponse.json({ ok: true, deleted });
   } catch (e) {
     if (e.status) return NextResponse.json({ error: e.message }, { status: e.status });
-    console.error(e);
+    console.error("/api/visits/bulk-delete :", e?.message);
     return NextResponse.json({ error: "Suppression impossible, réessaie dans un instant." }, { status: 500 });
   }
 }

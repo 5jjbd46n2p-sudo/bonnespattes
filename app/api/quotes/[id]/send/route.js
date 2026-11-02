@@ -31,7 +31,7 @@ export async function POST(_req, { params }) {
     await query("UPDATE quotes SET sent_to = $1, sent_at = now() WHERE id = $2", [client.email, id]);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error("/api/quotes/[id]/send :", e?.message);
     return NextResponse.json({ error: e.message || "Envoi impossible." }, { status: 500 });
   }
 }

@@ -51,14 +51,14 @@ export async function POST(req, { params }) {
           loginPassword: password,
         });
       } catch (emailErr) {
-        console.error(emailErr);
+        console.error("/api/clients/[id]/login :", emailErr?.message);
         emailWarning = "l'email n'a pas pu être envoyé";
       }
     }
 
     return NextResponse.json({ ok: true, emailWarning });
   } catch (e) {
-    console.error(e);
+    console.error("/api/clients/[id]/login :", e?.message);
     if (String(e.message).includes("duplicate key")) {
       return NextResponse.json({ error: "Cet email est déjà utilisé par un autre compte." }, { status: 400 });
     }

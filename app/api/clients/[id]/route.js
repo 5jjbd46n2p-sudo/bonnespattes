@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { eraseClient } from "@/lib/privacy";
 import { isUuid, readJson } from "@/lib/api";
+import { validateClientPatch } from "@/lib/clientPatch";
 
 export async function GET(req, { params }) {
   const admin = await requireAdmin();
@@ -60,6 +61,11 @@ export async function PATCH(req, { params }) {
     distanceKm: "distance_km",
     travelMinutes: "travel_minutes",
   };
+  const cur = await query("SELECT email FROM clients WHERE id = $1", [id]);
+  if (!cur.rows[0]) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  const checked = validateClientPatch(body, cur.rows[0]);
+  if (checked.error) return NextResponse.json({ error: checked.error }, { status: 400 });
+  Object.assign(body, checked.body);
   for (const key of ["distanceKm", "travelMinutes"]) {
     if (body[key] !== undefined && body[key] !== null && body[key] !== "") {
       const n = Number(body[key]);
@@ -104,7 +110,7 @@ export async function DELETE(req, { params }) {
     if (!mode) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
     return NextResponse.json({ ok: true, mode });
   } catch (e) {
-    console.error(e);
+    console.error("Suppression d'un client :", e?.message);
     return NextResponse.json({ error: "Suppression impossible, réessaie dans un instant." }, { status: 500 });
   }
 }

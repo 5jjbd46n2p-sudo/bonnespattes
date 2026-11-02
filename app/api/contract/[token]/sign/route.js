@@ -5,7 +5,7 @@ import {
 } from "@/lib/contract";
 import { CONTRACT_CHECKBOXES } from "@/lib/contractTemplate";
 import { sendSignedCopies } from "@/lib/contractFinalize";
-import { isRateLimited, recordHit } from "@/lib/security";
+import { consumeAttempt } from "@/lib/security";
 import { readJson } from "@/lib/api";
 
 const bad = (error, status = 400) => NextResponse.json({ error }, { status });
@@ -30,10 +30,9 @@ export async function POST(req, { params }) {
 
   const tokenHash = hashToken(token);
   const ip = getClientIp(req);
-  if (await isRateLimited("contract-sign-ip", ip || "unknown", { limit: 20, windowSeconds: 60 * 60 })) {
+  if (!(await consumeAttempt("contract-sign-ip", ip || "unknown", { limit: 20, windowSeconds: 60 * 60 }))) {
     return bad("Trop d'essais. Réessayez dans une heure.", 429);
   }
-  await recordHit("contract-sign-ip", ip || "unknown");
   const ua = (req.headers.get("user-agent") || "").slice(0, 500);
 
   const result = await tx(async (db) => {

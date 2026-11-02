@@ -41,7 +41,7 @@ export async function POST(req, { params }) {
       jsonBase64: Buffer.from(JSON.stringify(data, null, 2), "utf8").toString("base64"),
     });
   } catch (e) {
-    console.error(e);
+    console.error("/api/clients/[id]/export :", e?.message);
     return NextResponse.json({ error: "Envoi impossible, réessaie plus tard." }, { status: 502 });
   }
   return NextResponse.json({ ok: true, sentTo: client.email });

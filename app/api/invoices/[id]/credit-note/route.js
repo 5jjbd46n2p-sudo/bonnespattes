@@ -51,7 +51,7 @@ export async function POST(req, { params }) {
     if (result.error) return NextResponse.json({ error: result.error }, { status: result.status });
     return NextResponse.json({ ok: true, creditNote: { id: result.note.id, number: result.note.number } });
   } catch (e) {
-    console.error(e);
+    console.error("/api/invoices/[id]/credit-note :", e?.message);
     return NextResponse.json({ error: "Création de l'avoir impossible, réessaie dans un instant." }, { status: 500 });
   }
 }
