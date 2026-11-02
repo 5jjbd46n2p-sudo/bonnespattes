@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { eraseClient } from "@/lib/privacy";
 import { isUuid, readJson } from "@/lib/api";
+import { validateClientPatch } from "@/lib/clientPatch";
 
 export async function GET(req, { params }) {
   const admin = await requireAdmin();
@@ -60,27 +61,11 @@ export async function PATCH(req, { params }) {
     distanceKm: "distance_km",
     travelMinutes: "travel_minutes",
   };
-  // Type et longueur des textes : refus clair plutôt qu'une valeur tronquée ou une erreur SQL.
-  const TEXT_MAX = { firstName: 100, lastName: 100, phone: 40, email: 200, address: 300, notes: 5000 };
-  for (const [key, max] of Object.entries(TEXT_MAX)) {
-    if (body[key] === undefined) continue;
-    if (body[key] === null) body[key] = "";
-    if (typeof body[key] !== "string") return NextResponse.json({ error: "Champ invalide." }, { status: 400 });
-    body[key] = body[key].trim();
-    if (body[key].length > max) {
-      return NextResponse.json({ error: `Texte trop long (${max} caractères maximum).` }, { status: 400 });
-    }
-  }
-  if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
-    return NextResponse.json({ error: "Adresse email invalide." }, { status: 400 });
-  }
-  if (body.hourlyRate !== undefined) {
-    const n = body.hourlyRate === null || body.hourlyRate === "" ? 0 : Number(body.hourlyRate);
-    if (!Number.isFinite(n) || n < 0 || n > 1000) {
-      return NextResponse.json({ error: "Tarif horaire invalide." }, { status: 400 });
-    }
-    body.hourlyRate = Math.round(n * 100) / 100;
-  }
+  const cur = await query("SELECT email FROM clients WHERE id = $1", [id]);
+  if (!cur.rows[0]) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+  const checked = validateClientPatch(body, cur.rows[0]);
+  if (checked.error) return NextResponse.json({ error: checked.error }, { status: 400 });
+  Object.assign(body, checked.body);
   for (const key of ["distanceKm", "travelMinutes"]) {
     if (body[key] !== undefined && body[key] !== null && body[key] !== "") {
       const n = Number(body[key]);

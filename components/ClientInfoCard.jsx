@@ -25,6 +25,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
   });
   const [calcLoading, setCalcLoading] = useState(false);
   const [calcError, setCalcError] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   async function calculateTravel() {
     setCalcLoading(true);
@@ -44,12 +45,18 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
 
   async function save() {
     setLoading(true);
-    await fetch(`/api/clients/${client.id}`, {
+    setSaveError("");
+    const res = await fetch(`/api/clients/${client.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, hourlyRate: Number(form.hourlyRate) }),
     });
     setLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setSaveError(data.error || "Enregistrement impossible, réessaie.");
+      return;
+    }
     setEditing(false);
     router.refresh();
   }
@@ -183,6 +190,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
         />
       </div>
+      {saveError && <p role="alert" className="text-sm text-brique">{saveError}</p>}
       <div className="flex gap-2">
         <button onClick={save} disabled={loading} className="btn-primary text-sm">
           {loading ? "Enregistrement..." : "Enregistrer"}
