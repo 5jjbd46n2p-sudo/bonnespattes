@@ -42,3 +42,6 @@ Une pastille unique dans VisitCard/planning/fiche client.
   (POST from-visits pour toutes les visites du groupe, cases à décocher) ; lien « Facture personnalisée » vers l'existant.
 - À encaisser : factures ENVOYEE/EN_RETARD/BROUILLON avec reste à payer + bouton « Marquer payée ».
 - Payées : historique. Conserver l'export existant.
+
+## Envoi par e-mail (branche `facture-email`)
+Bouton « Envoyer par e-mail » sur la fiche facture (POST /api/invoices/[id]/send) : PDF en pièce jointe (lib/invoicePdf.js, partagé avec le téléchargement), texte signé Aurore (sendInvoiceEmail). Un brouillon envoyé passe « Envoyée » ; facture de test jamais envoyée. Dernier envoi mémorisé dans invoices.emailed_at / emailed_to.
