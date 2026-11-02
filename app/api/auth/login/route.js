@@ -9,7 +9,7 @@ import {
   createMfaPendingCookie,
   redirectFor,
 } from "@/lib/auth";
-import { clientIp, isRateLimited, recordHit } from "@/lib/security";
+import { clientIp, consumeAttempt, clearAttempts } from "@/lib/security";
 import { readJson } from "@/lib/api";
 
 // Par compte et par IP, avant blocage temporaire
@@ -32,9 +32,21 @@ export async function POST(req) {
     }
 
     const ip = clientIp(req);
-    if (await isRateLimited("login-ip", ip, IP_LIMIT)) return tooMany();
-
     const normalizedEmail = email.trim().toLowerCase();
+    // Clé email + IP, que le compte existe ou non : le blocage (429) ne révèle
+    // donc pas quels comptes existent. Après 6 essais, cette IP ne peut plus
+    // essayer cet email pendant 15 minutes ; la propriétaire du compte, depuis
+    // une autre IP, n'est pas bloquée.
+    const accountKey = `${normalizedEmail}|${ip}`;
+
+    // Essais enregistrés AVANT la vérification (voir consumeAttempt).
+    const ipOk = await consumeAttempt("login-ip", ip, IP_LIMIT);
+    const accountOk = ipOk && (await consumeAttempt("login-account", accountKey, ACCOUNT_LIMIT));
+    if (!ipOk || !accountOk) {
+      await verifyAgainstDummy(password); // même durée de réponse dans tous les cas
+      return tooMany();
+    }
+
     const { rows } = await query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
     const user = rows[0];
 
@@ -44,25 +56,14 @@ export async function POST(req) {
 
     if (!user) {
       await verifyAgainstDummy(password); // même durée de réponse qu'avec un vrai compte
-      await recordHit("login-ip", ip);
       return genericError;
-    }
-
-    // Verrouillage par couple compte + adresse IP : après 6 échecs, cette IP
-    // ne peut plus essayer ce compte pendant 15 minutes. Un tiers ne peut donc
-    // pas bloquer le compte de sa propriétaire, qui se connecte d'une autre IP.
-    const accountKey = `${user.id}|${ip}`;
-    if (await isRateLimited("login-account", accountKey, ACCOUNT_LIMIT)) {
-      await verifyAgainstDummy(password);
-      return tooMany();
     }
 
     const ok = await verifyPassword(password, user.password_hash);
-    if (!ok) {
-      await recordHit("login-ip", ip);
-      await recordHit("login-account", accountKey);
-      return genericError;
-    }
+    if (!ok) return genericError;
+
+    // Connexion réussie : la propriétaire ne doit pas se bloquer elle-même.
+    await clearAttempts("login-account", accountKey);
 
     // Renforcement transparent des anciennes empreintes de mot de passe
     if (needsRehash(user.password_hash)) {
@@ -78,7 +79,7 @@ export async function POST(req) {
     await createSessionCookie(user);
     return NextResponse.json({ ok: true, role: user.role, redirect: redirectFor(user) });
   } catch (e) {
-    console.error(e);
+    console.error("Connexion :", e?.message);
     return NextResponse.json({ error: "Une erreur est survenue. Réessaie plus tard." }, { status: 500 });
   }
 }

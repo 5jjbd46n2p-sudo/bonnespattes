@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { hashToken, generateOtp, hashOtp, OTP_MAX_SENT, OTP_TTL_MINUTES } from "@/lib/contract";
 import { sendContractOtpEmail } from "@/lib/email";
-import { clientIp, isRateLimited, recordHit } from "@/lib/security";
+import { clientIp, consumeAttempt } from "@/lib/security";
 
 // Réponse volontairement générique : ne révèle rien sur l'état du jeton.
 const GENERIC = { ok: true };
@@ -12,10 +12,9 @@ export async function POST(req, { params }) {
   if (!token || typeof token !== "string" || token.length > 200) return NextResponse.json(GENERIC);
   // Limite par IP : empêche d'utiliser le site pour envoyer des emails en masse.
   const ip = clientIp(req);
-  if (await isRateLimited("contract-otp-ip", ip, { limit: 10, windowSeconds: 60 * 60 })) {
+  if (!(await consumeAttempt("contract-otp-ip", ip, { limit: 10, windowSeconds: 60 * 60 }))) {
     return NextResponse.json(GENERIC);
   }
-  await recordHit("contract-otp-ip", ip);
   const tokenHash = hashToken(token);
   const code = generateOtp();
 
