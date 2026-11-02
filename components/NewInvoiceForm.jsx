@@ -81,7 +81,10 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
     .filter((v) => selectedVisitIds.has(v.id))
     .flatMap((v) => {
       const hours = computeVisitHours(v.start_time, v.end_time);
-      const label = `Visite du ${formatDateFR(v.date)} — ${v.pet_name}${hours ? ` (${hours} h)` : ""}`;
+      const label =
+        v.service_kind === "GARDE_JOUR"
+          ? `Garde à domicile du ${formatDateFR(v.date)} — ${v.pet_name} (forfait journalier)`
+          : `Visite du ${formatDateFR(v.date)} — ${v.pet_name}${hours ? ` (${hours} h)` : ""}`;
       if (v.is_free) return [{ description: `${label} — offerte`, quantity: 1, unitPrice: 0 }];
       const disc = Number(v.discount_percent) || 0;
       const rows = [
