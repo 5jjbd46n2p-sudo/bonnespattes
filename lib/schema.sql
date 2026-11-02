@@ -417,3 +417,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_log_at ON audit_log(at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action, at DESC);
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS access_info_enc TEXT;
+
+-- Envoi de la facture par e-mail (date et adresse du dernier envoi)
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS emailed_at TIMESTAMPTZ;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS emailed_to TEXT;

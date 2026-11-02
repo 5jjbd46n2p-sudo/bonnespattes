@@ -7,6 +7,7 @@ import { InvoiceStatusBadge } from "@/components/StatusBadge";
 import InvoiceStatusControl from "@/components/InvoiceStatusControl";
 import PaymentRecorder from "@/components/PaymentRecorder";
 import DeleteInvoiceButton from "@/components/DeleteInvoiceButton";
+import SendInvoiceButton from "@/components/SendInvoiceButton";
 import { ArrowLeft, DownloadSimple } from "@phosphor-icons/react/ssr";
 import { isUuid } from "@/lib/api";
 
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 async function getInvoice(id) {
   const invRes = await query(
-    `SELECT i.*, c.first_name, c.last_name, c.address, c.email AS client_email
+    `SELECT i.*, i.emailed_at::text AS emailed_at_text, c.first_name, c.last_name, c.address, c.email AS client_email
      FROM invoices i JOIN clients c ON c.id = i.client_id WHERE i.id = $1`,
     [id]
   );
@@ -61,6 +62,16 @@ export default async function InvoiceDetailPage({ params }) {
         </div>
         <InvoiceStatusControl invoiceId={id} status={invoice.status} />
       </div>
+
+      {!invoice.is_test && (
+        <SendInvoiceButton
+          invoiceId={id}
+          email={invoice.client_email}
+          status={invoice.status}
+          emailedAt={invoice.emailed_at_text}
+          emailedTo={invoice.emailed_to}
+        />
+      )}
 
       <div className="card p-5">
         <div className="scroll-x">
