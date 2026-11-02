@@ -128,6 +128,8 @@ export default function VisitCard({ visit }) {
 
   const time = visit.start_time
     ? `${visit.start_time.slice(0, 5)}${visit.end_time ? `–${visit.end_time.slice(0, 5)}` : ""}`
+    : visit.service_kind === "GARDE_JOUR"
+    ? "Journée"
     : "—";
   const pastThreshold = Math.abs(dx) >= SWIPE_THRESHOLD;
 
@@ -181,6 +183,9 @@ export default function VisitCard({ visit }) {
               <Link href={`/admin/visits/${visit.id}`} className="font-bold hover:underline">
                 {visit.pet_name} — {visit.first_name} {visit.last_name}
               </Link>
+              {visit.service_kind === "GARDE_JOUR" && (
+                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full border border-trait">Garde à domicile</span>
+              )}
               <VisitBillingBadge
                 visit={{ status, is_free: visit.is_free, invoice_status: visit.invoice_status }}
                 invoiceStatus={visit.invoice_status}

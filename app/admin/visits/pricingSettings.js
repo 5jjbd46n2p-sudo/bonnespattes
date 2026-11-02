@@ -13,5 +13,6 @@ export async function getPricingSettings() {
     rate_30: n(r.rate_30, 15),
     rate_45: n(r.rate_45, 18),
     rate_60: n(r.rate_60, 22),
+    rate_day: n(r.rate_day, null),
   };
 }

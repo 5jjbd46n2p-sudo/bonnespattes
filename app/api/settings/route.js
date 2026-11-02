@@ -31,6 +31,7 @@ export async function PATCH(req) {
     rate30: "rate_30",
     rate45: "rate_45",
     rate60: "rate_60",
+    rateDay: "rate_day",
     referralCredit: "referral_credit",
     serviceArea: "service_area",
     insuranceInfo: "insurance_info",
@@ -82,7 +83,7 @@ export async function PATCH(req) {
     }
     body.defaultTvaRate = n;
   }
-  for (const key of ["kmRate", "travelTimeShare", "travelFreeKm", "rate30", "rate45", "rate60", "referralCredit"]) {
+  for (const key of ["kmRate", "travelTimeShare", "travelFreeKm", "rate30", "rate45", "rate60", "rateDay", "referralCredit"]) {
     if (body[key] !== undefined) {
       const n = Number(body[key]);
       if (body[key] === "" || body[key] === null || !Number.isFinite(n) || n < 0 || (key === "travelTimeShare" && n > 1)) {

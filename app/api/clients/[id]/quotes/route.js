@@ -27,7 +27,7 @@ export async function POST(req, { params }) {
       if (send && !client.email) return { status: 400, error: "Ce client n'a pas d'adresse e-mail. Décoche l'envoi pour créer seulement le PDF." };
       const visits = (
         await db.query(
-          `SELECT v.id, v.price, v.travel_fee, v.is_free, v.discount_percent, v.invoice_id, v.status,
+          `SELECT v.id, v.price, v.travel_fee, v.is_free, v.discount_percent, v.service_kind, v.invoice_id, v.status,
                   to_char(v.date, 'DD/MM/YYYY') AS date_fr, p.name AS pet_name,
                   CASE WHEN v.start_time IS NOT NULL AND v.end_time IS NOT NULL
                        THEN EXTRACT(EPOCH FROM (v.end_time - v.start_time)) / 60 END AS minutes

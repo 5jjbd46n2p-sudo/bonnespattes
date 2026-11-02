@@ -388,3 +388,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_events_date ON admin_events(date);
 
 -- Récurrence des tâches administratives
 ALTER TABLE admin_events ADD COLUMN IF NOT EXISTS recurrence_id uuid;
+
+-- Garde à domicile (forfait journalier) : type de prestation de la visite + tarif par défaut
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS service_kind TEXT NOT NULL DEFAULT 'VISITE';
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_day NUMERIC;

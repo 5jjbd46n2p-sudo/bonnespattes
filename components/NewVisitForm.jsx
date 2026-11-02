@@ -81,6 +81,9 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
   const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
   const [recurrenceDays, setRecurrenceDays] = useState([]);
   const [recurrenceWeeks, setRecurrenceWeeks] = useState(4);
+  const [recurrenceUntil, setRecurrenceUntil] = useState(""); // date de fin facultative (remplace le nombre de semaines)
+  const [stay, setStay] = useState(false); // garde à mon domicile, forfait journalier
+  const [stayEnd, setStayEnd] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -93,8 +96,9 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
       ? { km: calc.km, min: calc.min }
       : { km: selectedClient?.distance_km, min: selectedClient?.travel_minutes };
   const distanceKnown = dist.km !== null && dist.km !== undefined && dist.km !== "";
-  const suggestedBase = Number(basePrice(minutes, settings, selectedClient?.hourly_rate)) || 0;
-  const suggestedTravel = distanceKnown
+  const dayRate = Number(settings.rate_day) || 0;
+  const suggestedBase = stay ? dayRate : Number(basePrice(minutes, settings, selectedClient?.hourly_rate)) || 0;
+  const suggestedTravel = !stay && distanceKnown
     ? Number(computeTravelFee({ distanceKm: Number(dist.km), travelMinutes: Number(dist.min) || 0 }, settings)) || 0
     : 0;
   const suggestedTotal = suggestedBase + suggestedTravel;
@@ -151,9 +155,17 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
     );
   }
 
-  const recurrenceDates = recurrenceEnabled
-    ? generateWeeklyRecurrenceDates(date, recurrenceDays, Number(recurrenceWeeks) || 1)
-    : [];
+  const stayEndDate = stayEnd && stayEnd >= date ? stayEnd : date;
+  const stayDates = stay ? generateWeeklyRecurrenceDates(date, [1, 2, 3, 4, 5, 6, 7], 0, stayEndDate) : [];
+  const recurrenceDates =
+    recurrenceEnabled && !stay
+      ? generateWeeklyRecurrenceDates(
+          date,
+          recurrenceDays,
+          Number(recurrenceWeeks) || 1,
+          recurrenceUntil && recurrenceUntil >= date ? recurrenceUntil : null
+        )
+      : [];
 
   function addTask() {
     if (!newTask.trim()) return;
@@ -176,7 +188,19 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
       setError("Ajoute d'abord un animal à ce client.");
       return;
     }
-    if (recurrenceEnabled && recurrenceDays.length === 0) {
+    if (stay && stayEnd && stayEnd < date) {
+      setError("Le départ doit être après l'arrivée.");
+      return;
+    }
+    if (stay && !(Number(price) > 0)) {
+      setError("Indique le forfait par jour (ou renseigne-le dans les réglages).");
+      return;
+    }
+    if (recurrenceEnabled && !stay && recurrenceUntil && recurrenceUntil < date) {
+      setError("La date de fin doit être après la date de début.");
+      return;
+    }
+    if (recurrenceEnabled && !stay && recurrenceDays.length === 0) {
       setError("Choisis au moins un jour pour la semaine type.");
       return;
     }
@@ -188,17 +212,25 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
         petId,
         clientId: selectedClient.id,
         date,
-        startTime: startTime || null,
-        endTime: endTime || null,
+        startTime: stay ? null : startTime || null,
+        endTime: stay ? null : endTime || null,
+        serviceKind: stay ? "GARDE_JOUR" : "VISITE",
         price: price ? Number(price) : 0,
         discountPercent: discountValue,
         travelFee: travelFee ? Number(travelFee) : 0,
         notes,
         tasks,
-        recurrence:
-          recurrenceEnabled && recurrenceDays.length > 0
-            ? { weekdays: recurrenceDays, weeks: Number(recurrenceWeeks) || 1 }
-            : null,
+        recurrence: stay
+          ? stayDates.length > 1
+            ? { weekdays: [1, 2, 3, 4, 5, 6, 7], weeks: 1, until: stayEndDate }
+            : null
+          : recurrenceEnabled && recurrenceDays.length > 0
+          ? {
+              weekdays: recurrenceDays,
+              weeks: Number(recurrenceWeeks) || 1,
+              ...(recurrenceUntil && recurrenceUntil >= date ? { until: recurrenceUntil } : {}),
+            }
+          : null,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -225,7 +257,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             Retour à la fiche client
           </Link>
         )}
-        <h1 className="font-display font-semibold text-encre mt-2">Planifier une visite</h1>
+        <h1 className="font-display font-semibold text-encre mt-2">{stay ? "Planifier une garde à domicile" : "Planifier une visite"}</h1>
         {!pickMode && (
           <p className="text-pierre text-sm mt-1">
             Pour {fixedClient.first_name} {fixedClient.last_name}
@@ -293,7 +325,28 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           </div>
 
           <div>
-            <label className="label block mb-1.5">Date et horaires</label>
+            <label className="flex items-start gap-2 mb-3">
+              <input type="checkbox" className="mt-1" checked={stay} onChange={(e) => { setStay(e.target.checked); setStayEnd((v) => v || date); setManualPrice(null); setManualTravel(null); }} />
+              <span>
+                <span className="text-sm font-bold block">Garde à mon domicile (forfait journalier)</span>
+                <span className="text-[13px] text-pierre block">
+                  L'animal séjourne chez moi : une ligne par jour, du jour d'arrivée au jour de départ inclus, sans déplacement.
+                </span>
+              </span>
+            </label>
+            <label className="label block mb-1.5">{stay ? "Arrivée et départ" : "Date et horaires"}</label>
+            {stay ? (
+              <div className="ios-field-group">
+                <div className="ios-field-row">
+                  <span className="ios-field-label">Arrivée</span>
+                  <input type="date" className="pill-input pill-input--date" value={date} onChange={(e) => setDate(e.target.value)} required />
+                </div>
+                <div className="ios-field-row">
+                  <span className="ios-field-label">Départ</span>
+                  <input type="date" className="pill-input pill-input--date" value={stayEnd || date} min={date} onChange={(e) => setStayEnd(e.target.value)} required />
+                </div>
+              </div>
+            ) : (
             <div className="ios-field-group">
               <div className="ios-field-row">
                 <span className="ios-field-label">Début</span>
@@ -325,6 +378,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                 </div>
               </div>
             </div>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -333,10 +387,11 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                 <span className="min-w-0">
                   <span className="label block">Tarif conseillé</span>
                   <span className="text-[13px] text-pierre tabular-nums block">
-                    Prestation {eur(suggestedBase)}
-                    {Number(selectedClient?.hourly_rate) > 0 ? ` (tarif client ${Number(selectedClient.hourly_rate)} €/h, grille proportionnelle)` : ""}
-                    {distanceKnown ? ` + Déplacement ${eur(suggestedTravel)}` : ""}
-                    {hours ? ` (${hours} h)` : ""}
+                    {stay ? `Forfait journalier ${eur(suggestedBase)} × ${stayDates.length || 1} jour${stayDates.length > 1 ? "s" : ""}` : `Prestation ${eur(suggestedBase)}`}
+                    {!stay && Number(selectedClient?.hourly_rate) > 0 ? ` (tarif client ${Number(selectedClient.hourly_rate)} €/h, grille proportionnelle)` : ""}
+                    {!stay && distanceKnown ? ` + Déplacement ${eur(suggestedTravel)}` : ""}
+                    {!stay && hours ? ` (${hours} h)` : ""}
+                    {stay && dayRate === 0 ? " — forfait non renseigné dans les réglages, saisis-le ci-dessous" : ""}
                   </span>
                 </span>
                 <span className="flex items-center gap-3 shrink-0">
@@ -356,7 +411,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
               </div>
             </div>
 
-            {!distanceKnown && selectedClient && (
+            {!stay && !distanceKnown && selectedClient && (
               <p className="text-[13px] text-pierre flex items-center gap-2 flex-wrap">
                 <span>Distance du client inconnue : déplacement non compté.</span>
                 <button
@@ -370,7 +425,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                 </button>
               </p>
             )}
-            {distanceKnown && (
+            {!stay && distanceKnown && (
               <p className="text-[13px] text-pierre tabular-nums">
                 Trajet : {Number(dist.km)} km{dist.min ? `, ${dist.min} min` : ""} (aller simple).
               </p>
@@ -379,7 +434,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="label block mb-1">Prestation (€)</label>
+                <label className="label block mb-1">{stay ? "Forfait par jour (€)" : "Prestation (€)"}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -431,6 +486,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             )}
           </div>
 
+          {!stay && (
           <div className="border-t border-trait pt-4">
             <label className="flex items-center gap-2">
               <input
@@ -485,6 +541,25 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   </div>
                 </div>
 
+                <label className="flex items-center gap-3 flex-wrap">
+                  <span className="text-sm font-bold">Ou jusqu'au (date de fin incluse)</span>
+                  <input
+                    type="date"
+                    className="pill-input pill-input--date"
+                    value={recurrenceUntil}
+                    min={date}
+                    onChange={(e) => setRecurrenceUntil(e.target.value)}
+                  />
+                  {recurrenceUntil && (
+                    <button type="button" className="text-sm text-rouille underline" onClick={() => setRecurrenceUntil("")}>
+                      Effacer
+                    </button>
+                  )}
+                </label>
+                {recurrenceUntil && (
+                  <p className="text-[13px] text-pierre -mt-1">La date de fin remplace le nombre de semaines.</p>
+                )}
+
                 <p className="text-[13px] text-pierre">
                   {recurrenceDays.length === 0 || recurrenceDates.length === 0
                     ? "Choisis au moins un jour pour construire la semaine type."
@@ -497,6 +572,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
               </div>
             )}
           </div>
+          )}
 
           <div>
             <label className="label block mb-2">Tâches de la visite</label>
@@ -549,6 +625,10 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
         <button disabled={loading || locked || clientPets.length === 0} className="btn-primary w-full sm:w-auto">
           {loading
             ? "Création..."
+            : stay
+            ? stayDates.length > 1
+              ? `Planifier la garde (${stayDates.length} jours)`
+              : "Planifier la garde"
             : recurrenceEnabled && recurrenceDates.length > 1
             ? `Planifier les ${recurrenceDates.length} visites`
             : "Planifier la visite"}

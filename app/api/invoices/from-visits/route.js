@@ -28,7 +28,7 @@ export async function POST(req) {
     const invoice = await tx(async (client) => {
       const settings = (await client.query("SELECT * FROM settings LIMIT 1 FOR UPDATE")).rows[0];
       const visitsRes = await client.query(
-        `SELECT v.id, v.client_id, v.status, v.invoice_id, v.price, v.travel_fee, v.is_free, v.discount_percent,
+        `SELECT v.id, v.client_id, v.status, v.invoice_id, v.price, v.travel_fee, v.is_free, v.discount_percent, v.service_kind,
                 to_char(v.date, 'DD/MM/YYYY') AS date_fr, p.name AS pet_name,
                 CASE WHEN v.start_time IS NOT NULL AND v.end_time IS NOT NULL
                      THEN EXTRACT(EPOCH FROM (v.end_time - v.start_time)) / 60 END AS minutes
@@ -61,7 +61,10 @@ export async function POST(req) {
       const items = [];
       for (const v of visits) {
         const dur = durationLabel(Number(v.minutes));
-        const label = `Visite du ${v.date_fr} — ${v.pet_name}${dur ? ` (${dur})` : ""}`;
+        const label =
+          v.service_kind === "GARDE_JOUR"
+            ? `Garde à domicile du ${v.date_fr} — ${v.pet_name} (forfait journalier)`
+            : `Visite du ${v.date_fr} — ${v.pet_name}${dur ? ` (${dur})` : ""}`;
         if (v.is_free) {
           items.push({ description: `${label} — offerte`, unitPrice: 0 });
           continue;
@@ -72,7 +75,7 @@ export async function POST(req) {
           unitPrice: Number(v.price) || 0,
         });
         if (Number(v.travel_fee) > 0) {
-          items.push({ description: `Déplacement — visite du ${v.date_fr}`, unitPrice: Number(v.travel_fee) });
+          items.push({ description: `Déplacement — ${v.service_kind === "GARDE_JOUR" ? "garde" : "visite"} du ${v.date_fr}`, unitPrice: Number(v.travel_fee) });
         }
       }
 

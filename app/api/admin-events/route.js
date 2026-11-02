@@ -22,7 +22,10 @@ export async function POST(req) {
   if (rec && Array.isArray(rec.weekdays) && rec.weekdays.length > 0) {
     const weekdays = rec.weekdays.map(Number).filter((d) => Number.isInteger(d) && d >= 1 && d <= 7);
     const weeks = Math.min(Math.max(Math.floor(Number(rec.weeks) || 1), 1), 26);
-    const generated = generateWeeklyRecurrenceDates(date, weekdays, weeks).slice(0, 180);
+    const until = rec.until ? parseDateISO(rec.until) : null;
+    if (rec.until && !until) return NextResponse.json({ error: "Date de fin invalide." }, { status: 400 });
+    if (until && until < date) return NextResponse.json({ error: "La date de fin doit être après la date de début." }, { status: 400 });
+    const generated = generateWeeklyRecurrenceDates(date, weekdays, weeks, until).slice(0, 180);
     if (generated.length > 0) dates = generated;
   }
   const recurrenceId = dates.length > 1 ? randomUUID() : null;

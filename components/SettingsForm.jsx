@@ -141,6 +141,7 @@ export function PricingSettingsForm({ settings }) {
     rate30: settings.rate_30 ?? 15,
     rate45: settings.rate_45 ?? 18,
     rate60: settings.rate_60 ?? 22,
+    rateDay: settings.rate_day ?? "",
     kmRate: settings.km_rate ?? 0.5,
     travelFreeKm: settings.travel_free_km ?? 4,
     travelTimeSharePct: Math.round(Number(settings.travel_time_share ?? 0.5) * 100),
@@ -160,6 +161,7 @@ export function PricingSettingsForm({ settings }) {
         rate30: Number(form.rate30),
         rate45: Number(form.rate45),
         rate60: Number(form.rate60),
+        ...(form.rateDay !== "" && form.rateDay !== null ? { rateDay: Number(form.rateDay) } : {}),
         kmRate: Number(form.kmRate),
         travelFreeKm: Number(form.travelFreeKm),
         travelTimeShare: Number(form.travelTimeSharePct) / 100,
@@ -190,6 +192,9 @@ export function PricingSettingsForm({ settings }) {
         <Field label="Visite de 30 min (€)" type="number" step="0.5" min="0" value={form.rate30} onChange={(v) => setForm({ ...form, rate30: v })} />
         <Field label="Visite de 45 min (€)" type="number" step="0.5" min="0" value={form.rate45} onChange={(v) => setForm({ ...form, rate45: v })} />
         <Field label="Visite de 1 h (€)" type="number" step="0.5" min="0" value={form.rate60} onChange={(v) => setForm({ ...form, rate60: v })} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Field label="Garde à mon domicile : forfait par jour (€)" type="number" step="0.5" min="0" value={form.rateDay} onChange={(v) => setForm({ ...form, rateDay: v })} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Field label="Indemnité kilométrique (€/km)" type="number" step="0.01" min="0" value={form.kmRate} onChange={(v) => setForm({ ...form, kmRate: v })} />

@@ -26,6 +26,7 @@ function EventForm({ mode, date, clients, initial, isSeries, onDone, onCancel })
   const [repeat, setRepeat] = useState(false);
   const [weekdays, setWeekdays] = useState([]);
   const [weeks, setWeeks] = useState(4);
+  const [until, setUntil] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,7 +48,8 @@ function EventForm({ mode, date, clients, initial, isSeries, onDone, onCancel })
   function toggleDay(d) {
     setWeekdays((list) => (list.includes(d) ? list.filter((x) => x !== d) : [...list, d].sort((a, b) => a - b)));
   }
-  const repeatDates = repeat ? generateWeeklyRecurrenceDates(day, weekdays, Number(weeks) || 1) : [];
+  const untilOk = until && until >= day ? until : null;
+  const repeatDates = repeat ? generateWeeklyRecurrenceDates(day, weekdays, Number(weeks) || 1, untilOk) : [];
 
   async function submit(e) {
     e.preventDefault();
@@ -80,7 +82,7 @@ function EventForm({ mode, date, clients, initial, isSeries, onDone, onCancel })
       res = await fetch("/api/admin-events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, recurrence: repeat ? { weekdays, weeks: Number(weeks) || 1 } : undefined }),
+        body: JSON.stringify({ ...payload, recurrence: repeat ? { weekdays, weeks: Number(weeks) || 1, ...(untilOk ? { until: untilOk } : {}) } : undefined }),
       });
     }
     if (res.ok) {
@@ -197,6 +199,15 @@ function EventForm({ mode, date, clients, initial, isSeries, onDone, onCancel })
                   </button>
                 </div>
               </div>
+              <label className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm font-bold">Ou jusqu'au (date de fin incluse)</span>
+                <input type="date" className="pill-input pill-input--date" value={until} min={day} onChange={(e) => setUntil(e.target.value)} />
+                {until && (
+                  <button type="button" className="text-sm text-rouille underline" onClick={() => setUntil("")}>
+                    Effacer
+                  </button>
+                )}
+              </label>
               <p className="text-[13px] text-pierre">
                 {repeatDates.length === 0
                   ? "Choisis au moins un jour."

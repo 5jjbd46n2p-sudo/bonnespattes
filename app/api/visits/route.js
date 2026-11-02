@@ -81,6 +81,7 @@ export async function POST(req) {
     body.discountPercent === undefined || body.discountPercent === null || body.discountPercent === ""
       ? 0
       : Number(body.discountPercent);
+  const serviceKind = body.serviceKind === "GARDE_JOUR" ? "GARDE_JOUR" : "VISITE";
   const tasks = (Array.isArray(body.tasks) ? body.tasks : [])
     .filter((t) => typeof t === "string" && t.trim())
     .map((t) => t.trim().slice(0, 200))
@@ -105,7 +106,11 @@ export async function POST(req) {
   if (recurrence && Array.isArray(recurrence.weekdays) && recurrence.weekdays.length > 0) {
     const weekdays = recurrence.weekdays.map(Number).filter((d) => Number.isInteger(d) && d >= 1 && d <= 7);
     const weeks = Math.min(Math.max(Math.floor(Number(recurrence.weeks) || 1), 1), 26);
-    const generated = generateWeeklyRecurrenceDates(date, weekdays, weeks).slice(0, 180);
+    // Date de fin (incluse) : remplace le nombre de semaines.
+    const until = typeof recurrence.until === "string" && DATE_RE.test(recurrence.until) ? recurrence.until : null;
+    if (recurrence.until && !until) return bad("Date de fin invalide.");
+    if (until && until < date) return bad("La date de fin doit être après la date de début.");
+    const generated = generateWeeklyRecurrenceDates(date, weekdays, weeks, until).slice(0, 180);
     if (generated.length > 0) visitDates = generated;
   }
   const recurrenceId = visitDates.length > 1 ? randomUUID() : null;
@@ -114,13 +119,13 @@ export async function POST(req) {
   // tâches (au lieu d'une requête par visite et par tâche).
   const visits = await tx(async (db) => {
     const { rows: created } = await db.query(
-      `INSERT INTO visits (pet_id, client_id, date, start_time, end_time, notes, price, recurrence_id, travel_fee, discount_percent)
+      `INSERT INTO visits (pet_id, client_id, date, start_time, end_time, notes, price, recurrence_id, travel_fee, discount_percent, service_kind)
        SELECT $1, $2, t.d::date, $4, $5, $6,
               CASE WHEN t.o = 1 THEN $10::numeric ELSE $7::numeric END, $8, $9,
-              CASE WHEN t.o = 1 THEN $11::numeric ELSE 0 END
+              CASE WHEN t.o = 1 THEN $11::numeric ELSE 0 END, $12
          FROM unnest($3::text[]) WITH ORDINALITY AS t(d, o)
        RETURNING *`,
-      [petId, clientId, visitDates, startTime, endTime, notes, price, recurrenceId, fee, discountedPrice, discount]
+      [petId, clientId, visitDates, startTime, endTime, notes, price, recurrenceId, fee, discountedPrice, discount, serviceKind]
     );
     if (tasks.length) {
       await db.query(
