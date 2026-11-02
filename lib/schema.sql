@@ -392,3 +392,28 @@ ALTER TABLE admin_events ADD COLUMN IF NOT EXISTS recurrence_id uuid;
 -- Garde à domicile (forfait journalier) : type de prestation de la visite + tarif par défaut
 ALTER TABLE visits ADD COLUMN IF NOT EXISTS service_kind TEXT NOT NULL DEFAULT 'VISITE';
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS rate_day NUMERIC;
+
+-- Sécurité lot 0 : sceau des contrats, codes de secours 2FA, journal d'audit, accès chiffrés
+ALTER TABLE contract_signatures ADD COLUMN IF NOT EXISTS seal_hash TEXT;
+ALTER TABLE contract_signatures ADD COLUMN IF NOT EXISTS sealed_at TIMESTAMPTZ;
+ALTER TABLE contract_signatures ADD COLUMN IF NOT EXISTS seal_legacy BOOLEAN NOT NULL DEFAULT false;
+CREATE TABLE IF NOT EXISTS backup_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash TEXT NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, code_hash)
+);
+CREATE TABLE IF NOT EXISTS audit_log (
+  id BIGSERIAL PRIMARY KEY,
+  at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  actor_id UUID,
+  action TEXT NOT NULL,
+  entity TEXT NOT NULL,
+  entity_id TEXT,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+CREATE INDEX IF NOT EXISTS idx_audit_log_at ON audit_log(at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action, at DESC);
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS access_info_enc TEXT;
