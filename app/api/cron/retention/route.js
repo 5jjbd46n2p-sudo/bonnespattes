@@ -22,7 +22,7 @@ export async function GET(req) {
     console.log("Conservation RGPD appliquée :", JSON.stringify(report));
     return NextResponse.json({ ok: true, report });
   } catch (e) {
-    console.error(e);
+    console.error("/api/cron/retention :", e?.message);
     return NextResponse.json({ error: "Échec de la purge." }, { status: 500 });
   }
 }

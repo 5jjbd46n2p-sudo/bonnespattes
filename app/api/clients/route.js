@@ -97,14 +97,14 @@ export async function POST(req) {
           loginPassword,
         });
       } catch (emailErr) {
-        console.error(emailErr);
+        console.error("/api/clients :", emailErr?.message);
         emailWarning = "l'email n'a pas pu être envoyé";
       }
     }
 
     return NextResponse.json({ client: result, emailWarning });
   } catch (e) {
-    console.error(e);
+    console.error("/api/clients :", e?.message);
     if (String(e.message).includes("duplicate key")) {
       return NextResponse.json(
         { error: "Cet email de connexion est déjà utilisé." },

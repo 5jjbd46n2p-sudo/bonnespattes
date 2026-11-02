@@ -45,7 +45,7 @@ export async function GET(req, { params }) {
       },
     });
   } catch (e) {
-    console.error(e);
+    console.error("/api/photos/[id]/file :", e?.message);
     return new NextResponse("Erreur serveur.", { status: 500 });
   }
 }

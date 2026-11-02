@@ -82,13 +82,13 @@ export async function POST(req, { params }) {
         emailed = true;
         await query("UPDATE quotes SET sent_to = $1, sent_at = now() WHERE id = $2", [created.client.email, created.quote.id]);
       } catch (e) {
-        console.error(e);
+        console.error("/api/clients/[id]/quotes :", e?.message);
         emailError = e.message || "Envoi impossible.";
       }
     }
     return NextResponse.json({ ok: true, quote: { id: created.quote.id, number: created.quote.number }, emailed, emailError });
   } catch (e) {
-    console.error(e);
+    console.error("/api/clients/[id]/quotes :", e?.message);
     return NextResponse.json({ error: "Création du devis impossible, réessaie dans un instant." }, { status: 500 });
   }
 }

@@ -67,7 +67,7 @@ export async function POST(req, { params }) {
     ]);
     return NextResponse.json({ distanceKm, travelMinutes });
   } catch (e) {
-    console.error(e);
+    console.error("/api/clients/[id]/travel :", e?.message);
     const timeout = e?.name === "TimeoutError" || e?.name === "AbortError";
     return NextResponse.json(
       {

@@ -3,6 +3,7 @@ import { put, get, del } from "@vercel/blob";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { isSiteSlot } from "@/lib/sitePhotos";
+import { sniffImageType, matchesDeclaredType } from "@/lib/imageMagic";
 
 const ALLOWED = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const MAX_SIZE = 4 * 1024 * 1024; // le navigateur réduit la photo avant l'envoi
@@ -27,7 +28,7 @@ export async function GET(req, { params }) {
       headers: { ...headers, "Content-Type": result.blob.contentType, "X-Content-Type-Options": "nosniff" },
     });
   } catch (e) {
-    console.error(e);
+    console.error("/api/site-photos/[slot] :", e?.message);
     return new NextResponse("Erreur serveur.", { status: 500 });
   }
 }
@@ -44,6 +45,10 @@ export async function POST(req, { params }) {
   const ext = ALLOWED[file.type];
   if (!ext) return NextResponse.json({ error: "Format non pris en charge (JPEG, PNG ou WEBP)." }, { status: 400 });
   if (file.size > MAX_SIZE) return NextResponse.json({ error: "Photo trop volumineuse." }, { status: 400 });
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  if (!matchesDeclaredType(sniffImageType(head), file.type)) {
+    return NextResponse.json({ error: "Format non pris en charge (JPEG, PNG ou WEBP)." }, { status: 400 });
+  }
 
   try {
     const old = await query("SELECT url FROM site_photos WHERE slot = $1", [slot]);
@@ -56,7 +61,7 @@ export async function POST(req, { params }) {
     if (old.rows[0]) await del(old.rows[0].url).catch(() => {});
     return NextResponse.json({ ok: true, v: new Date(rows[0].updated_at).getTime() });
   } catch (e) {
-    console.error(e);
+    console.error("/api/site-photos/[slot] :", e?.message);
     return NextResponse.json({ error: "Échec de l'envoi de la photo. Réessaie dans un instant." }, { status: 500 });
   }
 }
@@ -71,7 +76,7 @@ export async function DELETE(req, { params }) {
     if (rows[0]) await del(rows[0].url).catch(() => {});
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error("/api/site-photos/[slot] :", e?.message);
     return NextResponse.json({ error: "Suppression impossible." }, { status: 500 });
   }
 }

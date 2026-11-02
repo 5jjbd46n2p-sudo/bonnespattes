@@ -138,7 +138,7 @@ export async function POST(req) {
     return NextResponse.json({ invoice });
   } catch (e) {
     if (e.status) return NextResponse.json({ error: e.message }, { status: e.status });
-    console.error(e);
+    console.error("/api/invoices/from-visits :", e?.message);
     return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
   }
 }

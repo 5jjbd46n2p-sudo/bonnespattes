@@ -55,7 +55,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ clientId });
   } catch (e) {
     if (e.status) return NextResponse.json({ error: e.message }, { status: e.status });
-    console.error(e);
+    console.error("/api/leads/[id]/convert :", e?.message);
     return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
   }
 }

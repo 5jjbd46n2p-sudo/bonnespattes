@@ -40,7 +40,7 @@ export async function GET(req) {
     ]);
     return NextResponse.json({ clients: clientsRes.rows, pets: petsRes.rows });
   } catch (e) {
-    console.error(e);
+    console.error("/api/search :", e?.message);
     return NextResponse.json({ error: "Erreur serveur, réessaie plus tard." }, { status: 500 });
   }
 }

@@ -116,7 +116,7 @@ export async function POST(req) {
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error("/api/leads :", e?.message);
     return NextResponse.json({ error: "Erreur serveur, réessayez plus tard." }, { status: 500 });
   }
 }
