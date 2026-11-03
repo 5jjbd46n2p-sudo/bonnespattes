@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { alertAdmin } from "@/lib/security";
 import { readJson } from "@/lib/api";
+import { audit } from "@/lib/audit";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -120,9 +121,26 @@ export async function PATCH(req) {
     if (templateChanged) sets.push("contract_version = contract_version + 1");
   }
   if (!sets.length) return NextResponse.json({ error: "Rien à mettre à jour." }, { status: 400 });
-  const current = await query("SELECT id, iban FROM settings LIMIT 1");
+  const current = await query("SELECT * FROM settings LIMIT 1");
+  // Le préfixe entre dans la numérotation légale : figé dès la première vraie facture.
+  if (body.invoicePrefix !== undefined && body.invoicePrefix !== (current.rows[0].invoice_prefix || "F")) {
+    const real = await query("SELECT 1 FROM invoices WHERE is_test = false LIMIT 1");
+    if (real.rows[0]) {
+      return NextResponse.json(
+        { error: "Le préfixe de facturation ne peut plus changer : des factures ont déjà été émises." },
+        { status: 409 }
+      );
+    }
+  }
   values.push(current.rows[0].id);
   const { rows } = await query(`UPDATE settings SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`, values);
+
+  // Journal : noms des champs sensibles modifiés, jamais leurs valeurs.
+  const SENSITIVE = ["invoice_prefix", "iban", "siret", "contract_template", "insurance_info", "mediator_info"];
+  const changed = SENSITIVE.filter((col) => String(current.rows[0][col] ?? "") !== String(rows[0][col] ?? ""));
+  if (changed.length) {
+    await audit(null, { actorId: admin.id, action: "settings.sensitive_change", entity: "settings", entityId: rows[0].id, details: { fields: changed } });
+  }
 
   // Changement d'IBAN : fraude classique après piratage d'un compte (les
   // clients paieraient sur le compte du fraudeur). Alerte systématique.

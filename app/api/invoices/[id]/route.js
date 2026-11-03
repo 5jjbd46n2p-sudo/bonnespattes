@@ -3,6 +3,7 @@ import { query, tx } from "@/lib/db";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { allocateInvoiceNumber, resyncInvoiceSequences } from "@/lib/invoiceNumber";
 import { isUuid, readJson, parseDateISO } from "@/lib/api";
+import { audit } from "@/lib/audit";
 
 // Code de commerce / CGI : une facture émise se conserve 10 ans et la
 // numérotation doit rester continue. On corrige par un avoir, jamais en supprimant.
@@ -106,7 +107,19 @@ export async function PATCH(req, { params }) {
   }
   if (!sets.length) return NextResponse.json({ error: "Rien à mettre à jour." }, { status: 400 });
   values.push(id);
+  const before = (await query("SELECT number, status, notes, due_date::text AS due FROM invoices WHERE id = $1", [id])).rows[0];
+  if (!before) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
   const { rows } = await query(`UPDATE invoices SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`, values);
+  const details = { number: before.number };
+  if (body.status !== undefined && before.status === "BROUILLON" && body.status !== "BROUILLON") {
+    await audit(null, { actorId: admin.id, action: "invoice.issue", entity: "invoice", entityId: id, details });
+  }
+  if (body.notes !== undefined && body.notes !== (before.notes || "")) {
+    await audit(null, { actorId: admin.id, action: "invoice.update_notes", entity: "invoice", entityId: id, details });
+  }
+  if (body.dueDate !== undefined && (body.dueDate || null) !== (before.due || null)) {
+    await audit(null, { actorId: admin.id, action: "invoice.update_due_date", entity: "invoice", entityId: id, details });
+  }
   return NextResponse.json({ invoice: rows[0] });
 }
 

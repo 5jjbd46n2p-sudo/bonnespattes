@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
 import { isUuid, parseDateISO, readJson } from "@/lib/api";
 
@@ -133,6 +134,7 @@ export async function POST(req) {
         );
       }
       await client.query(`UPDATE visits SET invoice_id = $1 WHERE id = ANY($2::uuid[])`, [inv.id, ids]);
+      await audit(client, { actorId: admin.id, action: "invoice.create", entity: "invoice", entityId: inv.id, details: { number: inv.number, test: inv.is_test } });
       return inv;
     });
     return NextResponse.json({ invoice });

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
-import { isUuid } from "@/lib/api";
+import { isUuid, readJson } from "@/lib/api";
+import { audit } from "@/lib/audit";
 
 // Annulation d'une facture émise par un avoir : nouvelle facture numérotée
 // dans la même suite, aux montants opposés, qui référence la facture annulée.
@@ -14,6 +15,8 @@ export async function POST(req, { params }) {
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
   if (!isUuid(id)) return NextResponse.json({ error: "Facture introuvable." }, { status: 404 });
+  const body = await readJson(req);
+  const replacing = body?.reason === "replace";
 
   try {
     const result = await tx(async (db) => {
@@ -31,7 +34,7 @@ export async function POST(req, { params }) {
       const neg = (v) => -Number(v || 0);
       const ins = await db.query(
         `INSERT INTO invoices (client_id, number, tva_rate, total_ht, total_tva, total_ttc, notes, status, credit_note_of)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,'ENVOYEE',$8) RETURNING *`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'BROUILLON',$8) RETURNING *`,
         [inv.client_id, number, inv.tva_rate, neg(inv.total_ht), neg(inv.total_tva), neg(inv.total_ttc),
          `Avoir annulant la facture ${inv.number}.`, id]
       );
@@ -43,6 +46,16 @@ export async function POST(req, { params }) {
           [note.id, `Annulation : ${it.description}`, it.quantity, neg(it.unit_price), neg(it.total)]
         );
       }
+      // Avoir créé en brouillon, lignes ajoutées, puis émis : une facture émise
+      // ne reçoit plus de nouvelles lignes (verrou en base).
+      await db.query("UPDATE invoices SET status = 'ENVOYEE' WHERE id = $1", [note.id]);
+      await audit(db, {
+        actorId: admin.id,
+        action: replacing ? "invoice.replace" : "invoice.credit_note",
+        entity: "invoice",
+        entityId: id,
+        details: { number: inv.number, creditNote: number },
+      });
       // Les visites peuvent être refacturées, les crédits de parrainage réutilisés.
       await db.query("UPDATE visits SET invoice_id = NULL WHERE invoice_id = $1", [id]);
       await db.query("UPDATE client_credits SET used_at = NULL, used_invoice_id = NULL WHERE used_invoice_id = $1", [id]);

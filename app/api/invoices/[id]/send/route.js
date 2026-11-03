@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { isUuid } from "@/lib/api";
+import { audit } from "@/lib/audit";
 import { loadInvoiceWithClient, buildInvoicePdf, invoiceFilename } from "@/lib/invoicePdf";
 import { sendInvoiceEmail } from "@/lib/email";
 import { formatEUR, formatDateFR } from "@/lib/utils";
@@ -53,6 +54,9 @@ export async function POST(_req, { params }) {
         WHERE id = $1 RETURNING status, emailed_at::text`,
       [id, to]
     );
+    if (invoice.status === "BROUILLON" && rows[0]?.status !== "BROUILLON") {
+      await audit(null, { actorId: admin.id, action: "invoice.issue", entity: "invoice", entityId: id, details: { number: invoice.number } });
+    }
     return NextResponse.json({ ok: true, to, status: rows[0]?.status, emailedAt: rows[0]?.emailed_at });
   } catch (e) {
     console.error("/api/invoices/[id]/send :", e?.message);

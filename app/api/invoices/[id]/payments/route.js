@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 import { todayISO } from "@/lib/utils";
 import { cleanText, isUuid, parseAmount, parseDateISO, readJson } from "@/lib/api";
 
@@ -38,6 +39,7 @@ export async function POST(req, { params }) {
       await client.query("UPDATE invoices SET status = 'PAYEE' WHERE id = $1", [id]);
     }
 
+    await audit(client, { actorId: admin.id, action: "invoice.payment", entity: "invoice", entityId: id, details: { number: invoice.number, amount } });
     return { payment: payRes.rows[0] };
   });
 

@@ -70,7 +70,11 @@ export default function DeleteInvoiceButton({ invoiceId, clientId = null, number
     if (!confirm(`Annuler et remplacer la facture ${number} ?\n\n1. Un avoir annule la facture ${number} (elle reste conservée).\n2. Ses visites redeviennent « à facturer » et tu arrives sur une nouvelle facture à corriger.\n\nSi le client avait déjà payé, le remboursement ou le report du paiement se gère à part.`)) return;
     setBusy(true);
     setError("");
-    const res = await fetch(`/api/invoices/${invoiceId}/credit-note`, { method: "POST" });
+    const res = await fetch(`/api/invoices/${invoiceId}/credit-note`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: "replace" }),
+    });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.creditNote) {
       router.push(`/admin/accounting/invoices/new?clientId=${clientId}&remplace=${encodeURIComponent(number)}&avoir=${encodeURIComponent(data.creditNote.number)}`);

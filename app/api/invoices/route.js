@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
 import { cleanText, isUuid, parseDateISO, readJson } from "@/lib/api";
 
@@ -135,6 +136,7 @@ export async function POST(req) {
         invoice.status = "PAYEE";
       }
 
+      await audit(client, { actorId: admin.id, action: "invoice.create", entity: "invoice", entityId: invoice.id, details: { number: invoice.number, test: invoice.is_test } });
       return invoice;
     });
 
