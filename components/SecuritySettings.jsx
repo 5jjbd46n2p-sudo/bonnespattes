@@ -6,7 +6,7 @@ import PasswordChangeForm from "@/components/PasswordChangeForm";
 
 // Réglages > Sécurité : double authentification (application type Google
 // Authenticator) et changement de mot de passe.
-export default function SecuritySettings({ totpEnabled }) {
+export default function SecuritySettings({ totpEnabled, backupCodesLeft = 0 }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -14,6 +14,11 @@ export default function SecuritySettings({ totpEnabled }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  // Codes de secours affichés une seule fois, après activation ou régénération.
+  const [codes, setCodes] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   async function call(action) {
     setError("");
@@ -46,9 +51,38 @@ export default function SecuritySettings({ totpEnabled }) {
       setSetup(null);
       setPassword("");
       setCode("");
+      setCodes(data.backupCodes || []);
+      setSaved(false);
       setMessage("Double authentification activée. Tes autres appareils ont été déconnectés.");
-      router.refresh();
     }
+  }
+
+  async function regenerate(e) {
+    e.preventDefault();
+    const data = await call("regenerate-codes");
+    if (data) {
+      setPassword("");
+      setCode("");
+      setRegenerating(false);
+      setCodes(data.backupCodes || []);
+      setSaved(false);
+      setMessage("Nouveaux codes de secours créés : les anciens ne fonctionnent plus.");
+    }
+  }
+
+  async function copyCodes() {
+    try {
+      await navigator.clipboard.writeText(codes.join("\n"));
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  function closeCodes() {
+    setCodes(null);
+    setCopied(false);
+    router.refresh();
   }
 
   async function disable(e) {
@@ -74,9 +108,52 @@ export default function SecuritySettings({ totpEnabled }) {
           </p>
         </div>
 
-        {totpEnabled ? (
+        {codes ? (
+          <div className="space-y-3">
+            <p className="text-sm font-bold">Tes codes de secours</p>
+            <p className="text-sm text-pierre">
+              Chaque code sert une seule fois, si tu n&apos;as plus ton téléphone. Ils ne seront plus jamais
+              affichés : range-les dans ton gestionnaire de mots de passe ou imprime-les.
+            </p>
+            <ul className="grid grid-cols-2 gap-2 p-3 rounded bg-sable font-mono text-[15px] tracking-wider select-all">
+              {codes.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+            <button type="button" onClick={copyCodes} className="btn-ghost">
+              {copied ? "Copiés" : "Copier les codes"}
+            </button>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
+              J&apos;ai mis ces codes en lieu sûr
+            </label>
+            <button type="button" onClick={closeCodes} disabled={!saved} className="btn-primary">
+              Terminé
+            </button>
+          </div>
+        ) : totpEnabled && regenerating ? (
+          <form onSubmit={regenerate} className="space-y-3">
+            <p className="text-sm text-pierre">Les anciens codes de secours cesseront de fonctionner.</p>
+            <input type="password" required autoComplete="current-password" className="input"
+              placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input inputMode="numeric" required maxLength={7} autoComplete="one-time-code" className="input"
+              placeholder="Code à 6 chiffres" value={code} onChange={(e) => setCode(e.target.value)} />
+            <div className="flex gap-2 flex-wrap">
+              <button type="submit" disabled={loading} className="btn-primary">Générer de nouveaux codes</button>
+              <button type="button" onClick={() => setRegenerating(false)} className="btn-ghost">Annuler</button>
+            </div>
+          </form>
+        ) : totpEnabled ? (
           <form onSubmit={disable} className="space-y-3">
             <p className="text-sm font-bold text-mousse">Activée</p>
+            <p className="text-sm text-pierre">
+              {backupCodesLeft > 0
+                ? `Codes de secours restants : ${backupCodesLeft} sur 10.`
+                : "Aucun code de secours disponible : génères-en avant d'en avoir besoin."}{" "}
+              <button type="button" onClick={() => setRegenerating(true)} className="text-rouille underline font-bold">
+                Générer de nouveaux codes
+              </button>
+            </p>
             <input type="password" required autoComplete="current-password" className="input"
               placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} />
             <input inputMode="numeric" required maxLength={7} autoComplete="one-time-code" className="input"

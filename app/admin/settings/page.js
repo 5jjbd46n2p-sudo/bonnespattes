@@ -11,6 +11,8 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   const admin = await adminPageGuard();
   const { rows } = await query("SELECT * FROM settings LIMIT 1");
+  const codesRes = await query("SELECT COUNT(*)::int AS n FROM backup_codes WHERE user_id = $1 AND used_at IS NULL", [admin.id]);
+  const backupCodesLeft = codesRes.rows[0]?.n || 0;
   return (
     <div className="max-w-xl space-y-6">
       <h1 className="font-display text-3xl font-semibold text-encre">Réglages</h1>
@@ -49,7 +51,7 @@ export default async function SettingsPage() {
       <LegalSettingsForm settings={rows[0]} />
       <ContractSettingsForm settings={rows[0]} />
 
-      <SecuritySettings totpEnabled={Boolean(admin.totp_enabled)} />
+      <SecuritySettings totpEnabled={Boolean(admin.totp_enabled)} backupCodesLeft={backupCodesLeft} />
 
       <div className="card p-5 flex items-center justify-between gap-3">
         <div>

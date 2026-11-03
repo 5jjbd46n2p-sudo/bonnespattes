@@ -14,6 +14,8 @@ export default function LoginPage() {
   // 2e étape (double authentification) : code de l'application d'authentification
   const [mfaStep, setMfaStep] = useState(false);
   const [code, setCode] = useState("");
+  // Code de secours (XXXX-XXXX) à la place du code de l'application.
+  const [useBackup, setUseBackup] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -67,20 +69,33 @@ export default function LoginPage() {
               </label>
               <input
                 id="login-code"
-                inputMode="numeric"
-                pattern="[0-9 ]{6,7}"
-                maxLength={7}
+                inputMode={useBackup ? "text" : "numeric"}
+                pattern={useBackup ? undefined : "[0-9 ]{6,7}"}
+                maxLength={useBackup ? 12 : 7}
                 required
                 autoFocus
-                autoComplete="one-time-code"
+                autoComplete={useBackup ? "off" : "one-time-code"}
+                autoCapitalize={useBackup ? "characters" : undefined}
                 className="input tracking-[0.3em] text-center"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="000000"
+                placeholder={useBackup ? "XXXX-XXXX" : "000000"}
               />
               <p className="text-[13px] text-pierre mt-1.5">
-                Saisis le code à 6 chiffres affiché dans ton application d&apos;authentification.
+                {useBackup
+                  ? "Saisis un de tes codes de secours. Chacun ne sert qu'une fois."
+                  : "Saisis le code à 6 chiffres affiché dans ton application d'authentification."}
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setUseBackup(!useBackup);
+                  setCode("");
+                }}
+                className="text-[13px] font-bold text-rouille underline mt-2"
+              >
+                {useBackup ? "Utiliser le code de l'application" : "Utiliser un code de secours"}
+              </button>
             </div>
           ) : (
           <>
