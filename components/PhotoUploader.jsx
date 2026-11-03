@@ -55,7 +55,7 @@ export default function PhotoUploader({ visitId, photos }) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm text-pierre tabular-nums">{photos.length} photo{photos.length > 1 ? "s" : ""}</p>
-        <label className="btn-primary text-sm !py-1.5 !px-3 cursor-pointer">
+        <label className="btn-primary btn-sm text-sm cursor-pointer">
           {!uploading && <Camera size={20} aria-hidden="true" />}
           {uploading ? "Envoi..." : "Ajouter une photo"}
           <input

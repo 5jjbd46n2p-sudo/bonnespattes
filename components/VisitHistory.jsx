@@ -69,20 +69,20 @@ export default function VisitHistory({ visits }) {
               >
                 {selected.size === selectable.length && selectable.length > 0 ? "Tout décocher" : "Tout cocher"}
               </button>
-              <button type="button" onClick={stop} className="btn-ghost text-sm !py-1 !px-3">
+              <button type="button" onClick={stop} className="btn-ghost btn-sm text-sm">
                 Annuler
               </button>
               <button
                 type="button"
                 onClick={removeSelected}
                 disabled={busy || selected.size === 0}
-                className="btn-primary text-sm !py-1 !px-3 disabled:opacity-50"
+                className="btn-primary btn-sm text-sm disabled:opacity-50"
               >
                 {busy ? "Suppression..." : `Supprimer (${selected.size})`}
               </button>
             </div>
           ) : (
-            <button type="button" onClick={() => setSelecting(true)} className="btn-ghost text-sm !py-1 !px-3">
+            <button type="button" onClick={() => setSelecting(true)} className="btn-ghost btn-sm text-sm">
               Sélectionner
             </button>
           ))}

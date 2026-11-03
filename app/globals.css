@@ -199,7 +199,8 @@ button.list-row:hover {
 }
 
 .btn-primary,
-.btn-ghost {
+.btn-ghost,
+.btn-danger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -235,9 +236,28 @@ button.list-row:hover {
   background: var(--color-sable);
 }
 
+/* Action destructrice secondaire (supprimer…) : même forme que btn-ghost, texte brique */
+.btn-danger {
+  background: transparent;
+  color: var(--color-brique);
+  border: 1px solid var(--color-trait);
+  padding: 0.55rem 1rem;
+}
+.btn-danger:hover {
+  background: var(--color-sable);
+}
+
+/* Variante compacte (36px) pour une action secondaire placée à côté d'un autre
+   contrôle. Se combine : « btn-ghost btn-sm », « btn-primary btn-sm ». */
+.btn-sm {
+  min-height: 36px;
+  padding: 0.35rem 0.75rem;
+  font-size: 14px;
+}
+
 .input {
   background: var(--color-lin);
-  border: 1px solid var(--color-trait);
+  border: 1px solid var(--color-bord);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
   width: 100%;
@@ -246,9 +266,32 @@ button.list-row:hover {
   min-height: 44px;
   -webkit-tap-highlight-color: transparent;
 }
-.input:focus {
+/* Variantes de largeur et d'icône (à la place des utilitaires en !important) */
+.input--auto {
+  width: auto;
+}
+.input--etroit {
+  width: 6rem;
+}
+.input--compact {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.input--icone {
+  min-height: 40px;
+  padding-left: 2.5rem;
+}
+
+/* Focus clavier : un seul anneau rouille (contraste ≥ 5:1 sur papier, clair
+   et sombre), invisible au clic de souris ou au toucher. */
+:where(a, button, input, select, textarea, summary, [tabindex], .pill-input, .weekday-pill):focus-visible {
   outline: 2px solid var(--color-rouille);
-  outline-offset: 1px;
+  outline-offset: 2px;
+}
+/* Sur les barres de navigation encre : rouille claire, lisible sur fond sombre */
+.bg-nav :focus-visible,
+.tabbar :focus-visible {
+  outline-color: var(--color-nav-actif);
 }
 
 /* Garde-fou global : quel que soit l'utilitaire text-sm/xs appliqué localement
@@ -293,23 +336,23 @@ button.list-row:hover {
    avec des lignes "Début"/"Fin", chacune terminée par une ou deux pilules.
    Comme ce sont de vrais <input type="date"/"time">, taper dessus ouvre le
    sélecteur natif (roue iOS) — seul l'habillage change. */
-.ios-field-group {
+.field-group {
   border: 1px solid var(--color-trait);
   border-radius: 8px;
   overflow: hidden;
   background: var(--color-lin);
 }
-.ios-field-row {
+.field-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.65rem 0.9rem;
 }
-.ios-field-row + .ios-field-row {
+.field-row + .field-row {
   border-top: 1px solid var(--color-trait);
 }
-.ios-field-label {
+.field-row-label {
   font-size: 0.92rem;
   font-weight: 500;
   color: var(--color-encre);
@@ -330,10 +373,6 @@ button.list-row:hover {
   -webkit-appearance: none;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
-}
-.pill-input:focus {
-  outline: 2px solid var(--color-rouille);
-  outline-offset: 1px;
 }
 /* Rend toute la pilule tapable (pas juste la petite icône native) */
 .pill-input::-webkit-calendar-picker-indicator {
@@ -359,7 +398,7 @@ button.list-row:hover {
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  border: 1px solid var(--color-trait);
+  border: 1px solid var(--color-bord);
   background: var(--color-sable);
   color: var(--color-encre);
   font-size: 0.85rem;
@@ -382,7 +421,7 @@ button.list-row:hover {
 .stepper {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--color-trait);
+  border: 1px solid var(--color-bord);
   border-radius: 999px;
   background: var(--color-lin);
   overflow: hidden;

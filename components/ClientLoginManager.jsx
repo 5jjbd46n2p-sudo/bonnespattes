@@ -87,7 +87,7 @@ export default function ClientLoginManager({ clientId, login }) {
             <p className="text-sm text-pierre mt-1">{login.email}</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setEditing(true)} className="btn-ghost text-sm !py-1.5 !px-3">
+            <button onClick={() => setEditing(true)} className="btn-ghost btn-sm text-sm">
               Réinitialiser
             </button>
             <button onClick={remove} className="text-[13px] font-bold text-brique hover:underline">
@@ -115,7 +115,7 @@ export default function ClientLoginManager({ clientId, login }) {
             <button
               type="button"
               onClick={() => setPassword(generateTemporaryPassword())}
-              className="btn-ghost !px-3 text-sm shrink-0"
+              className="btn-ghost btn-sm text-sm shrink-0"
               aria-label="Générer un mot de passe"
               title="Générer un mot de passe"
             >

@@ -116,7 +116,7 @@ export default function ClientInfoCard({ client, invoiceCount = 0 }) {
               )}
             </div>
           </div>
-          <button onClick={() => setEditing(true)} className="btn-ghost text-sm !py-1.5 !px-3 shrink-0">
+          <button onClick={() => setEditing(true)} className="btn-ghost btn-sm text-sm shrink-0">
             Modifier
           </button>
         </div>

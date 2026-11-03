@@ -220,7 +220,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
             <div className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
             <label className="label">Lignes manuelles</label>
-            <button type="button" onClick={addManualItem} className="btn-ghost text-sm !py-1 !px-3">
+            <button type="button" onClick={addManualItem} className="btn-ghost btn-sm text-sm">
               <Plus size={20} aria-hidden="true" />
               Ajouter une ligne
             </button>

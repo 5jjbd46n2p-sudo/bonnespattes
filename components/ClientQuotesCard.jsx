@@ -146,7 +146,7 @@ export default function ClientQuotesCard({ clientId, email, plannedVisits, quote
                   {q.sent_at ? ` · envoyé à ${q.sent_to}` : " · non envoyé"}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <a href={`/api/quotes/${q.id}/pdf`} target="_blank" rel="noreferrer" className="btn-ghost text-sm gap-1.5 !py-1 !px-3">
+                  <a href={`/api/quotes/${q.id}/pdf`} target="_blank" rel="noreferrer" className="btn-ghost btn-sm text-sm gap-1.5">
                     <FilePdf size={20} aria-hidden="true" />
                     PDF
                   </a>
@@ -155,7 +155,7 @@ export default function ClientQuotesCard({ clientId, email, plannedVisits, quote
                       type="button"
                       disabled={busy}
                       onClick={() => confirm(`Envoyer le devis ${q.number} à ${email} ?`) && call(`/api/quotes/${q.id}/send`, "POST", null, `Devis ${q.number} envoyé à ${email}.`)}
-                      className="btn-ghost text-sm gap-1.5 !py-1 !px-3"
+                      className="btn-ghost btn-sm text-sm gap-1.5"
                     >
                       <PaperPlaneTilt size={20} aria-hidden="true" />
                       {q.sent_at ? "Renvoyer" : "Envoyer"}
@@ -163,10 +163,10 @@ export default function ClientQuotesCard({ clientId, email, plannedVisits, quote
                   )}
                   {q.status === "EN_ATTENTE" && (
                     <>
-                      <button type="button" disabled={busy} onClick={() => call(`/api/quotes/${q.id}`, "PATCH", { status: "ACCEPTE" }, `Devis ${q.number} accepté.`)} className="btn-primary text-sm !py-1 !px-3">
+                      <button type="button" disabled={busy} onClick={() => call(`/api/quotes/${q.id}`, "PATCH", { status: "ACCEPTE" }, `Devis ${q.number} accepté.`)} className="btn-primary btn-sm text-sm">
                         Accepté
                       </button>
-                      <button type="button" disabled={busy} onClick={() => call(`/api/quotes/${q.id}`, "PATCH", { status: "REFUSE" })} className="btn-ghost text-sm !py-1 !px-3">
+                      <button type="button" disabled={busy} onClick={() => call(`/api/quotes/${q.id}`, "PATCH", { status: "REFUSE" })} className="btn-ghost btn-sm text-sm">
                         Refusé
                       </button>
                     </>

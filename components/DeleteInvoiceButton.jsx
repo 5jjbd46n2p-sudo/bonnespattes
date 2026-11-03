@@ -129,7 +129,7 @@ export default function DeleteInvoiceButton({ invoiceId, clientId = null, number
             Marquer comme test
           </button>
         )}
-        <button type="button" onClick={remove} disabled={busy} className="btn-ghost text-sm gap-2 !text-brique">
+        <button type="button" onClick={remove} disabled={busy} className="btn-danger text-sm gap-2">
           <Trash size={20} aria-hidden="true" />
           {busy ? "..." : "Supprimer"}
         </button>

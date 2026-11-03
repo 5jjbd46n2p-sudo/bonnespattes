@@ -30,7 +30,7 @@ export default function ClientDataExportCard({ clientId, email }) {
         </p>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <a href={`/api/clients/${clientId}/export`} className="btn-ghost text-sm gap-2 !py-1.5 !px-3">
+        <a href={`/api/clients/${clientId}/export`} className="btn-ghost btn-sm text-sm gap-2">
           <DownloadSimple size={20} aria-hidden="true" />
           Télécharger
         </a>
@@ -38,7 +38,7 @@ export default function ClientDataExportCard({ clientId, email }) {
           type="button"
           onClick={send}
           disabled={!email || state === "sending"}
-          className="btn-primary text-sm gap-2 !py-1.5 !px-3 disabled:opacity-50"
+          className="btn-primary btn-sm text-sm gap-2 disabled:opacity-50"
         >
           <PaperPlaneTilt size={20} aria-hidden="true" />
           {state === "sending" ? "Envoi..." : "Envoyer par email"}

@@ -115,7 +115,7 @@ export default async function PortalPage() {
             Après chaque passage, je vous laisse ici le compte rendu et les photos. — Aurore
           </p>
         </div>
-        <a href="/api/portal/export" className="btn-ghost text-sm gap-2 !py-1.5 !px-3 shrink-0">
+        <a href="/api/portal/export" className="btn-ghost btn-sm text-sm gap-2 shrink-0">
           <DownloadSimple size={20} aria-hidden="true" />
           Télécharger mes données
         </a>
@@ -229,7 +229,7 @@ export default async function PortalPage() {
               Signé le {formatDateFR(signedContract.signed_at)} (version {signedContract.version})
             </p>
           </div>
-          <a href={`/api/contracts/${signedContract.id}/pdf`} className="btn-ghost text-sm gap-2 !py-1.5 !px-3">
+          <a href={`/api/contracts/${signedContract.id}/pdf`} className="btn-ghost btn-sm text-sm gap-2">
             <FileText size={20} aria-hidden="true" />
             Télécharger le PDF
           </a>

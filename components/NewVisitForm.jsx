@@ -270,8 +270,8 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           <div>
             <label className="label block mb-1.5">Client</label>
             {selectedClient ? (
-              <div className="ios-field-group">
-                <div className="ios-field-row">
+              <div className="field-group">
+                <div className="field-row">
                   <span className="flex items-center gap-2 min-w-0">
                     <span className="w-8 h-8 rounded-full bg-sable text-encre text-[13px] font-bold flex items-center justify-center shrink-0">
                       {(selectedClient.first_name?.[0] || "") + (selectedClient.last_name?.[0] || "")}
@@ -336,20 +336,20 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             </label>
             <label className="label block mb-1.5">{stay ? "Arrivée et départ" : "Date et horaires"}</label>
             {stay ? (
-              <div className="ios-field-group">
-                <div className="ios-field-row">
-                  <span className="ios-field-label">Arrivée</span>
+              <div className="field-group">
+                <div className="field-row">
+                  <span className="field-row-label">Arrivée</span>
                   <input type="date" className="pill-input pill-input--date" value={date} onChange={(e) => setDate(e.target.value)} required />
                 </div>
-                <div className="ios-field-row">
-                  <span className="ios-field-label">Départ</span>
+                <div className="field-row">
+                  <span className="field-row-label">Départ</span>
                   <input type="date" className="pill-input pill-input--date" value={stayEnd || date} min={date} onChange={(e) => setStayEnd(e.target.value)} required />
                 </div>
               </div>
             ) : (
-            <div className="ios-field-group">
-              <div className="ios-field-row">
-                <span className="ios-field-label">Début</span>
+            <div className="field-group">
+              <div className="field-row">
+                <span className="field-row-label">Début</span>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
@@ -366,8 +366,8 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   />
                 </div>
               </div>
-              <div className="ios-field-row">
-                <span className="ios-field-label">Fin</span>
+              <div className="field-row">
+                <span className="field-row-label">Fin</span>
                 <div className="flex items-center gap-2">
                   <input
                     type="time"
@@ -382,8 +382,8 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
           </div>
 
           <div className="space-y-3">
-            <div className="ios-field-group">
-              <div className="ios-field-row">
+            <div className="field-group">
+              <div className="field-row">
                 <span className="min-w-0">
                   <span className="label block">Tarif conseillé</span>
                   <span className="text-[13px] text-pierre tabular-nums block">
@@ -403,7 +403,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                       setManualTravel(null);
                     }}
                     disabled={isApplied}
-                    className="btn-ghost !py-1 !px-3 text-sm"
+                    className="btn-ghost btn-sm text-sm"
                   >
                     {isApplied ? "Appliqué" : "Appliquer"}
                   </button>
@@ -470,7 +470,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   step="1"
                   inputMode="decimal"
                   aria-label="Remise en pourcentage"
-                  className="input !w-24"
+                  className="input input--etroit"
                   value={discountPercent}
                   onChange={(e) => setDiscountPercent(e.target.value)}
                 />
@@ -604,7 +604,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
                   }
                 }}
               />
-              <button type="button" onClick={addTask} className="btn-ghost text-sm !px-3">
+              <button type="button" onClick={addTask} className="btn-ghost btn-sm text-sm">
                 Ajouter
               </button>
             </div>
@@ -668,7 +668,7 @@ function ClientPicker({ clients, onSelect }) {
   }
 
   return (
-    <div className="ios-field-group">
+    <div className="field-group">
       <div className="p-2 border-b border-trait relative">
         <MagnifyingGlass
           size={20}
@@ -677,7 +677,7 @@ function ClientPicker({ clients, onSelect }) {
         />
         <input
           ref={inputRef}
-          className="input !min-h-[40px] !pl-10"
+          className="input input--icone"
           placeholder="Rechercher un client…"
           value={q}
           onChange={(e) => setQ(e.target.value)}

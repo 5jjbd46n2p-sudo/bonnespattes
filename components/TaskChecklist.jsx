@@ -76,7 +76,7 @@ export default function TaskChecklist({ visitId, tasks }) {
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
         />
-        <button disabled={loading} className="btn-ghost text-sm !px-3 shrink-0">
+        <button disabled={loading} className="btn-ghost btn-sm text-sm shrink-0">
           Ajouter
         </button>
       </form>

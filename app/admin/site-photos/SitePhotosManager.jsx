@@ -81,7 +81,7 @@ export default function SitePhotosManager({ slots, initial }) {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <label className={`btn-ghost text-sm gap-2 !py-1.5 !px-3 cursor-pointer ${busy === s.slot ? "opacity-60 pointer-events-none" : ""}`}>
+                <label className={`btn-ghost btn-sm text-sm gap-2 cursor-pointer ${busy === s.slot ? "opacity-60 pointer-events-none" : ""}`}>
                   <Camera size={20} aria-hidden="true" />
                   {busy === s.slot ? "Envoi..." : v ? "Changer" : "Choisir dans la galerie"}
                   <input type="file" accept="image/*" className="sr-only" onChange={(e) => onPick(s.slot, e)} disabled={busy === s.slot} />

@@ -41,7 +41,7 @@ export default function MarkPaidButton({ invoiceId, balance, number }) {
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <select
-          className="input !w-auto text-sm !py-1"
+          className="input input--auto input--compact text-sm"
           value={method}
           onChange={(e) => setMethod(e.target.value)}
           aria-label={`Mode de paiement de la facture ${number}`}
@@ -52,7 +52,7 @@ export default function MarkPaidButton({ invoiceId, balance, number }) {
           <option>Carte bancaire</option>
           <option>Autre</option>
         </select>
-        <button type="button" onClick={markPaid} disabled={loading || balance <= 0} className="btn-primary text-sm !py-1 !px-3 gap-1.5">
+        <button type="button" onClick={markPaid} disabled={loading || balance <= 0} className="btn-primary btn-sm text-sm gap-1.5">
           <Check size={20} aria-hidden="true" />
           {loading ? "..." : "Marquer payée"}
         </button>

@@ -169,7 +169,7 @@ export default function PetManager({ clientId, pets }) {
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-display font-semibold text-encre">Animaux</h2>
-        <button onClick={() => setAdding((a) => !a)} className="btn-ghost text-sm !py-1 !px-3">
+        <button onClick={() => setAdding((a) => !a)} className="btn-ghost btn-sm text-sm">
           {!adding && <Plus size={20} aria-hidden="true" />}
           {adding ? "Annuler" : "Ajouter"}
         </button>

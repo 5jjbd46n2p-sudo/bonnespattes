@@ -122,7 +122,7 @@ export default function NewClientPage() {
         <section className="card p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xl font-semibold">Animaux</h2>
-            <button type="button" onClick={addPet} className="btn-ghost text-sm gap-2 !py-1 !px-3">
+            <button type="button" onClick={addPet} className="btn-ghost btn-sm text-sm gap-2">
               <Plus size={20} aria-hidden="true" />
               Ajouter un animal
             </button>
@@ -178,7 +178,7 @@ export default function NewClientPage() {
                   <button
                     type="button"
                     onClick={() => setLoginPassword(generateTemporaryPassword())}
-                    className="btn-ghost !px-3 text-sm shrink-0"
+                    className="btn-ghost btn-sm text-sm shrink-0"
                     aria-label="Générer un autre mot de passe"
                     title="Générer un autre mot de passe"
                   >

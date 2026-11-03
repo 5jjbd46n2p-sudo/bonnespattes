@@ -223,7 +223,7 @@ export default function VisitCard({ visit }) {
                 type="button"
                 disabled={busy}
                 onClick={() => changeStatus("EN_COURS")}
-                className="btn-ghost !py-1.5 !px-3 text-sm"
+                className="btn-ghost btn-sm text-sm"
               >
                 <Play size={20} aria-hidden="true" />
                 Démarrer
@@ -234,7 +234,7 @@ export default function VisitCard({ visit }) {
                 type="button"
                 disabled={busy}
                 onClick={() => changeStatus("FAIT")}
-                className="btn-primary !py-1.5 !px-3 text-sm"
+                className="btn-primary btn-sm text-sm"
               >
                 <Check size={20} aria-hidden="true" />
                 Terminer
@@ -242,7 +242,7 @@ export default function VisitCard({ visit }) {
             )}
             {canPhoto && (
               <label
-                className={`btn-ghost !py-1.5 !px-3 text-sm cursor-pointer ${uploading ? "opacity-60" : ""}`}
+                className={`btn-ghost btn-sm text-sm cursor-pointer ${uploading ? "opacity-60" : ""}`}
                 title="Ajouter une photo"
               >
                 {uploading ? "Envoi…" : <Camera size={20} aria-hidden="true" />}
@@ -259,7 +259,7 @@ export default function VisitCard({ visit }) {
                 />
               </label>
             )}
-            <Link href={`/admin/visits/${visit.id}`} className="btn-ghost !py-1.5 !px-3 text-sm">
+            <Link href={`/admin/visits/${visit.id}`} className="btn-ghost btn-sm text-sm">
               Détail
             </Link>
           </div>

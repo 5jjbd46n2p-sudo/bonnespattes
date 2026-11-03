@@ -92,9 +92,9 @@ export default function VisitEditPanel({ visit }) {
       </div>
       <div>
         <label className="label block mb-1.5">Date et horaires</label>
-        <div className="ios-field-group">
-          <div className="ios-field-row">
-            <span className="ios-field-label">Début</span>
+        <div className="field-group">
+          <div className="field-row">
+            <span className="field-row-label">Début</span>
             <div className="flex items-center gap-2">
               <input
                 type="date"
@@ -110,8 +110,8 @@ export default function VisitEditPanel({ visit }) {
               />
             </div>
           </div>
-          <div className="ios-field-row">
-            <span className="ios-field-label">Fin</span>
+          <div className="field-row">
+            <span className="field-row-label">Fin</span>
             <div className="flex items-center gap-2">
               <input
                 type="time"
@@ -150,7 +150,7 @@ export default function VisitEditPanel({ visit }) {
                 {freeReason && <span className="text-pierre"> : {freeReason}</span>}
               </span>
             </p>
-            <button type="button" onClick={() => setFree(false)} disabled={freeBusy} className="btn-ghost text-sm !py-1.5 !px-3">
+            <button type="button" onClick={() => setFree(false)} disabled={freeBusy} className="btn-ghost btn-sm text-sm">
               Annuler l'offre
             </button>
           </div>

@@ -20,7 +20,7 @@ export default function InvoiceStatusControl({ invoiceId, status }) {
 
   return (
     <select
-      className="input !w-auto text-sm"
+      className="input input--auto text-sm"
       value={status}
       disabled={loading}
       onChange={(e) => change(e.target.value)}
