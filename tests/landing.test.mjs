@@ -11,7 +11,7 @@ test("tarifs : lignes vides, nulles ou invalides masquées", () => {
 test("tarifs : ordre et journée", () => {
   const rows = priceRows({ rate_30: "15", rate_45: 18, rate_60: 22, rate_day: 40 });
   expect(rows.map((r) => r.key)).toEqual(["rate_30", "rate_45", "rate_60", "rate_day"]);
-  expect(rows[3].label).toBe("Garde à domicile, la journée");
+  expect(rows[3].label).toBe("Garde chez Aurore, la journée");
 });
 
 test("fromPrice : minimum des visites, journée ignorée, null si rien", () => {

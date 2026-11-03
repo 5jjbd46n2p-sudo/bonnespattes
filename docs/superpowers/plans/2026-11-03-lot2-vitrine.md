@@ -25,7 +25,7 @@
 ### Tâche 1 : logique pure `lib/landing.js`
 **Fichiers :** créer `lib/landing.js`, `tests/landing.test.mjs`.
 **Produit :**
-- `priceRows(settings): {key, label, amount}[]` — dans l'ordre 30 min, 45 min, 1 h, journée (`rate_day`, libellé « Garde à domicile, la journée ») ; lignes à montant absent, nul ou non numérique exclues.
+- `priceRows(settings): {key, label, amount}[]` — dans l'ordre 30 min, 45 min, 1 h, journée (`rate_day`, libellé « Garde chez Aurore, la journée ») ; lignes à montant absent, nul ou non numérique exclues.
 - `fromPrice(rows): number|null` — minimum des lignes 30/45/60, `null` si aucune.
 - `normalizeWhatsapp(input): {value: string|null} | {error: string}` — vide → `{value: null}` ; retire espaces, points, tirets ; accepte `+` initial ; `0X…` français à 10 chiffres → `33X…` ; 8 à 15 chiffres sinon `{error: "Numéro WhatsApp invalide."}`.
 - `whatsappHref(number): string|null` — `https://wa.me/<chiffres>?text=<encodeURIComponent(WHATSAPP_MESSAGE)>`, `null` si vide.
