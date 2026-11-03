@@ -1,62 +1,48 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
-import { requireAdmin, hashPassword } from "@/lib/auth";
-import { passwordProblem } from "@/lib/security";
-import { sendClientCredentialsEmail } from "@/lib/email";
+import { query, tx } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
+import { sendActivationEmail } from "@/lib/email";
 import { isUuid, readJson } from "@/lib/api";
+import { activationLink } from "@/lib/activation";
+import { issueClientAccess } from "@/lib/activationStore";
 
-// Crée ou remplace l'identifiant/mot de passe d'un client
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Crée l'accès d'un client, le réinitialise ou renvoie le lien d'activation.
+// Aucun mot de passe n'est choisi ni transmis par l'admin : le client reçoit un
+// lien à usage unique (72 h) pour choisir le sien. Si l'e-mail ne part pas (ou
+// si sendEmail est faux), le lien est renvoyé à l'admin pour qu'elle le
+// transmette elle-même.
 export async function POST(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
   if (!isUuid(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
-  const { email, password, sendEmail } = (await readJson(req)) || {};
-  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
-    return NextResponse.json({ error: "Email et mot de passe requis." }, { status: 400 });
+  const { email, sendEmail = true } = (await readJson(req)) || {};
+  const login = typeof email === "string" ? email.trim().toLowerCase() : "";
+  if (!login || login.length > 200 || !EMAIL_RE.test(login)) {
+    return NextResponse.json({ error: "Adresse email de connexion invalide." }, { status: 400 });
   }
-  const problem = passwordProblem(password, { email });
-  if (problem) return NextResponse.json({ error: problem }, { status: 400 });
   try {
-    const hash = await hashPassword(password);
-    const existing = await query("SELECT id FROM users WHERE client_id = $1", [id]);
-    if (existing.rows[0]) {
-      // Réinitialisation : mot de passe provisoire à changer, anciennes sessions révoquées.
-      await query(
-        `UPDATE users SET email = $1, password_hash = $2, must_change_password = true,
-                session_version = session_version + 1
-          WHERE client_id = $3`,
-        [
-          email.trim().toLowerCase(),
-          hash,
-          id,
-        ]
-      );
-    } else {
-      await query(
-        "INSERT INTO users (email, password_hash, role, client_id, must_change_password) VALUES ($1,$2,'CLIENT',$3,true)",
-        [email.trim().toLowerCase(), hash, id]
-      );
-    }
+    const clientRes = await query("SELECT first_name, last_name FROM clients WHERE id = $1", [id]);
+    const c = clientRes.rows[0];
+    if (!c) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+
+    const { token, expiresAt } = await tx((db) => issueClientAccess(db, { clientId: id, email: login }));
+    const link = activationLink(token);
 
     let emailWarning = null;
     if (sendEmail) {
       try {
-        const clientRes = await query("SELECT first_name, last_name FROM clients WHERE id = $1", [id]);
-        const c = clientRes.rows[0];
-        await sendClientCredentialsEmail({
-          to: email.trim().toLowerCase(),
-          clientName: c ? `${c.first_name} ${c.last_name}` : "",
-          loginEmail: email.trim().toLowerCase(),
-          loginPassword: password,
-        });
+        await sendActivationEmail({ to: login, clientName: `${c.first_name} ${c.last_name}`, link, expiresAt });
       } catch (emailErr) {
         console.error("/api/clients/[id]/login :", emailErr?.message);
         emailWarning = "l'email n'a pas pu être envoyé";
       }
     }
-
-    return NextResponse.json({ ok: true, emailWarning });
+    const emailed = Boolean(sendEmail) && !emailWarning;
+    // Le lien n'est montré à l'admin que s'il n'est pas parti par e-mail.
+    return NextResponse.json({ ok: true, emailed, emailWarning, link: emailed ? null : link, expiresAt });
   } catch (e) {
     console.error("/api/clients/[id]/login :", e?.message);
     if (String(e.message).includes("duplicate key")) {

@@ -22,6 +22,9 @@ mock.module("../lib/db.js", () => ({
     }
     throw new Error("requête inattendue : " + sql);
   },
+  tx: async () => {
+    throw new Error("tx non simulé dans ce test");
+  },
 }));
 
 const { consumeAttempt, clearAttempts } = await import("../lib/security.js");

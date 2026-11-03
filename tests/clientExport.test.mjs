@@ -1,7 +1,7 @@
 import { test, expect, mock } from "bun:test";
 
 // L'assemblage est pur ; la base est simulée pour pouvoir importer le module.
-mock.module("../lib/db.js", () => ({ query: async () => ({ rows: [] }) }));
+mock.module("../lib/db.js", () => ({ query: async () => ({ rows: [] }), tx: async (fn) => fn({ query: async () => ({ rows: [] }) }) }));
 const { assembleClientExport } = await import("../lib/clientExport.js");
 
 const base = {

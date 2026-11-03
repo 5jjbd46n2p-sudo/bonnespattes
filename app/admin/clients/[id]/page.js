@@ -35,7 +35,17 @@ async function getClientData(id) {
     "SELECT * FROM invoices WHERE client_id = $1 ORDER BY issue_date DESC LIMIT 10",
     [id]
   );
-  const loginRes = await query("SELECT id, email FROM users WHERE client_id = $1", [id]);
+  // Accès client et éventuel lien d'activation non encore utilisé (le plus récent).
+  const loginRes = await query(
+    `SELECT u.id, u.email, a.expires_at::text AS pending_until, (a.expires_at <= now()) AS pending_expired
+       FROM users u
+       LEFT JOIN LATERAL (
+         SELECT expires_at FROM activation_tokens t
+          WHERE t.user_id = u.id AND t.used_at IS NULL ORDER BY t.created_at DESC LIMIT 1
+       ) a ON true
+      WHERE u.client_id = $1`,
+    [id]
+  );
   const depositsRes = await query(
     `SELECT d.*, i.number AS invoice_number
      FROM deposits d LEFT JOIN invoices i ON i.id = d.invoice_id

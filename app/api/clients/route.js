@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { query, tx } from "@/lib/db";
-import { requireAdmin, hashPassword } from "@/lib/auth";
-import { passwordProblem } from "@/lib/security";
-import { sendClientCredentialsEmail } from "@/lib/email";
+import { requireAdmin } from "@/lib/auth";
+import { sendActivationEmail } from "@/lib/email";
+import { activationLink } from "@/lib/activation";
+import { issueClientAccess } from "@/lib/activationStore";
 import { ensureReferralCode } from "@/lib/referral";
 import { readJson } from "@/lib/api";
 
@@ -37,22 +38,15 @@ export async function POST(req) {
     pets = [],
     createLogin,
     loginEmail,
-    loginPassword,
     sendEmail,
   } = body;
 
   if (!firstName || !lastName) {
     return NextResponse.json({ error: "Prénom et nom requis." }, { status: 400 });
   }
-  if (createLogin && (!loginEmail || !loginPassword)) {
-    return NextResponse.json(
-      { error: "Email et mot de passe requis pour créer l'accès client." },
-      { status: 400 }
-    );
-  }
-  if (createLogin) {
-    const problem = passwordProblem(loginPassword, { email: loginEmail });
-    if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+  const login = typeof loginEmail === "string" ? loginEmail.trim().toLowerCase() : "";
+  if (createLogin && (!login || login.length > 200 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(login))) {
+    return NextResponse.json({ error: "Email de connexion requis pour créer l'accès client." }, { status: 400 });
   }
 
   try {
@@ -73,36 +67,36 @@ export async function POST(req) {
         );
       }
 
-      if (createLogin) {
-        const hash = await hashPassword(loginPassword);
-        await client.query(
-          // Mot de passe provisoire : le client devra le remplacer à sa première connexion.
-          `INSERT INTO users (email, password_hash, role, client_id, must_change_password) VALUES ($1,$2,'CLIENT',$3,true)`,
-          [loginEmail.trim().toLowerCase(), hash, newClient.id]
-        );
-      }
+      // Accès client : compte sans mot de passe utilisable + lien d'activation
+      // (le client choisit son mot de passe ; aucun mot de passe par e-mail).
+      const access = createLogin ? await issueClientAccess(client, { clientId: newClient.id, email: login }) : null;
 
-      return newClient;
+      return { newClient, access };
     });
 
     // L'envoi de l'email se fait après la transaction : un échec d'envoi ne
     // doit pas empêcher la création du client, on renvoie juste un avertissement.
     let emailWarning = null;
-    if (createLogin && sendEmail) {
-      try {
-        await sendClientCredentialsEmail({
-          to: loginEmail.trim().toLowerCase(),
-          clientName: `${firstName} ${lastName}`,
-          loginEmail: loginEmail.trim().toLowerCase(),
-          loginPassword,
-        });
-      } catch (emailErr) {
-        console.error("/api/clients :", emailErr?.message);
-        emailWarning = "l'email n'a pas pu être envoyé";
+    let link = null;
+    if (result.access) {
+      link = activationLink(result.access.token);
+      if (sendEmail) {
+        try {
+          await sendActivationEmail({
+            to: login,
+            clientName: `${firstName} ${lastName}`,
+            link,
+            expiresAt: result.access.expiresAt,
+          });
+        } catch (emailErr) {
+          console.error("/api/clients :", emailErr?.message);
+          emailWarning = "l'email n'a pas pu être envoyé";
+        }
       }
     }
-
-    return NextResponse.json({ client: result, emailWarning });
+    const emailed = Boolean(result.access && sendEmail && !emailWarning);
+    // Le lien n'est montré à l'admin que s'il n'est pas parti par e-mail.
+    return NextResponse.json({ client: result.newClient, emailWarning, activationLink: emailed ? null : link });
   } catch (e) {
     console.error("/api/clients :", e?.message);
     if (String(e.message).includes("duplicate key")) {

@@ -12,7 +12,7 @@ mock.module("jsonwebtoken", () => ({
   default: { verify: () => ({ userId: "u1", role: dbUser.role, sv: 0 }), sign: () => "" },
 }));
 mock.module("bcryptjs", () => ({ default: {} }));
-mock.module("../lib/db.js", () => ({ query: async () => ({ rows: [dbUser] }) }));
+mock.module("../lib/db.js", () => ({ query: async () => ({ rows: [dbUser] }), tx: async (fn) => fn({ query: async () => ({ rows: [dbUser] }) }) }));
 process.env.JWT_SECRET = "x".repeat(32);
 
 const { clientPageGuard, requireClient } = await import("../lib/auth.js");
