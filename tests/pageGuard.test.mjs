@@ -1,7 +1,10 @@
 import { test, expect, mock } from "bun:test";
+import * as RealReact from "react";
 
 let dbUser;
-mock.module("react", () => ({ cache: (fn) => fn }));
+// On garde le vrai React (d'autres fichiers de test font du rendu dans le même
+// processus) et on neutralise seulement cache().
+mock.module("react", () => ({ ...RealReact, default: RealReact, cache: (fn) => fn }));
 mock.module("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: "jeton" }) }) }));
 mock.module("next/navigation", () => ({
   redirect: (to) => {
