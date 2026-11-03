@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 // Date de la dernière mise à jour du contenu de cette page
-const UPDATED = "30 septembre 2026";
+const UPDATED = "3 novembre 2026";
 
 function Missing() {
   return <span className="text-rouille font-bold">à compléter dans Réglages</span>;
@@ -114,6 +114,12 @@ export default async function ConfidentialitePage() {
                 contrat.
               </li>
               <li>
+                <strong>Avis clients</strong> (nom ou prénom affiché, précision facultative comme la commune ou
+                les animaux, texte de l&apos;avis) : présenter sur la page d&apos;accueil des avis de clients.
+                Un avis n&apos;est publié qu&apos;avec l&apos;accord de la personne concernée. Base légale :
+                consentement, retirable à tout moment sur simple demande.
+              </li>
+              <li>
                 <strong>Sécurité du site</strong> : empreintes non réversibles des adresses IP utilisées pour
                 limiter les tentatives de connexion abusives et les envois en masse. Base légale : intérêt
                 légitime (protection du service et de vos données).
@@ -141,12 +147,15 @@ export default async function ConfidentialitePage() {
               </li>
               <li>
                 <strong>Resend Inc.</strong> (États-Unis) : envoi des emails (identifiants, codes de
-                signature, contrats, réponses aux demandes).
+                signature, contrats, devis, factures, réponses aux demandes).
               </li>
               <li>
-                <strong>Base Adresse Nationale</strong> (État français) et <strong>OSRM</strong> (association
-                FOSSGIS, Allemagne) : calcul de la distance de trajet jusqu&apos;à votre domicile, à partir de
-                votre adresse, pour les frais de déplacement. Aucune autre donnée n&apos;est transmise.
+                <strong>Base Adresse Nationale</strong> (api-adresse.data.gouv.fr, État français) : reçoit
+                l&apos;adresse de votre domicile et celle de la prestataire pour les convertir en coordonnées
+                GPS. <strong>OSRM</strong> (router.project-osrm.org, association FOSSGIS, Allemagne) : reçoit
+                uniquement ces coordonnées GPS pour calculer la distance et la durée du trajet. Finalité :
+                calculer les frais de déplacement. Aucune autre donnée (nom, email, animaux) n&apos;est
+                transmise à ces services.
               </li>
             </ul>
             <p>
@@ -176,6 +185,9 @@ export default async function ConfidentialitePage() {
               <li>
                 Factures et pièces comptables : 10 ans, comme l&apos;impose la loi, y compris après une
                 demande d&apos;effacement.
+              </li>
+              <li>
+                Avis clients : tant qu&apos;ils sont publiés ; retirés et supprimés sur simple demande.
               </li>
               <li>Empreintes d&apos;adresses IP (sécurité) : {R.rateLimitDays} jours.</li>
             </ul>
