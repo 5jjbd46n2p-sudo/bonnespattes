@@ -1,35 +1,81 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Tokens de couleur « carnet de balade » (docs/IDENTITE_VISUELLE.md) :
-   papier, lin, sable, encre, pierre, trait, rouille, mousse, miel, brique.
+   Tokens « carnet de balade » (docs/IDENTITE_VISUELLE.md).
+   Chaque couleur est déclarée une seule fois : light-dark(<clair>, <sombre>).
+   Le thème suit le système (color-scheme: light dark) ; Réglages peut le forcer
+   avec data-theme="light" ou "dark" sur <html>.
    ------------------------------------------------------------------------- */
 :root {
-  /* Palette « carnet de balade » (docs/IDENTITE_VISUELLE.md) */
-  --color-papier: #f7f2ea;
-  --color-lin: #fffcf7;
-  --color-sable: #efe7da;
-  --color-encre: #1f1a15;
-  --color-pierre: #6e655a;
-  --color-trait: #e3d9c9;
-  --color-rouille: #a8481f;
-  --color-rouille-fonce: #8a3a18;
-  --color-mousse: #4f6b3a;
-  --color-miel: #d69a4e;
-  --color-brique: #b3261e;
-  --color-nav: #1f1a15;
+  color-scheme: light dark;
+
+  --color-papier: light-dark(#f7f2ea, #15120f);
+  --color-lin: light-dark(#fffcf7, #1e1a16);
+  --color-sable: light-dark(#efe7da, #29241f);
+  --color-encre: light-dark(#1f1a15, #efe7da);
+  --color-pierre: light-dark(#6e655a, #a89e91);
+  --color-trait: light-dark(#e3d9c9, #3a332c);
+  /* Bordures de champs, cases et pilules de saisie : contraste 3:1 minimum */
+  --color-bord: light-dark(#8c8174, #7d7266);
+  --color-rouille: light-dark(#a8481f, #e0784a);
+  --color-rouille-fonce: light-dark(#8a3a18, #ee8e62);
+  --color-mousse: light-dark(#4f6b3a, #9dbb84);
+  --color-miel: light-dark(#d69a4e, #e2ae6a);
+  --color-brique: light-dark(#b3261e, #f08a80);
+  --color-nav: light-dark(#1f1a15, #0f0d0b);
   --color-sur-nav: #f7f2ea; /* texte sur la barre encre, identique dans les deux modes */
   --color-nav-actif: #e0784a; /* onglet actif sur la barre encre */
-  --color-sur-rouille: #ffffff;
-  --shadow-modal: 0 8px 28px rgba(31, 26, 21, 0.14);
+  --color-sur-rouille: light-dark(#ffffff, #15120f);
+  --shadow-modal: 0 8px 28px light-dark(rgba(31, 26, 21, 0.14), rgba(0, 0, 0, 0.5));
+
+  /* Teintes pastel de Tailwind (badges, encadrés) : valeur par défaut de
+     Tailwind 4.3 en clair, adaptée au fond sombre en sombre. */
+  --color-amber-50: light-dark(oklch(98.7% 0.022 95.277), rgba(245, 158, 11, 0.1));
+  --color-amber-100: light-dark(oklch(96.2% 0.059 95.617), rgba(245, 158, 11, 0.2));
+  --color-amber-200: light-dark(oklch(92.4% 0.12 95.746), rgba(245, 158, 11, 0.35));
+  --color-amber-400: light-dark(oklch(82.8% 0.189 84.429), #d99a2b);
+  --color-amber-800: light-dark(oklch(47.3% 0.137 46.201), #fcd34d);
+  --color-blue-100: light-dark(oklch(93.2% 0.032 255.585), rgba(59, 130, 246, 0.22));
+  --color-blue-400: light-dark(oklch(70.7% 0.165 254.624), #5b8def);
+  --color-blue-800: light-dark(oklch(42.4% 0.199 265.638), #a5c8fd);
+  --color-emerald-50: light-dark(oklch(97.9% 0.021 166.113), rgba(16, 185, 129, 0.1));
+  --color-emerald-100: light-dark(oklch(95% 0.052 163.051), rgba(16, 185, 129, 0.2));
+  --color-emerald-400: light-dark(oklch(76.5% 0.177 163.223), #34d399);
+  --color-emerald-600: light-dark(oklch(59.6% 0.145 163.225), #34d399);
+  --color-emerald-700: light-dark(oklch(50.8% 0.118 165.612), #6ee7b7);
+  --color-emerald-800: light-dark(oklch(43.2% 0.095 166.913), #86efc4);
+  --color-red-50: light-dark(oklch(97.1% 0.013 17.38), rgba(239, 68, 68, 0.12));
+  --color-red-100: light-dark(oklch(93.6% 0.032 17.717), rgba(239, 68, 68, 0.22));
+  --color-red-200: light-dark(oklch(88.5% 0.062 18.334), rgba(239, 68, 68, 0.38));
+  --color-red-800: light-dark(oklch(44.4% 0.177 26.899), #fca5a5);
+  --color-stone-100: light-dark(oklch(97% 0.001 106.424), #29241f);
+  --color-stone-200: light-dark(oklch(92.3% 0.003 48.717), #332d27);
+  --color-stone-300: light-dark(oklch(86.9% 0.005 56.366), #4a423a);
+  --color-stone-400: light-dark(oklch(70.9% 0.01 56.259), #6f665c);
+  --color-stone-600: light-dark(oklch(44.4% 0.011 73.639), #b8ad9f);
+  --color-stone-700: light-dark(oklch(37.4% 0.01 67.558), #d3c9bb);
 
   /* Couleurs dérivées */
   --color-input: var(--color-lin);
   --color-tabbar: var(--color-nav);
 
+  /* Espacements nommés (base 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
   /* Polices (variables posées sur <html> par next/font dans app/layout.js) */
   --font-display: var(--font-fraunces), Georgia, "Iowan Old Style", serif;
   --font-body: var(--font-atkinson), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -39,6 +85,7 @@
   --color-encre: var(--color-encre);
   --color-pierre: var(--color-pierre);
   --color-trait: var(--color-trait);
+  --color-bord: var(--color-bord);
   --color-rouille: var(--color-rouille);
   --color-rouille-fonce: var(--color-rouille-fonce);
   --color-mousse: var(--color-mousse);
@@ -55,112 +102,26 @@
   --radius-card: 8px;
 }
 
-/* ---------------------------------------------------------------------------
-   Mode sombre : "Auto" (aucun data-theme) suit le système ; Réglages permet de
-   forcer data-theme="light" ou "dark". Le même jeu de couleurs est déclaré
-   pour les deux cas (le CSS ne permet pas de mutualiser un bloc entre une
-   media query et un sélecteur). Les alias ci-dessus suivent automatiquement.
-   ------------------------------------------------------------------------- */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-  color-scheme: dark;
-  --color-papier: #15120f;
-  --color-lin: #1e1a16;
-  --color-sable: #29241f;
-  --color-encre: #efe7da;
-  --color-pierre: #a89e91;
-  --color-trait: #3a332c;
-  --color-rouille: #e0784a;
-  --color-rouille-fonce: #ee8e62;
-  --color-mousse: #9dbb84;
-  --color-miel: #e2ae6a;
-  --color-brique: #f08a80;
-  --color-nav: #0f0d0b;
-  --color-sur-nav: #f7f2ea;
-  --color-nav-actif: #e0784a;
-  --color-sur-rouille: #15120f;
-  --shadow-modal: 0 8px 28px rgba(0, 0, 0, 0.5);
+/* Échelle typographique et rayons nommés (émis en variables CSS) :
+   text-titre-1, text-titre-2, text-corps, text-legende, rounded-carte, rounded-pilule. */
+@theme {
+  --radius-carte: 8px;
+  --radius-pilule: 999px;
 
-  /* Teintes pastel de Tailwind (badges, encadrés) adaptées au fond sombre */
-  --color-amber-50: rgba(245, 158, 11, 0.1);
-  --color-amber-100: rgba(245, 158, 11, 0.2);
-  --color-amber-200: rgba(245, 158, 11, 0.35);
-  --color-amber-400: #d99a2b;
-  --color-amber-800: #fcd34d;
-  --color-blue-100: rgba(59, 130, 246, 0.22);
-  --color-blue-400: #5b8def;
-  --color-blue-800: #a5c8fd;
-  --color-emerald-50: rgba(16, 185, 129, 0.1);
-  --color-emerald-100: rgba(16, 185, 129, 0.2);
-  --color-emerald-400: #34d399;
-  --color-emerald-600: #34d399;
-  --color-emerald-700: #6ee7b7;
-  --color-emerald-800: #86efc4;
-  --color-red-50: rgba(239, 68, 68, 0.12);
-  --color-red-100: rgba(239, 68, 68, 0.22);
-  --color-red-200: rgba(239, 68, 68, 0.38);
-  --color-red-800: #fca5a5;
-  --color-stone-100: #29241f;
-  --color-stone-200: #332d27;
-  --color-stone-300: #4a423a;
-  --color-stone-400: #6f665c;
-  --color-stone-600: #b8ad9f;
-  --color-stone-700: #d3c9bb;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --color-papier: #15120f;
-  --color-lin: #1e1a16;
-  --color-sable: #29241f;
-  --color-encre: #efe7da;
-  --color-pierre: #a89e91;
-  --color-trait: #3a332c;
-  --color-rouille: #e0784a;
-  --color-rouille-fonce: #ee8e62;
-  --color-mousse: #9dbb84;
-  --color-miel: #e2ae6a;
-  --color-brique: #f08a80;
-  --color-nav: #0f0d0b;
-  --color-sur-nav: #f7f2ea;
-  --color-nav-actif: #e0784a;
-  --color-sur-rouille: #15120f;
-  --shadow-modal: 0 8px 28px rgba(0, 0, 0, 0.5);
-
-  /* Teintes pastel de Tailwind (badges, encadrés) adaptées au fond sombre */
-  --color-amber-50: rgba(245, 158, 11, 0.1);
-  --color-amber-100: rgba(245, 158, 11, 0.2);
-  --color-amber-200: rgba(245, 158, 11, 0.35);
-  --color-amber-400: #d99a2b;
-  --color-amber-800: #fcd34d;
-  --color-blue-100: rgba(59, 130, 246, 0.22);
-  --color-blue-400: #5b8def;
-  --color-blue-800: #a5c8fd;
-  --color-emerald-50: rgba(16, 185, 129, 0.1);
-  --color-emerald-100: rgba(16, 185, 129, 0.2);
-  --color-emerald-400: #34d399;
-  --color-emerald-600: #34d399;
-  --color-emerald-700: #6ee7b7;
-  --color-emerald-800: #86efc4;
-  --color-red-50: rgba(239, 68, 68, 0.12);
-  --color-red-100: rgba(239, 68, 68, 0.22);
-  --color-red-200: rgba(239, 68, 68, 0.38);
-  --color-red-800: #fca5a5;
-  --color-stone-100: #29241f;
-  --color-stone-200: #332d27;
-  --color-stone-300: #4a423a;
-  --color-stone-400: #6f665c;
-  --color-stone-600: #b8ad9f;
-  --color-stone-700: #d3c9bb;
-}
-:root[data-theme="light"] {
-  color-scheme: light;
+  --text-titre-1: clamp(28px, 4vw, 32px);
+  --text-titre-1--line-height: 1.15;
+  --text-titre-2: 20px;
+  --text-titre-2--line-height: 1.25;
+  --text-corps: 16px;
+  --text-corps--line-height: 1.5;
+  --text-legende: 13px;
+  --text-legende--line-height: 1.35;
 }
 
 body {
   background: var(--color-papier);
   color: var(--color-encre);
-  font-size: 16px;
+  font-size: var(--text-corps);
 }
 
 /* Typographie : Fraunces réservée aux titres (h1/h2) et au logo. En couche
@@ -172,12 +133,12 @@ body {
     font-weight: 600;
   }
   h1 {
-    font-size: clamp(28px, 4vw, 32px);
-    line-height: 1.15;
+    font-size: var(--text-titre-1);
+    line-height: var(--text-titre-1--line-height);
   }
   h2 {
-    font-size: 20px;
-    line-height: 1.25;
+    font-size: var(--text-titre-2);
+    line-height: var(--text-titre-2--line-height);
   }
 }
 .font-display,
@@ -189,20 +150,21 @@ h2 {
 
 /* Libellés : casse normale, 13px, gras, couleur pierre */
 .label {
-  font-size: 13px;
+  font-size: var(--text-legende);
   font-weight: 700;
   color: var(--color-pierre);
 }
 
 /* Chiffres (heures, prix, compteurs) */
-.num {
+.num,
+.chiffres {
   font-variant-numeric: tabular-nums;
 }
 
 .card {
   background: var(--color-lin);
   border: 1px solid var(--color-trait);
-  border-radius: 8px;
+  border-radius: var(--radius-carte);
 }
 
 /* Liste groupée façon iOS : une surface lin, lignes séparées par un filet */
