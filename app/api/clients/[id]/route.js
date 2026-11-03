@@ -106,7 +106,7 @@ export async function DELETE(req, { params }) {
   // Droit à l'effacement (RGPD) : suppression complète, ou anonymisation si des
   // factures existent (elles doivent légalement être conservées 10 ans).
   try {
-    const mode = await eraseClient(id);
+    const mode = await eraseClient(id, admin.id);
     if (!mode) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
     return NextResponse.json({ ok: true, mode });
   } catch (e) {
