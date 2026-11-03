@@ -226,6 +226,7 @@ export function PublicSettingsForm({ settings }) {
   const [form, setForm] = useState({
     referralCredit: settings.referral_credit ?? 10,
     serviceArea: settings.service_area || "Viarmes et environs (15 km, au-delà sur devis)",
+    whatsappNumber: settings.whatsapp_number ? `+${settings.whatsapp_number}` : "",
   });
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -238,7 +239,11 @@ export function PublicSettingsForm({ settings }) {
     const res = await fetch("/api/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ referralCredit: Number(form.referralCredit), serviceArea: form.serviceArea }),
+      body: JSON.stringify({
+        referralCredit: Number(form.referralCredit),
+        serviceArea: form.serviceArea,
+        ...(form.whatsappNumber || settings.whatsapp_number ? { whatsappNumber: form.whatsappNumber } : {}),
+      }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -263,6 +268,19 @@ export function PublicSettingsForm({ settings }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Crédit de parrainage (€)" type="number" step="0.5" min="0" value={form.referralCredit} onChange={(v) => setForm({ ...form, referralCredit: v })} />
         <Field label="Zone d'intervention" value={form.serviceArea} onChange={(v) => setForm({ ...form, serviceArea: v })} />
+        <div className="sm:col-span-2">
+          <Field
+            label="WhatsApp entreprise (facultatif)"
+            type="tel"
+            inputMode="tel"
+            placeholder="+33 6 00 00 00 00"
+            value={form.whatsappNumber}
+            onChange={(v) => setForm({ ...form, whatsappNumber: v })}
+          />
+          <p className="text-[13px] text-pierre mt-1">
+            Laisse vide tant qu'il n'y a pas de numéro professionnel. Le bouton WhatsApp n'apparaît sur le site que s'il est rempli.
+          </p>
+        </div>
       </div>
       {error && <p className="text-sm font-bold text-rouille">{error}</p>}
       <div className="flex items-center gap-3">
