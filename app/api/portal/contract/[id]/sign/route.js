@@ -3,8 +3,9 @@ import { tx } from "@/lib/db";
 import { requireClient } from "@/lib/auth";
 import { getClientIp } from "@/lib/contract";
 import { CONTRACT_CHECKBOXES } from "@/lib/contractTemplate";
-import { sendSignedCopies } from "@/lib/contractFinalize";
-import { isRateLimited, recordHit } from "@/lib/security";
+import { sendSignedCopies, sealSignedContract } from "@/lib/contractFinalize";
+import { SIGNED_AT_UTC_SQL } from "@/lib/contractSeal";
+import { consumeAttempt } from "@/lib/security";
 import { readJson, isUuid } from "@/lib/api";
 
 const bad = (error, status = 400) => NextResponse.json({ error }, { status });
@@ -29,10 +30,9 @@ export async function POST(req, { params }) {
   if (!checkboxes.accept) return bad("Vous devez accepter le contrat pour le signer.");
   if (!emergency) return bad("Veuillez indiquer une personne à prévenir en cas d'urgence.");
 
-  if (await isRateLimited("contract-sign-user", user.id, { limit: 20, windowSeconds: 60 * 60 })) {
+  if (!(await consumeAttempt("contract-sign-user", user.id, { limit: 20, windowSeconds: 60 * 60 }))) {
     return bad("Trop d'essais. Réessayez dans une heure.", 429);
   }
-  await recordHit("contract-sign-user", user.id);
   const ip = getClientIp(req);
   const ua = (req.headers.get("user-agent") || "").slice(0, 500);
 
@@ -51,10 +51,11 @@ export async function POST(req, { params }) {
           SET status = 'SIGNE', signed_at = now(), signer_name = $2, signer_ip = $3, signer_user_agent = $4,
               checkboxes = $5::jsonb, emergency_contact = $6, vet_info = $7, otp_hash = NULL, otp_expires_at = NULL,
               auth_method = 'COMPTE_CLIENT'
-        WHERE id = $1 AND status = 'ENVOYE' RETURNING *`,
+        WHERE id = $1 AND status = 'ENVOYE' RETURNING *, ${SIGNED_AT_UTC_SQL}`,
       [sig.id, name, ip, ua, JSON.stringify(checkboxes), emergency, vet]
     );
-    return { signed: upd.rows[0] };
+    if (!upd.rows[0]) return { error: "Ce contrat est déjà signé.", status: 409 };
+    return { signed: await sealSignedContract(db, upd.rows[0], user.id) };
   });
   if (result.error) return bad(result.error, result.status);
 

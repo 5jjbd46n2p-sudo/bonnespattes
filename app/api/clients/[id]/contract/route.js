@@ -6,6 +6,7 @@ import {
 } from "@/lib/contract";
 import { sendContractEmail } from "@/lib/email";
 import { isUuid } from "@/lib/api";
+import { audit } from "@/lib/audit";
 
 
 export async function GET(_req, { params }) {
@@ -53,12 +54,19 @@ export async function POST(_req, { params }) {
 
   const token = newToken();
   const signature = await tx(async (db) => {
-    await db.query("UPDATE contract_signatures SET status = 'ANNULE' WHERE client_id = $1 AND status = 'ENVOYE'", [id]);
+    const cancelled = await db.query(
+      "UPDATE contract_signatures SET status = 'ANNULE' WHERE client_id = $1 AND status = 'ENVOYE' RETURNING id",
+      [id]
+    );
+    for (const c of cancelled.rows) {
+      await audit(db, { actorId: admin.id, action: "contract.cancel", entity: "contract", entityId: c.id, details: { reason: "renvoi" } });
+    }
     const ins = await db.query(
       `INSERT INTO contract_signatures (client_id, token_hash, version, content, content_hash, sent_to, expires_at)
        VALUES ($1,$2,$3,$4,$5,$6, now() + ($7 || ' days')::interval) RETURNING id, expires_at`,
       [id, hashToken(token), Number(settings.contract_version) || 1, content, sha256Hex(content), email, String(CONTRACT_VALIDITY_DAYS)]
     );
+    await audit(db, { actorId: admin.id, action: "contract.send", entity: "contract", entityId: ins.rows[0].id, details: { clientId: id } });
     return ins.rows[0];
   });
 
@@ -74,6 +82,7 @@ export async function POST(_req, { params }) {
   } catch (e) {
     console.error("Envoi du contrat échoué :", e?.message);
     await query("UPDATE contract_signatures SET status = 'ANNULE' WHERE id = $1 AND status = 'ENVOYE'", [signature.id]);
+    await audit(null, { actorId: admin.id, action: "contract.cancel", entity: "contract", entityId: signature.id, details: { reason: "envoi échoué" } });
     return NextResponse.json({ error: "Échec de l'envoi de l'email, réessaie plus tard." }, { status: 502 });
   }
   return NextResponse.json({ ok: true, mode: inAccount ? "account" : "email" });

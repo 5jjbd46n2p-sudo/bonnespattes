@@ -4,7 +4,8 @@ import {
   hashToken, hashOtp, safeEqualHex, getClientIp, OTP_MAX_ATTEMPTS,
 } from "@/lib/contract";
 import { CONTRACT_CHECKBOXES } from "@/lib/contractTemplate";
-import { sendSignedCopies } from "@/lib/contractFinalize";
+import { sendSignedCopies, sealSignedContract } from "@/lib/contractFinalize";
+import { SIGNED_AT_UTC_SQL } from "@/lib/contractSeal";
 import { consumeAttempt } from "@/lib/security";
 import { readJson } from "@/lib/api";
 
@@ -58,10 +59,11 @@ export async function POST(req, { params }) {
           SET status = 'SIGNE', signed_at = now(), signer_name = $2, signer_ip = $3, signer_user_agent = $4,
               checkboxes = $5::jsonb, emergency_contact = $6, vet_info = $7, otp_hash = NULL, otp_expires_at = NULL,
               auth_method = 'EMAIL_OTP'
-        WHERE id = $1 AND status = 'ENVOYE' RETURNING *`,
+        WHERE id = $1 AND status = 'ENVOYE' RETURNING *, ${SIGNED_AT_UTC_SQL}`,
       [sig.id, name, ip, ua, JSON.stringify(checkboxes), emergency, vet]
     );
-    return { signed: upd.rows[0] };
+    if (!upd.rows[0]) return { error: "Ce contrat est déjà signé.", status: 409 };
+    return { signed: await sealSignedContract(db, upd.rows[0], null) };
   });
 
   if (result.error) return bad(result.error, result.status);
