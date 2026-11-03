@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookieNames } from "./lib/cookieNames";
 
 // Première barrière, exécutée avant tout rendu (Next.js 16 : "proxy" remplace
 // "middleware"). Volontairement sans dépendance (pas de bibliothèque JWT) pour
@@ -51,7 +52,7 @@ export function proxy(request) {
   // Espaces privés : sans cookie de session, inutile d'aller plus loin.
   const isPrivateArea =
     pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/portal" || pathname.startsWith("/portal/");
-  if (isPrivateArea && !request.cookies.get("petsitter_session")?.value) {
+  if (isPrivateArea && !request.cookies.get(cookieNames().session)?.value) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

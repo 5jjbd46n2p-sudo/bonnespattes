@@ -199,11 +199,11 @@ export default async function ConfidentialitePage() {
             <p>Ce site n&apos;utilise que des cookies nécessaires à son fonctionnement :</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>
-                <strong>petsitter_session</strong> : maintient votre connexion à votre espace (30 jours au
+                <strong>__Host-petsitter_session</strong> : maintient votre connexion à votre espace (30 jours au
                 plus).
               </li>
               <li>
-                <strong>petsitter_mfa</strong> : étape de vérification du code lors de la connexion
+                <strong>__Host-petsitter_mfa</strong> : étape de vérification du code lors de la connexion
                 administrateur (5 minutes).
               </li>
               <li>
