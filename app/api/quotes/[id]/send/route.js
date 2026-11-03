@@ -32,6 +32,6 @@ export async function POST(_req, { params }) {
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("/api/quotes/[id]/send :", e?.message);
-    return NextResponse.json({ error: e.message || "Envoi impossible." }, { status: 500 });
+    return NextResponse.json({ error: "Envoi du devis impossible, réessaie dans un instant." }, { status: 500 });
   }
 }
