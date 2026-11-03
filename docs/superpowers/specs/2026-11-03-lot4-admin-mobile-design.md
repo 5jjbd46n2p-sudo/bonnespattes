@@ -1,6 +1,6 @@
 # Lot 4 : admin mobile
 
-Date : 2026-11-03. Statut : proposition, à valider par Timothé section par section (aucune conception encore approuvée).
+Date : 2026-11-03. Statut : validée par Timothé le 2026-11-03 (options recommandées retenues).
 Source : `docs/lots/lot-4-admin-mobile.md`, lecture du code de `main` (b20afa7), règles Better Design (cibles tactiles, navigation responsive, formulaires en étapes, dialogues). Rien n'a été vu à l'écran.
 
 ## Objectif
@@ -68,10 +68,10 @@ Mode hors ligne, application native, notifications, refonte de la Compta elle-m�
 ## Dépendances
 Lot 1 (tokens, `btn-sm`, `Field`, dialogues) recommandé avant ; sinon les étapes utilisent directement `<dialog>` et les classes existantes.
 
-## Questions à trancher par Timothé
-1. Remplacer l'onglet Compta par « Plus » (recommandé) ou garder Compta et mettre « Plus » dans l'en-tête ?
-2. Formulaire de visite : étapes qui se déplient sur un écran (recommandé) ou une étape par écran ?
-3. L'ordre des étapes Client, Quand, Tarif, Récapitulatif convient-il, ou Aurore part-elle plutôt de la date (depuis le planning) ? Recommandé : garder Client d'abord, la date venant du planning est préremplie.
-4. Libellé visible « Photo » sur le bouton photo (recommandé) ou icône seule ?
-5. Km administratifs : total du mois seul (recommandé) ou aussi le montant en euros au barème `km_rate` (dépend de la décision 0,70 € / 0,07 €) ?
-6. Faire tester le parcours terrain par Aurore elle-même sur son téléphone avant « Merge » (recommandé) ?
+## Décisions (validées le 2026-11-03)
+1. L'onglet Compta est remplacé par « Plus » (feuille du bas : Compta, Charges, Demandes, Avis, Photos du site, Réglages).
+2. Formulaire de visite en étapes qui se déplient sur un même écran.
+3. Ordre des étapes : Client → Quand → Tarif → Récapitulatif (la date venant du planning reste préremplie).
+4. Bouton photo avec libellé visible « Photo ».
+5. Km administratifs : total du mois seul (pas de montant en euros).
+6. Parcours terrain testé par Aurore sur son téléphone avant « Merge ».

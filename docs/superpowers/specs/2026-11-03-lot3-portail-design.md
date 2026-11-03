@@ -1,6 +1,6 @@
 # Lot 3 : portail client
 
-Date : 2026-11-03. Statut : proposition, à valider par Timothé section par section (aucune conception encore approuvée).
+Date : 2026-11-03. Statut : validée par Timothé le 2026-11-03 (options recommandées retenues).
 Source : `docs/lots/lot-3-portail-client.md`, lecture du code de `main` (b20afa7), règles Better Design (accessibilité, formulaires multi-étapes, navigation). Rien n'a été vu à l'écran.
 
 ## Objectif
@@ -58,10 +58,10 @@ Recommandation : 1, avec une navigation légère à trois ancres (Nouvelles, Fac
 ## Hors périmètre
 Paiement en ligne (carte), messagerie avec Aurore, notifications push, refonte du contrat lui-même, sceau (lot 0 B).
 
-## Questions à trancher par Timothé
-1. Accueil sur une seule page avec ancres (recommandé) ou trois pages séparées ?
-2. Afficher l'IBAN en clair dans le portail avec un bouton « Copier » (recommandé : oui, il figure déjà sur chaque facture) ?
-3. Heure de la prochaine visite : afficher l'heure exacte ou un créneau « vers 9 h » (recommandé : « vers », Aurore peut décaler de quelques minutes) ?
-4. Historique : 12 derniers mois puis « Voir plus » (recommandé) ou tout l'historique ?
-5. Résumé du contrat : extrait automatique du modèle (recommandé) ou texte écrit par Aurore dans les Réglages ?
-6. Faire le lot 3 avant ou après le lot 0 B (sceau) ? Recommandé : après, pour afficher directement « Scellé le ».
+## Décisions (validées le 2026-11-03)
+1. Accueil sur une seule page, navigation par ancres (Nouvelles, Factures, Mon compte).
+2. IBAN affiché en clair dans le portail, avec un bouton « Copier l'IBAN ».
+3. Prochaine visite affichée en créneau approximatif : « vers 9 h ».
+4. Historique : 12 derniers mois, puis « Voir plus ».
+5. Résumé du contrat extrait automatiquement du modèle.
+6. Le lot 3 est réalisé après la phase B du lot 0 (`secu-0b-contrat`, sceau), pour afficher directement « Scellé le ».
