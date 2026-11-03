@@ -26,3 +26,8 @@
 4. Activer la double authentification dans Réglages > Sécurité.
 5. Recommandé : base Neon en région européenne (aws-eu-central-1) au lieu de us-east-2.
 6. Vérifier que les accords de traitement (DPA) de Vercel, Neon et Resend sont acceptés dans leurs consoles.
+
+## Mises à jour
+- **Dependabot** (`.github/dependabot.yml`) ouvre chaque lundi une seule demande groupée pour les versions mineures et correctifs des paquets npm, et une demande séparée par version majeure (Next.js, React, Tailwind…). Les actions GitHub sont vérifiées chaque mois.
+- **Rythme** : une revue par mois des demandes ouvertes ; un correctif de sécurité (alerte Dependabot ou `npm audit` de gravité élevée ou critique) est appliqué sous 7 jours.
+- **Méthode** : fusion seulement après un déploiement d'aperçu Vercel réussi et un contrôle de la connexion, du planning et d'une facture PDF. Une version majeure passe par une branche dédiée et la lecture des notes de version (pour Next.js : `node_modules/next/dist/docs/`).

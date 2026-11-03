@@ -1,0 +1,25 @@
+# Mises à jour automatiques des dépendances (voir docs/SECURITE.md, « Mises à jour »).
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 5
+    groups:
+      # Une seule demande par semaine pour les versions mineures et correctifs
+      mineures-et-correctifs:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "Dépendances"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "Actions"
