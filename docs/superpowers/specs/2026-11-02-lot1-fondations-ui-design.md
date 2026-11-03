@@ -1,6 +1,6 @@
 # Lot 1 : fondations UI
 
-Date : 2026-11-02. Statut : à relire par Timothé avant le plan d'implémentation.
+Date : 2026-11-02. Statut : sections validées par Timothé (« Go » ×4) ; mise à jour du 2026-11-03 : 17 fichiers (avis), conventions Next 16.3 vérifiées.
 Origine : `docs/lots/lot-1-fondations-ui.md`, conception validée section par section le 2026-11-02.
 
 ## Objectif
@@ -71,7 +71,7 @@ Espacements nommés (base 4px) : `--space-1` 4px, `--space-2` 8px, `--space-3` 1
 
 ## 1c. États de page
 
-Fichiers (conventions vérifiées dans la documentation de Next.js 16 avant le plan) :
+Fichiers (conventions vérifiées dans `next@16.3.7/dist/docs` : `error.js` et `global-error.js` sont des composants client qui reçoivent `{ error, retry }` — `retry()` stable depuis 16.3, relance le chargement et le rendu du segment ; `error.digest` identifie l'erreur dans les journaux ; `global-error.js` rend ses propres `<html>`/`<body>`, sans styles globaux ni `metadata` (utiliser `<title>`) ; `not-found.js` et `loading.js` ne reçoivent aucune prop et sont des composants serveur ; la racine `app/not-found.js` gère aussi toutes les URL inconnues) :
 - Racine : `app/loading.js`, `app/error.js`, `app/not-found.js`, `app/global-error.js`.
 - Admin : `app/admin/loading.js`, `app/admin/error.js`, `app/admin/not-found.js`.
 - Portail : `app/portal/loading.js`, `app/portal/error.js`, `app/portal/not-found.js`.
@@ -101,8 +101,8 @@ Placé dans `app/admin/layout.js` et `app/portal/layout.js` (et `app/admin/clien
 - Succès : pastille mousse + texte, `role="status"`, disparaît après 5 s. Erreur : pastille brique + texte, `role="alert"`, reste jusqu'à fermeture (bouton « Fermer », icône Phosphor `X`).
 - Au plus trois notifications visibles ; les plus anciennes partent d'abord.
 
-### Remplacements (16 fichiers)
-`app/admin/accounting/ExpensesManager.jsx`, `app/admin/clients/new/page.js`, `app/admin/site-photos/SitePhotosManager.jsx`, `components/AdminEvents.jsx`, `components/ClientContractCard.jsx`, `components/ClientDataExportCard.jsx`, `components/ClientInfoCard.jsx`, `components/ClientLoginManager.jsx`, `components/ClientQuotesCard.jsx`, `components/DeleteInvoiceButton.jsx`, `components/DepositManager.jsx`, `components/PetManager.jsx`, `components/PhotoUploader.jsx`, `components/SettingsForm.jsx`, `components/VisitEditPanel.jsx`, `components/VisitHistory.jsx`.
+### Remplacements (17 fichiers)
+`app/admin/accounting/ExpensesManager.jsx`, `app/admin/avis/TestimonialsManager.jsx` (ajouté à main avec la fusion `avis`), `app/admin/clients/new/page.js`, `app/admin/site-photos/SitePhotosManager.jsx`, `components/AdminEvents.jsx`, `components/ClientContractCard.jsx`, `components/ClientDataExportCard.jsx`, `components/ClientInfoCard.jsx`, `components/ClientLoginManager.jsx`, `components/ClientQuotesCard.jsx`, `components/DeleteInvoiceButton.jsx`, `components/DepositManager.jsx`, `components/PetManager.jsx`, `components/PhotoUploader.jsx`, `components/SettingsForm.jsx`, `components/VisitEditPanel.jsx`, `components/VisitHistory.jsx`.
 - Chaque `confirm(texte)` devient `await confirmer({...})` ; le texte actuel est repris, découpé en titre (première phrase) et message (le reste). `danger: true` pour les suppressions, avoirs et révocations.
 - Chaque `alert(texte)` devient `toast.erreur(texte)` ou `toast.succes(texte)` selon le cas, ou un message dans le formulaire s'il en affiche déjà.
 
