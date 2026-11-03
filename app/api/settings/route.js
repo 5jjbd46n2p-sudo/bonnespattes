@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { alertAdmin } from "@/lib/security";
 import { readJson } from "@/lib/api";
+import { normalizeWhatsapp } from "@/lib/landing";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -37,6 +38,7 @@ export async function PATCH(req) {
     insuranceInfo: "insurance_info",
     mediatorInfo: "mediator_info",
     socialRate: "social_rate",
+    whatsappNumber: "whatsapp_number",
   };
   let templateChanged = false;
   if (body.contractTemplate !== undefined) {
@@ -104,6 +106,12 @@ export async function PATCH(req) {
       return NextResponse.json({ error: "Zone d'intervention invalide." }, { status: 400 });
     }
     body.serviceArea = body.serviceArea.trim();
+  }
+  // WhatsApp entreprise : vide = bouton masqué sur le site ; sinon chiffres au format international.
+  if (body.whatsappNumber !== undefined) {
+    const wa = normalizeWhatsapp(body.whatsappNumber);
+    if (wa.error) return NextResponse.json({ error: wa.error }, { status: 400 });
+    body.whatsappNumber = wa.value;
   }
   const sets = [];
   const values = [];

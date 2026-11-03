@@ -83,7 +83,7 @@ export default function NewInvoiceForm({ clients, settings, preselectedClientId,
       const hours = computeVisitHours(v.start_time, v.end_time);
       const label =
         v.service_kind === "GARDE_JOUR"
-          ? `Garde à domicile du ${formatDateFR(v.date)} — ${v.pet_name} (forfait journalier)`
+          ? `Garde chez Aurore du ${formatDateFR(v.date)} — ${v.pet_name} (forfait journalier)`
           : `Visite du ${formatDateFR(v.date)} — ${v.pet_name}${hours ? ` (${hours} h)` : ""}`;
       if (v.is_free) return [{ description: `${label} — offerte`, quantity: 1, unitPrice: 0 }];
       const disc = Number(v.discount_percent) || 0;

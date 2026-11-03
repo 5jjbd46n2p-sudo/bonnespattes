@@ -184,7 +184,7 @@ export default function VisitCard({ visit }) {
                 {visit.pet_name} — {visit.first_name} {visit.last_name}
               </Link>
               {visit.service_kind === "GARDE_JOUR" && (
-                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full border border-trait">Garde à domicile</span>
+                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full border border-trait">Garde chez moi</span>
               )}
               <VisitBillingBadge
                 visit={{ status, is_free: visit.is_free, invoice_status: visit.invoice_status }}

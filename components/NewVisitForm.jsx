@@ -257,7 +257,7 @@ export default function NewVisitForm({ client: fixedClient = null, clients = [],
             Retour à la fiche client
           </Link>
         )}
-        <h1 className="font-display font-semibold text-encre mt-2">{stay ? "Planifier une garde à domicile" : "Planifier une visite"}</h1>
+        <h1 className="font-display font-semibold text-encre mt-2">{stay ? "Planifier une garde chez moi" : "Planifier une visite"}</h1>
         {!pickMode && (
           <p className="text-pierre text-sm mt-1">
             Pour {fixedClient.first_name} {fixedClient.last_name}

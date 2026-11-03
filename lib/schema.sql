@@ -431,3 +431,6 @@ CREATE TABLE IF NOT EXISTS testimonials (
   published BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Vitrine : numéro WhatsApp entreprise (chiffres au format international, vide = bouton masqué)
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;
