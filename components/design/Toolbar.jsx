@@ -204,6 +204,23 @@ export default function Toolbar({ active, refresh, resolver, actions }) {
           onChange={(v) => setText({ charSpacing: v }, true)}
         />
         <ColorField label="Couleur du texte" value={t.fill} onChange={(c) => change(() => t.set("fill", c || "#1f1a15"))} />
+        <ColorField
+          label="Contour du texte"
+          allowNone
+          value={t.strokeWidth > 0 ? t.stroke : null}
+          onChange={(c) =>
+            setText(c ? { stroke: c, strokeWidth: t.strokeWidth > 0 ? t.strokeWidth : 2 } : { stroke: null, strokeWidth: 0 })
+          }
+        />
+        <NumberField
+          label="Épaisseur du contour du texte (mm)"
+          value={fmtNum((t.strokeWidth || 0) / 10, 2)}
+          min={0}
+          max={5}
+          step={0.05}
+          suffix="mm"
+          onChange={(mm) => setText(mm > 0 && !t.stroke ? { strokeWidth: mm * 10, stroke: "#1f1a15" } : { strokeWidth: mm * 10 }, true)}
+        />
       </>
     );
   } else if (single && isImage(single)) {
