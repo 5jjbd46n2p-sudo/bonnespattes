@@ -59,8 +59,8 @@ test("formulaire : tous les champs actuels conservés", () => {
   expect(src).toContain("DEVIS");
 });
 
-test("page : un seul h1 et nouvelle accroche", () => {
+test("page : un seul h1 et accroche d'origine", () => {
   const all = files.map((f) => readFileSync(f, "utf8")).join("\n");
   expect((all.match(/<h1[\s>]/g) || []).length).toBe(1);
-  expect(readFileSync("app/page.js", "utf8")).toContain("Visites et balades pour vos animaux, à Viarmes et autour.");
+  expect(readFileSync("app/page.js", "utf8")).toContain("Vos compagnons entre de bonnes mains, en votre absence.");
 });

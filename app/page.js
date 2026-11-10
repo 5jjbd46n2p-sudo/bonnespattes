@@ -79,6 +79,8 @@ function jsonLd(area, appUrl) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rouille";
+
 export default async function Home({ searchParams }) {
   let user = null;
   try {
@@ -97,6 +99,7 @@ export default async function Home({ searchParams }) {
 
   const rateList = [s.rate_30, s.rate_45, s.rate_60].map(Number).filter((n) => Number.isFinite(n) && n > 0);
   const fromPrice = rateList.length ? Math.min(...rateList) : 15;
+  const dayRate = Number(s.rate_day);
 
 
   return (
@@ -112,19 +115,19 @@ export default async function Home({ searchParams }) {
 
       <header className="px-4 py-4 border-b border-trait">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-          <Link href="/" aria-label="Aux Bonnes Pattes, accueil">
+          <Link href="/" aria-label="Aux Bonnes Pattes, accueil" className={`rounded ${FOCUS}`}>
             <Logo size={26} className="text-encre" />
           </Link>
           <nav aria-label="Navigation" className="flex items-center gap-4 sm:gap-6 text-sm font-bold">
-            <a href="#tarifs" className="text-encre underline underline-offset-4 decoration-trait hover:decoration-rouille py-2">
+            <a href="#tarifs" className={`hidden sm:inline rounded text-encre underline underline-offset-4 decoration-trait hover:decoration-rouille py-2 ${FOCUS}`}>
               Tarifs
             </a>
             {galleryPhotos.length > 0 && (
-              <a href="#galerie" className="text-encre underline underline-offset-4 decoration-trait hover:decoration-rouille py-2">
+              <a href="#galerie" className={`rounded text-encre underline underline-offset-4 decoration-trait hover:decoration-rouille py-2 ${FOCUS}`}>
                 Galerie
               </a>
             )}
-            <Link href="/login" className="text-encre underline underline-offset-4 decoration-trait hover:decoration-rouille py-2">
+            <Link href="/login" className={`rounded text-encre underline underline-offset-4 decoration-trait hover:decoration-rouille py-2 ${FOCUS}`}>
               Espace client
             </Link>
           </nav>
@@ -148,10 +151,10 @@ export default async function Home({ searchParams }) {
                 vos NAC, avec compte rendu et photos après chaque passage.
               </p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <a href="#contact" className="btn-primary text-base">
+                <a href="#contact" className={`btn-primary text-base ${FOCUS}`}>
                   Demander un rendez-vous
                 </a>
-                <a href="#tarifs" className="btn-ghost text-base">
+                <a href="#tarifs" className={`btn-ghost text-base ${FOCUS}`}>
                   Voir les tarifs
                 </a>
               </div>
@@ -288,6 +291,9 @@ export default async function Home({ searchParams }) {
                 <li>Un compte rendu avec photos après chaque visite</li>
                 <li>Une première rencontre gratuite, chez vous</li>
                 <li>Un devis personnalisé sous 24 h, avant toute prestation</li>
+                {Number.isFinite(dayRate) && dayRate > 0 && (
+                  <li>Garde chez Aurore : {formatEUR(dayRate)} la journée</li>
+                )}
               </ul>
               <p className="text-pierre mt-4 leading-relaxed">
                 Le tarif dépend de la durée, du nombre d'animaux et de la distance depuis Viarmes. Je me déplace sur
