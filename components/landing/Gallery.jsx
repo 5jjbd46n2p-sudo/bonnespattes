@@ -20,7 +20,7 @@ export default function Gallery({ photos = [] }) {
   if (photos.length === 0 || missing >= photos.length) return null;
 
   return (
-    <section aria-labelledby="galerie" className="py-12 md:py-16">
+    <section aria-labelledby="galerie" className="py-12 md:py-16 scroll-mt-4">
       <h2 id="galerie" className="font-display text-2xl md:text-3xl font-semibold mb-6 px-4 max-w-5xl mx-auto">
         Instants de balade
       </h2>
