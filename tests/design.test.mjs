@@ -128,15 +128,15 @@ test("designInfo : réglages remplis", () => {
 
 test("designInfo : champs vides → textes d'exemple", () => {
   const info = designInfo({ business_name: "  ", contact_email: "", whatsapp_number: null }, "");
-  expect(info.name).toBe("Nom de ton activité");
-  expect(info.email).toBe("ton.email@exemple.fr");
+  expect(info.name).toBe("Nom de l'activité");
+  expect(info.email).toBe("email@exemple.fr");
   expect(info.phone).toBe("06 00 00 00 00");
-  expect(info.area).toBe("Ta commune et ses environs");
+  expect(info.area).toBe("Commune et environs");
   expect(info.instagram).toBe("@auxbonnespattes");
-  expect(info.site).toBe("ton-site.fr");
-  expect(info.siteUrl).toBe("https://ton-site.fr");
+  expect(info.site).toBe("site-internet.fr");
+  expect(info.siteUrl).toBe("https://site-internet.fr");
   expect(info.fromPrice).toBe(null);
-  expect(designInfo(null, undefined).name).toBe("Nom de ton activité");
+  expect(designInfo(null, undefined).name).toBe("Nom de l'activité");
 });
 
 // --- Modèles -----------------------------------------------------------------
