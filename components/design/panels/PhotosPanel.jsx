@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FabricImage, Rect } from "fabric";
+import { FabricImage, Rect, util } from "fabric";
 import { UploadSimple, CircleNotch } from "@phosphor-icons/react";
 import { useEditor } from "../EditorContext";
 import { coverCrop, fitScale } from "@/lib/designExport";
@@ -71,18 +71,26 @@ function assetsIn(pages) {
 // Emplacement photo (Rect d'un modèle) ou photo déjà cadrée.
 const isPhotoFrame = (o) => !!o && o.abpRole === "photo" && isType(o, "rect", "image");
 
+// Cadre visible sur la page (unités) : un Rect, ou le clipPath d'une photo déjà
+// cadrée. Même modèle que le cœur de l'éditeur (editor-utils, getPhotoFrame) :
+// clipPath Rect relatif à l'image, centré dans son repère local.
 function frameOf(o) {
-  const w = o.width * (o.scaleX ?? 1);
-  const h = o.height * (o.scaleY ?? 1);
-  let r = 0;
-  if (isType(o, "rect")) r = (o.rx || 0) * (o.scaleX ?? 1);
-  else if (o.clipPath && isType(o.clipPath, "rect")) r = (o.clipPath.rx || 0) * (o.scaleX ?? 1);
-  return { w, h, r, center: o.getCenterPoint(), angle: o.angle || 0 };
+  const sx = o.scaleX ?? 1;
+  const sy = o.scaleY ?? 1;
+  const clip = isType(o, "image") && o.clipPath && !o.clipPath.absolutePositioned ? o.clipPath : null;
+  if (clip) {
+    const cw = (clip.width || 0) * (clip.scaleX ?? 1);
+    const ch = (clip.height || 0) * (clip.scaleY ?? 1);
+    const center = util.transformPoint(clip.getCenterPoint(), o.calcTransformMatrix());
+    return { w: cw * sx, h: ch * sy, r: (clip.rx || 0) * (clip.scaleX ?? 1) * sx, center, angle: o.angle || 0 };
+  }
+  const r = isType(o, "rect") ? (o.rx || 0) * sx : 0;
+  return { w: o.width * sx, h: o.height * sy, r, center: o.getCenterPoint(), angle: o.angle || 0 };
 }
 
-// Cadre rectangulaire (clipPath) aux dimensions de l'image recadrée, en coordonnées locales.
+// Cadre (clipPath) centré dans le repère local de l'image, rayon en unités locales.
 function frameClip(width, height, rLocal) {
-  return new Rect({ width, height, originX: "center", originY: "center", left: 0, top: 0, rx: rLocal, ry: rLocal, strokeWidth: 0 });
+  return new Rect({ width, height, originX: "center", originY: "center", left: 0, top: 0, rx: rLocal, ry: rLocal, strokeWidth: 0, absolutePositioned: false });
 }
 
 function Thumb({ src, label, onPick, onBroken, disabled }) {
@@ -149,14 +157,12 @@ export default function PhotosPanel() {
       const ih = img.height;
       const target = canvas.getActiveObject?.();
       if (isPhotoFrame(target) && canvas.getObjects().includes(target)) {
-        // La photo prend la place et la taille de l'emplacement, recadrée en couverture.
+        // La photo prend la place et la taille de l'emplacement, en couverture :
+        // image entière à l'échelle c.scale, cadre (clipPath) de c.width × c.height
+        // au centre (zoom 1, décalage 0 pour la barre d'outils).
         const f = frameOf(target);
         const c = coverCrop(iw, ih, f.w, f.h);
         img.set({
-          cropX: c.cropX,
-          cropY: c.cropY,
-          width: c.width,
-          height: c.height,
           scaleX: c.scale,
           scaleY: c.scale,
           angle: f.angle,

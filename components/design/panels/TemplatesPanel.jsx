@@ -76,7 +76,7 @@ export default function TemplatesPanel() {
     setPending({ id: "blank", label: "Page vierge", page: pageOf(blankPages(design.format), faceIndex) });
   }
 
-  async function confirm() {
+  async function applyPending() {
     if (!pending?.page) return;
     setBusy(true);
     setError("");
@@ -149,7 +149,7 @@ export default function TemplatesPanel() {
         onCancel={() => {
           if (!busy) setPending(null);
         }}
-        onConfirm={confirm}
+        onConfirm={applyPending}
       >
         {faceLabel ? `Le contenu actuel du ${faceLabel} sera remplacé.` : "Le contenu actuel de la page sera remplacé."} Tu pourras annuler avec Ctrl+Z.
       </ConfirmDialog>
