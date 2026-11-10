@@ -434,3 +434,22 @@ CREATE TABLE IF NOT EXISTS testimonials (
 
 -- Vitrine : numéro WhatsApp entreprise (chiffres au format international, vide = bouton masqué)
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;
+
+-- Onglet Conception : cartes de visite et flyers (2026-11-10)
+CREATE TABLE IF NOT EXISTS designs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  format TEXT NOT NULL CHECK (format IN ('CARTE','A5','A4')),
+  orientation TEXT NOT NULL DEFAULT 'portrait' CHECK (orientation IN ('portrait','paysage')),
+  pages JSONB NOT NULL DEFAULT '[]'::jsonb,
+  thumbnail TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS design_assets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  blob_url TEXT NOT NULL,
+  content_type TEXT NOT NULL,
+  bytes INTEGER NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
