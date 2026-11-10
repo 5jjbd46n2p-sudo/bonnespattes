@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sun, CalendarBlank, Plus, PawPrint, Receipt, GearSix, Tray } from "@phosphor-icons/react";
+import { Sun, CalendarBlank, Plus, PawPrint, Receipt, GearSix, Tray, PaintBrush } from "@phosphor-icons/react";
 import useNewLeadsCount from "@/app/admin/leads/useNewLeadsCount";
 import GlobalSearch from "@/components/GlobalSearch";
 import Logo from "@/components/Logo";
@@ -21,10 +21,11 @@ export default function MobileNav() {
   const newLeads = useNewLeadsCount(pathname);
   const leadsActive = pathname.startsWith("/admin/leads");
   const settingsActive = pathname.startsWith("/admin/settings");
+  const conceptionActive = pathname.startsWith("/admin/conception");
 
   return (
     <>
-      {/* En-tête compact : marque + recherche + réglages */}
+      {/* En-tête compact : marque + recherche + demandes + conception + réglages */}
       <header className="md:hidden sticky top-0 z-20 bg-nav text-sur-nav pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between px-3 h-12">
           <Link href="/admin" aria-label="Aux Bonnes Pattes, accueil" className="pl-1">
@@ -46,6 +47,16 @@ export default function MobileNav() {
                   {newLeads}
                 </span>
               )}
+            </Link>
+            <Link
+              href="/admin/conception"
+              aria-label="Conception"
+              aria-current={conceptionActive ? "page" : undefined}
+              className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                conceptionActive ? "text-nav-actif" : "hover:bg-white/10"
+              }`}
+            >
+              <PaintBrush size={24} aria-hidden="true" />
             </Link>
             <Link
               href="/admin/settings"
