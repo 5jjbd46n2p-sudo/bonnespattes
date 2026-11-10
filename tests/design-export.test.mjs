@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
-import { coverCrop, fitScale, pngMultiplier, exportFileName, renderRect, dataUrlToBytes } from "../lib/designExport.js";
-import { isQrPlaceholder, isQrObject, qrPlaceholderBox, pageQrPlaceholders, parseQrText } from "../lib/designQr.js";
+import { coverCrop, fitScale, pngMultiplier, exportFileName, renderRect, dataUrlToBytes, pdfPageSize } from "../lib/designExport.js";
+import { isQrPlaceholder, isQrObject, qrPlaceholderBox, pageQrPlaceholders, parseQrText, qrPathData } from "../lib/designQr.js";
 import { getFormat } from "../lib/designFormats.js";
 
 test("coverCrop : image plus large que le cadre, rognée sur les côtés", () => {
@@ -95,4 +95,51 @@ test("parseQrText", () => {
   expect(parseQrText("  https://a.fr ")).toEqual({ value: "https://a.fr" });
   expect(parseQrText("").error).toBeTruthy();
   expect(parseQrText("x".repeat(501)).error).toBeTruthy();
+});
+
+test("qrPathData : suites horizontales fusionnées", () => {
+  const grid = [
+    [1, 1, 0],
+    [0, 1, 1],
+    [1, 0, 1],
+  ];
+  const modules = { size: 3, get: (r, c) => grid[r][c] };
+  expect(qrPathData(modules)).toBe("M0 0h2v1h-2zM1 1h2v1h-2zM0 2h1v1h-1zM2 2h1v1h-1z");
+  expect(qrPathData({ size: 0, get: () => 0 })).toBe("");
+});
+
+test("pdfPageSize : carte 88 × 58 mm → 249,4 × 164,4 pt", () => {
+  const { w, h } = pdfPageSize(getFormat("CARTE"));
+  expect(w).toBeCloseTo(249.4, 1);
+  expect(h).toBeCloseTo(164.4, 1);
+});
+
+// pdf-lib n'est pas installé dans le bac à sable : test sauté si l'import échoue.
+let pdfLib = null;
+try {
+  pdfLib = await import("pdf-lib");
+} catch {
+  pdfLib = null;
+}
+
+// PNG 1 × 1 transparent : image factice à la place du rendu 300 dpi.
+const TINY_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+test.skipIf(!pdfLib)("PDF carte : deux pages de 249,4 × 164,4 pt, image pleine page", async () => {
+  const fmt = getFormat("CARTE");
+  const { PDFDocument } = pdfLib;
+  const doc = await PDFDocument.create();
+  const { w, h } = pdfPageSize(fmt);
+  for (let i = 0; i < fmt.faces; i++) {
+    const img = await doc.embedPng(dataUrlToBytes(TINY_PNG));
+    const p = doc.addPage([w, h]);
+    p.drawImage(img, { x: 0, y: 0, width: w, height: h });
+  }
+  const reloaded = await PDFDocument.load(await doc.save());
+  expect(reloaded.getPageCount()).toBe(2);
+  for (const page of reloaded.getPages()) {
+    const size = page.getSize();
+    expect(size.width).toBeCloseTo(249.4, 1);
+    expect(size.height).toBeCloseTo(164.4, 1);
+  }
 });
