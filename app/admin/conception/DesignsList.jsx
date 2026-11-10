@@ -26,7 +26,7 @@ function sizeHint(key) {
   return t ? `${t.w} × ${t.h} mm` : "";
 }
 
-// `updated_at::text` de Postgres (« 2026-11-10 14:23:05.12+00 ») → « 10 nov. 2026 ».
+// Date ISO (« 2026-11-10T14:23:05.120Z », ou texte Postgres « 2026-11-10 14:23:05+00 ») → « 10 nov. 2026 ».
 // Fuseau fixe pour que le rendu serveur et le rendu navigateur soient identiques.
 function formatDate(text) {
   if (!text) return "";
@@ -274,7 +274,7 @@ function NewDesignDialog({ open, onClose }) {
             Annuler
           </button>
           <button type="submit" disabled={busy} className="btn-primary text-sm">
-            {busy ? "Création..." : "Créer"}
+            {busy ? "Création…" : "Créer"}
           </button>
         </div>
       </form>
@@ -333,7 +333,7 @@ function RenameDialog({ design, onClose }) {
             Annuler
           </button>
           <button type="submit" disabled={busy} className="btn-primary text-sm">
-            {busy ? "Enregistrement..." : "Enregistrer"}
+            {busy ? "Enregistrement…" : "Enregistrer"}
           </button>
         </div>
       </form>
@@ -377,7 +377,7 @@ function DeleteDialog({ design, onClose }) {
           className="btn-ghost text-sm !border-brique !text-brique disabled:opacity-60"
         >
           <Trash size={20} aria-hidden="true" />
-          {busy ? "Suppression..." : "Supprimer"}
+          {busy ? "Suppression…" : "Supprimer"}
         </button>
       </div>
     </Modal>

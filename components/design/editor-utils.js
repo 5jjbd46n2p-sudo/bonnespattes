@@ -106,7 +106,7 @@ export async function sanitizeImages(page) {
 // Boîte englobante en unités (plan de la scène, sans le zoom).
 export function sceneBounds(obj) {
   obj.setCoords();
-  const r = obj.getBoundingRect(true, true);
+  const r = obj.getBoundingRect();
   return { left: r.left, top: r.top, width: r.width, height: r.height };
 }
 

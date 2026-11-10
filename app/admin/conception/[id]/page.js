@@ -3,6 +3,7 @@ import { adminPageGuard } from "@/lib/auth";
 import { isUuid } from "@/lib/api";
 import { loadDesign, loadDesignSettings } from "@/lib/designData";
 import { designInfo } from "@/lib/designTemplates";
+import { loadSitePhotos } from "@/lib/sitePhotos";
 import EditorLoader from "@/components/design/EditorLoader";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,10 @@ export default async function ConceptionEditorPage({ params }) {
   if (!design) notFound();
 
   const settings = await loadDesignSettings();
-  const info = designInfo(settings || {}, process.env.NEXT_PUBLIC_APP_URL || "");
+  const info = {
+    ...designInfo(settings || {}, process.env.NEXT_PUBLIC_APP_URL || ""),
+    sitePhotos: await loadSitePhotos(),
+  };
 
   // Objet simple (sérialisable) pour le composant client.
   const props = {

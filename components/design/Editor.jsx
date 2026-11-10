@@ -15,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { FACE_LABELS, SERIALIZE_PROPS, getFormat, isOutsideSafe } from "@/lib/designFormats";
 import { browserFontResolver, ensureFontsLoaded, mapPageFonts } from "@/lib/designFonts";
+import { replaceQrPlaceholders } from "@/lib/designQr";
 import { EditorContext } from "./EditorContext";
 import useHistory from "./useHistory";
 import Toolbar from "./Toolbar";
@@ -57,7 +58,7 @@ export default function Editor({ design, info }) {
   if (!fmt) {
     return (
       <div className="card p-6">
-        <h1>Conception</h1>
+        <h1 className="font-display text-2xl font-semibold text-encre">Conception</h1>
         <p className="mt-2 text-pierre">Le format de cette conception est inconnu, elle ne peut pas être ouverte.</p>
         <Link href="/admin/conception" className="btn-ghost mt-4">
           Retour à mes conceptions
@@ -215,6 +216,7 @@ function EditorInner({ design, info, fmt }) {
       });
       try {
         await sc.loadFromJSON(mapPageFonts(pagesRef.current[0] || blankPage(), toRuntime));
+        await replaceQrPlaceholders(sc);
         if (!sc.backgroundColor) sc.backgroundColor = PAPIER;
         sc.renderAll();
         const url = sc.toDataURL({ format: "jpeg", quality: 0.6, multiplier: 240 / fmt.canvas.w });
@@ -616,10 +618,11 @@ function EditorInner({ design, info, fmt }) {
 
     on("object:added", ({ target }) => {
       if (target) prepareObject(target);
-      if (!loadingRef.current) commit();
+      // Échange d'un QR (bloc 4b) : pas d'état intermédiaire dans l'historique.
+      if (!loadingRef.current && !target?.abpQrSwap) commit();
     });
-    on("object:removed", () => {
-      if (!loadingRef.current) commit();
+    on("object:removed", ({ target }) => {
+      if (!loadingRef.current && !target?.abpQrSwap) commit();
     });
     on("object:modified", () => {
       snapLinesRef.current = [];
@@ -774,6 +777,13 @@ function EditorInner({ design, info, fmt }) {
       }
       if (!a) return;
       if (e.key === "Delete" || e.key === "Backspace") {
+        if (
+          t &&
+          typeof t.closest === "function" &&
+          t.closest('[role="dialog"],dialog,button,input,select,textarea,[contenteditable]')
+        ) {
+          return;
+        }
         e.preventDefault();
         remove();
         return;
@@ -892,7 +902,9 @@ function EditorInner({ design, info, fmt }) {
 
   return (
     <EditorContext.Provider value={ctxValue}>
-      <div className="flex h-[calc(100dvh-13rem)] min-h-[420px] flex-col gap-3 md:h-[calc(100dvh-5rem)] md:min-h-[560px]">
+      {/* En md+ : toute la largeur disponible (100vw − AdminNav w-60 − marges du <main> md:px-10),
+          centrée sur le <main> limité à max-w-6xl. */}
+      <div className="flex h-[calc(100dvh-13rem)] min-h-[420px] flex-col gap-3 md:relative md:left-1/2 md:h-[calc(100dvh-5rem)] md:min-h-[560px] md:w-[calc(100vw-15rem-5rem)] md:max-w-none md:-translate-x-1/2">
         {/* Barre du haut : retour, nom, état d'enregistrement, téléchargement */}
         <header className="flex flex-wrap items-center gap-3">
           <Link
@@ -936,7 +948,7 @@ function EditorInner({ design, info, fmt }) {
 
         {/* Trois zones : panneau gauche, toile, barre contextuelle */}
         <div className="flex min-h-0 flex-1 overflow-hidden rounded-lg border border-trait bg-lin">
-          <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto border-r border-trait md:flex">
+          <aside className="hidden shrink-0 overflow-hidden md:flex">
             {canvas && <LeftPanel />}
           </aside>
           <section className="flex min-w-0 flex-1 flex-col">
