@@ -1,7 +1,7 @@
 "use client";
 
 // Outils du cœur de l'éditeur (navigateur seulement, Fabric v6).
-import { FabricImage, FabricText, Group, Point, Rect, util } from "fabric";
+import { ActiveSelection, FabricImage, FabricText, Group, Point, Rect, util } from "fabric";
 
 export const PAPIER = "#f7f2ea";
 export const ROUILLE = "#a8481f";
@@ -14,7 +14,8 @@ export const SNAP_UNITS = 30; // aimantation : 3 mm
 export const isText = (o) => !!o && o instanceof FabricText;
 export const isImage = (o) => !!o && o instanceof FabricImage;
 export const isGroup = (o) => !!o && o instanceof Group && !isSelection(o);
-export const isSelection = (o) => !!o && String(o.type || "").toLowerCase() === "activeselection";
+export const isSelection = (o) =>
+  !!o && (o instanceof ActiveSelection || String(o.type || "").toLowerCase() === "activeselection");
 export const isRect = (o) => !!o && o instanceof Rect;
 
 export function clamp(n, min, max) {
@@ -190,6 +191,7 @@ export function setPhotoCrop(img, { zoom, panX, panY, radius }) {
     originY: "center",
     rx: r,
     ry: r,
+    strokeWidth: 0,
     absolutePositioned: false,
   });
   img.set({ scaleX: s, scaleY: s, clipPath: clip });
@@ -252,11 +254,19 @@ export function drawGuides(ctx, fmt, vpt, { warnings = [], snapLines = [] } = {}
   ctx.transform(vpt[0], vpt[1], vpt[2], vpt[3], vpt[4], vpt[5]);
 
   // Fond perdu légèrement grisé (quatre bandes autour de la coupe).
+  // Effacées avant d'être peintes : le voile reste identique même si le
+  // contexte supérieur n'a pas été vidé entre deux rendus.
+  const bands = [
+    [0, 0, w, t.y],
+    [0, t.y + t.h, w, h - (t.y + t.h)],
+    [0, t.y, t.x, t.h],
+    [t.x + t.w, t.y, w - (t.x + t.w), t.h],
+  ];
   ctx.fillStyle = "rgba(31, 26, 21, 0.14)";
-  ctx.fillRect(0, 0, w, t.y);
-  ctx.fillRect(0, t.y + t.h, w, h - (t.y + t.h));
-  ctx.fillRect(0, t.y, t.x, t.h);
-  ctx.fillRect(t.x + t.w, t.y, w - (t.x + t.w), t.h);
+  for (const [x, y, bw, bh] of bands) {
+    ctx.clearRect(x, y, bw, bh);
+    ctx.fillRect(x, y, bw, bh);
+  }
 
   // Trait de coupe en pointillé.
   ctx.lineWidth = 1 / z;
