@@ -13,11 +13,22 @@ const SITE_LABELS = { hero: "Photo principale", services: "Ce que je fais", conf
 const slotLabel = (s) => SITE_LABELS[s] || `Galerie ${s.replace("gallery-", "")}`;
 
 const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
-const MAX_BYTES = 10 * 1024 * 1024;
+// Vercel refuse les corps de requête au-delà d'environ 4,5 Mo.
+const MAX_UPLOAD = 4 * 1024 * 1024;
 const MAX_SIDE = 4000; // au-delà, réduit à TARGET_SIDE (A4 à 300 dpi ≈ 3500 px)
 const TARGET_SIDE = 3500;
+const FALLBACK_SIDE = 3000;
 
-// Réduit les photos trop lourdes ou trop grandes ; laisse les autres intactes.
+function encode(bmp, maxSide, quality) {
+  const ratio = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * ratio);
+  c.height = Math.round(bmp.height * ratio);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise((res) => c.toBlob(res, "image/jpeg", quality));
+}
+
+// Réencode les photos trop lourdes pour l'envoi ou trop grandes ; laisse les autres intactes.
 async function prepare(file) {
   if (!ALLOWED.includes(file.type)) throw new Error("Format non pris en charge (JPEG, PNG ou WEBP).");
   let bmp;
@@ -26,20 +37,21 @@ async function prepare(file) {
   } catch {
     throw new Error("Cette photo ne peut pas être lue. Essaie en JPEG ou PNG.");
   }
-  const side = Math.max(bmp.width, bmp.height);
-  if (file.size <= MAX_BYTES && side <= MAX_SIDE) {
+  try {
+    const side = Math.max(bmp.width, bmp.height);
+    if (file.size <= MAX_UPLOAD && side <= MAX_SIDE) return file;
+    for (const [maxSide, quality] of [
+      [TARGET_SIDE, 0.9],
+      [TARGET_SIDE, 0.8],
+      [FALLBACK_SIDE, 0.8],
+    ]) {
+      const blob = await encode(bmp, maxSide, quality);
+      if (blob && blob.size <= MAX_UPLOAD) return new File([blob], "photo.jpg", { type: "image/jpeg" });
+    }
+    throw new Error("Photo trop lourde pour l'envoi, réduis-la puis réessaie.");
+  } finally {
     bmp.close?.();
-    return file;
   }
-  const ratio = Math.min(1, TARGET_SIDE / side);
-  const c = document.createElement("canvas");
-  c.width = Math.round(bmp.width * ratio);
-  c.height = Math.round(bmp.height * ratio);
-  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-  bmp.close?.();
-  const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.9));
-  if (!blob || blob.size > MAX_BYTES) throw new Error("Photo trop lourde (10 Mo au plus).");
-  return new File([blob], "photo.jpg", { type: "image/jpeg" });
 }
 
 const pathOf = (src) => {
@@ -211,6 +223,7 @@ export default function PhotosPanel() {
           throw new Error("Envoi impossible : vérifie ta connexion.");
         }
         const data = await res.json().catch(() => ({}));
+        if (res.status === 413) throw new Error("Photo trop lourde pour l'envoi, réduis-la puis réessaie.");
         if (!res.ok || !data?.asset?.src) throw new Error(data?.error || "Échec de l'envoi de la photo.");
         last = data.asset.src;
         setUploaded((u) => [data.asset.src, ...u.filter((x) => x !== data.asset.src)]);
@@ -252,7 +265,7 @@ export default function PhotosPanel() {
           onChange={(e) => onFiles(e.target.files)}
         />
       </label>
-      <p className="text-sm text-pierre mt-1.5">JPEG, PNG ou WEBP, 10 Mo au plus.</p>
+      <p className="text-sm text-pierre mt-1.5">JPEG, PNG ou WEBP. Les photos lourdes sont réduites avant l'envoi.</p>
       <ErrorText>{error}</ErrorText>
       {placing && (
         <p className="text-sm text-pierre mt-2 flex items-center gap-1.5" aria-live="polite">

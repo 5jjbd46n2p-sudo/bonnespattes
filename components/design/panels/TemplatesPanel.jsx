@@ -81,7 +81,11 @@ export default function TemplatesPanel() {
     setBusy(true);
     setError("");
     try {
-      await replaceCurrentPage(structuredClone(pending.page));
+      const ok = await replaceCurrentPage(structuredClone(pending.page));
+      if (ok === false) {
+        setError("Impossible d'appliquer ce modèle. Réessaie.");
+        return;
+      }
       setPending(null);
     } catch (e) {
       console.error("Remplacement de la page :", e?.message);

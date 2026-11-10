@@ -47,7 +47,7 @@ export default function LeftPanel() {
   }
 
   return (
-    <aside className="flex h-full min-h-0 border-r border-trait bg-lin" aria-label="Éléments à ajouter">
+    <div className="flex h-full min-h-0 border-r border-trait bg-lin" aria-label="Éléments à ajouter">
       <div role="tablist" aria-orientation="vertical" aria-label="Panneaux" className="flex w-20 shrink-0 flex-col gap-1 border-r border-trait bg-papier p-1.5" onKeyDown={onKeyDown}>
         {TABS.map((t) => {
           const selected = t.id === tab;
@@ -83,6 +83,6 @@ export default function LeftPanel() {
       >
         <Panel />
       </div>
-    </aside>
+    </div>
   );
 }
