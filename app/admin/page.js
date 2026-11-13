@@ -6,6 +6,7 @@ import VisitCard from "@/components/VisitCard";
 import NextVisitBanner from "@/components/NextVisitBanner";
 import { Plus } from "@phosphor-icons/react/ssr";
 import { SETTLED_BY_CREDIT_NOTE_SQL } from "@/lib/invoiceNumber";
+import { phraseOfDay } from "@/lib/dailyPhrases";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,8 @@ export default async function AdminDashboard() {
         <div>
           <p className="text-pierre text-sm mb-1 capitalize">{formatDateLongFR(today)}</p>
           <h1 className="font-display text-3xl font-semibold text-encre">Aujourd'hui</h1>
+          {/* Phrase du jour : une par jour de l'année, la même chaque année à la même date */}
+          <p className="text-pierre italic mt-2 max-w-xl leading-relaxed">{phraseOfDay(today)}</p>
         </div>
         {/* Masqué sur mobile (bouton « + » de la barre d'onglets) ; enveloppé dans
             un div car .btn-primary (hors @layer) écraserait la classe hidden. */}
