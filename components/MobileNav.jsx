@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sun, CalendarBlank, Plus, PawPrint, Receipt, GearSix, Tray, PaintBrush } from "@phosphor-icons/react";
+import { Sun, CalendarBlank, Plus, PawPrint, Receipt, GearSix, Tray, PaintBrush, FileText } from "@phosphor-icons/react";
 import useNewLeadsCount from "@/app/admin/leads/useNewLeadsCount";
 import GlobalSearch from "@/components/GlobalSearch";
 import Logo from "@/components/Logo";
@@ -22,16 +22,23 @@ export default function MobileNav() {
   const leadsActive = pathname.startsWith("/admin/leads");
   const settingsActive = pathname.startsWith("/admin/settings");
   const conceptionActive = pathname.startsWith("/admin/conception");
+  const documentsActive = pathname.startsWith("/admin/documents");
 
   return (
     <>
-      {/* En-tête compact : marque + recherche + demandes + conception + réglages */}
+      {/* En-tête compact : marque + recherche + demandes + conception + documents + réglages */}
       <header className="md:hidden sticky top-0 z-20 bg-nav text-sur-nav pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between px-3 h-12">
           <Link href="/admin" aria-label="Aux Bonnes Pattes, accueil" className="pl-1">
-            <Logo size={22} />
+            {/* Sous 430 px de large, l'empreinte seule : le nom complet ne tient pas à côté des cinq icônes. */}
+            <span className="min-[430px]:hidden">
+              <Logo size={24} showText={false} />
+            </span>
+            <span className="hidden min-[430px]:inline">
+              <Logo size={22} />
+            </span>
           </Link>
-          <div className="flex items-center">
+          <div className="flex items-center shrink-0">
             <GlobalSearch variant="icon" />
             <Link
               href="/admin/leads"
@@ -57,6 +64,16 @@ export default function MobileNav() {
               }`}
             >
               <PaintBrush size={24} aria-hidden="true" />
+            </Link>
+            <Link
+              href="/admin/documents"
+              aria-label="Documents"
+              aria-current={documentsActive ? "page" : undefined}
+              className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                documentsActive ? "text-nav-actif" : "hover:bg-white/10"
+              }`}
+            >
+              <FileText size={24} aria-hidden="true" />
             </Link>
             <Link
               href="/admin/settings"

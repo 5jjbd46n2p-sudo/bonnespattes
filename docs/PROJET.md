@@ -15,3 +15,6 @@ Portail client /portal : historique, photos, export RGPD en JSON. Pages publique
 
 ## Conventions
 Textes de l'interface en français : tutoiement côté admin, vouvoiement côté client. Commits en français. Identité visuelle : docs/IDENTITE_VISUELLE.md.
+
+## Documents et phrase du jour
+Onglet Documents (/admin/documents) : business plan et plan marketing, contenu dans lib/documents.js (blocs p/h3/ul/ol/note/table), chacun avec une checklist. Avancement en base, table `doc_checklist` créée à la première utilisation (lib/docChecklist.js) ; ne jamais renommer un identifiant de case déjà publié. Phrase du jour sous le titre « Aujourd'hui » : 365 phrases rangées par mois dans lib/dailyPhrases.js, choisies par la date de Paris, identiques d'une année sur l'autre (29 février = 28).

@@ -453,3 +453,11 @@ CREATE TABLE IF NOT EXISTS design_assets (
   bytes INTEGER NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Avancement des checklists des documents de pilotage (onglet Documents)
+CREATE TABLE IF NOT EXISTS doc_checklist (
+  doc TEXT NOT NULL,
+  item TEXT NOT NULL,
+  done_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (doc, item)
+);
