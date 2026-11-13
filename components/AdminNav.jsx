@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import GlobalSearch from "@/components/GlobalSearch";
 import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
-import { Sun, CalendarBlank, PawPrint, Receipt, GearSix, Plus, Tray } from "@phosphor-icons/react";
+import { Sun, CalendarBlank, PawPrint, Receipt, GearSix, Plus, Tray, PaintBrush } from "@phosphor-icons/react";
 import useNewLeadsCount from "@/app/admin/leads/useNewLeadsCount";
 
 const links = [
@@ -14,6 +14,7 @@ const links = [
   { href: "/admin/clients", label: "Clients", icon: PawPrint },
   { href: "/admin/leads", label: "Demandes", icon: Tray },
   { href: "/admin/accounting", label: "Comptabilité", icon: Receipt },
+  { href: "/admin/conception", label: "Conception", icon: PaintBrush },
   { href: "/admin/settings", label: "Réglages", icon: GearSix },
 ];
 
