@@ -5,6 +5,8 @@ import { getDocument } from "@/lib/documents";
 import { loadDone } from "@/lib/docChecklist";
 import { formatDateFR } from "@/lib/utils";
 import DocChecklist from "@/components/DocChecklist";
+import AddPlanToPlanning from "@/components/AddPlanToPlanning";
+import { planTasks } from "@/lib/planTasks";
 import { ArrowLeft } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
@@ -66,6 +68,7 @@ export default async function DocumentPage({ params }) {
   const doc = getDocument(slug);
   if (!doc) notFound();
   const done = await loadDone(doc.slug);
+  const tasks = planTasks(doc.slug);
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -86,6 +89,20 @@ export default async function DocumentPage({ params }) {
         </h2>
         <DocChecklist slug={doc.slug} groups={doc.checklist} initialDone={done} />
       </section>
+
+      {tasks.length > 0 && (
+        <section aria-labelledby="planning-titre" className="card p-5">
+          <h2 id="planning-titre" className="font-display text-xl font-semibold text-encre mb-2">
+            Dans le planning
+          </h2>
+          <AddPlanToPlanning
+            slug={doc.slug}
+            count={tasks.length}
+            from={tasks.reduce((m, t) => (t.date < m ? t.date : m), tasks[0].date)}
+            to={tasks.reduce((m, t) => (t.date > m ? t.date : m), tasks[0].date)}
+          />
+        </section>
+      )}
 
       {doc.sections.map((s) => (
         <section key={s.title} className="space-y-3 border-t border-trait pt-6">

@@ -49,3 +49,25 @@ test("avancement : ignore les identifiants inconnus", () => {
   expect(progressOf(doc, ids).percent).toBe(100);
   expect(progressOf(doc, [ids[0], "ancien-id"]).done).toBe(1);
 });
+
+const { planTasks } = await import("../lib/planTasks.js");
+
+test("tâches du planning : dates valides, types connus, pas de doublon entre les deux plans", () => {
+  const kinds = ["RENCONTRE", "DEVIS", "FACTURATION", "COURSES", "AUTRE"];
+  const seen = new Set();
+  for (const slug of ["business-plan", "plan-marketing"]) {
+    const tasks = planTasks(slug);
+    expect(tasks.length).toBeGreaterThan(40);
+    for (const t of tasks) {
+      expect(new Date(`${t.date}T00:00:00Z`).toISOString().slice(0, 10)).toBe(t.date);
+      expect(kinds).toContain(t.kind);
+      expect(t.title.length).toBeGreaterThan(3);
+      expect(t.title.length).toBeLessThanOrEqual(120);
+      expect(t.notes.length).toBeLessThanOrEqual(1000);
+      const key = `${t.date}|${t.title}`;
+      expect(seen.has(key)).toBe(false);
+      seen.add(key);
+    }
+  }
+  expect(planTasks("inconnu")).toEqual([]);
+});
