@@ -4,15 +4,33 @@ import { requireAdmin } from "@/lib/auth";
 import {
   renderContract, newToken, hashToken, sha256Hex, missingContractSettings, CONTRACT_VALIDITY_DAYS,
 } from "@/lib/contract";
-import { sendContractEmail } from "@/lib/email";
+import { sendContractEmail, getEmailDeliveryStatus } from "@/lib/email";
 import { isUuid } from "@/lib/api";
 
 
-export async function GET(_req, { params }) {
+export async function GET(req, { params }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   const { id } = await params;
   if (!isUuid(id)) return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+
+  // ?delivery=1 : état de remise du dernier email de contrat (consulté chez Resend).
+  if (new URL(req.url).searchParams.get("delivery")) {
+    let delivery = null;
+    try {
+      const { rows } = await query(
+        `SELECT email_id FROM contract_signatures
+          WHERE client_id = $1 AND status = 'ENVOYE' AND email_id IS NOT NULL
+          ORDER BY created_at DESC LIMIT 1`,
+        [id]
+      );
+      if (rows[0]) delivery = await getEmailDeliveryStatus(rows[0].email_id);
+    } catch {
+      // colonne email_id pas encore migrée : pas de suivi
+    }
+    return NextResponse.json({ delivery });
+  }
+
   const { rows } = await query(
     `SELECT id, client_id, version, status, sent_to, sent_at, expires_at, signed_at, signer_name, created_at
      FROM contract_signatures WHERE client_id = $1 ORDER BY created_at DESC`,
@@ -64,17 +82,21 @@ export async function POST(_req, { params }) {
 
   const base = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
   try {
-    await sendContractEmail({
+    const emailId = await sendContractEmail({
       to: email,
       clientName: `${client.first_name} ${client.last_name}`,
       link: inAccount ? `${base}/login` : `${base}/contrat/${token}`,
       expiresAt: signature.expires_at,
       inAccount,
     });
+    if (typeof emailId === "string") {
+      // Suivi de remise : sans la colonne email_id (migration non appliquée), l'envoi reste valable.
+      await query("UPDATE contract_signatures SET email_id = $2 WHERE id = $1", [signature.id, emailId]).catch(() => {});
+    }
   } catch (e) {
     console.error("Envoi du contrat échoué :", e?.message);
     await query("UPDATE contract_signatures SET status = 'ANNULE' WHERE id = $1 AND status = 'ENVOYE'", [signature.id]);
     return NextResponse.json({ error: "Échec de l'envoi de l'email, réessaie plus tard." }, { status: 502 });
   }
-  return NextResponse.json({ ok: true, mode: inAccount ? "account" : "email" });
+  return NextResponse.json({ ok: true, mode: inAccount ? "account" : "email", sentTo: email });
 }

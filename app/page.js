@@ -11,6 +11,7 @@ import Gallery from "@/components/landing/Gallery";
 import LeadForm from "@/components/landing/LeadForm";
 import SiteFooter from "@/components/landing/SiteFooter";
 import StickyContactBar from "@/components/landing/StickyContactBar";
+import { whatsappHref } from "@/lib/landing";
 import {
   Camera,
   Dog,
@@ -19,6 +20,7 @@ import {
   MapPin,
   ShieldCheck,
   Stethoscope,
+  WhatsappLogo,
 } from "@phosphor-icons/react/ssr";
 
 export const dynamic = "force-dynamic";
@@ -100,6 +102,7 @@ export default async function Home({ searchParams }) {
   const rateList = [s.rate_30, s.rate_45, s.rate_60].map(Number).filter((n) => Number.isFinite(n) && n > 0);
   const fromPrice = rateList.length ? Math.min(...rateList) : 15;
   const dayRate = Number(s.rate_day);
+  const waUrl = whatsappHref(s.whatsapp_number);
 
 
   return (
@@ -158,6 +161,19 @@ export default async function Home({ searchParams }) {
                   Voir les tarifs
                 </a>
               </div>
+              {waUrl && (
+                <p className="mt-4">
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-1.5 font-bold rounded text-encre underline underline-offset-4 decoration-trait hover:decoration-rouille py-2 ${FOCUS}`}
+                  >
+                    <WhatsappLogo size={20} aria-hidden="true" />
+                    Ou écrivez-moi sur WhatsApp
+                  </a>
+                </p>
+              )}
             </div>
             <Photo
               src={photoVersions.hero ? sitePhotoSrc("hero", photoVersions.hero) : null}
@@ -340,7 +356,7 @@ export default async function Home({ searchParams }) {
       </main>
 
       <SiteFooter area={area} email={s.contact_email} whatsapp={s.whatsapp_number} />
-      <StickyContactBar />
+      <StickyContactBar whatsappUrl={waUrl} />
     </div>
   );
 }

@@ -57,7 +57,8 @@ export function proxy(request) {
 
   const response = NextResponse.next();
   // Pages et API privées : jamais indexées par les moteurs de recherche.
-  if (PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  // Exception : les photos de la vitrine (/api/site-photos) sont publiques et peuvent apparaître dans Google Images.
+  if (!pathname.startsWith("/api/site-photos/") && PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   }
   return response;

@@ -434,3 +434,6 @@ CREATE TABLE IF NOT EXISTS testimonials (
 
 -- Vitrine : numéro WhatsApp entreprise (chiffres au format international, vide = bouton masqué)
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;
+
+-- Suivi de remise de l'email de contrat (identifiant du message chez Resend)
+ALTER TABLE contract_signatures ADD COLUMN IF NOT EXISTS email_id TEXT;
