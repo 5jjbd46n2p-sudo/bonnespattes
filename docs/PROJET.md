@@ -18,3 +18,11 @@ Textes de l'interface en français : tutoiement côté admin, vouvoiement côté
 
 ## Documents et phrase du jour
 Onglet Documents (/admin/documents) : business plan et plan marketing, contenu dans lib/documents.js (blocs p/h3/ul/ol/note/table), chacun avec une checklist. Avancement en base, table `doc_checklist` créée à la première utilisation (lib/docChecklist.js) ; ne jamais renommer un identifiant de case déjà publié. Phrase du jour sous le titre « Aujourd'hui » : 365 phrases rangées par mois dans lib/dailyPhrases.js, choisies par la date de Paris, identiques d'une année sur l'autre (29 février = 28).
+
+## Modèles du plan marketing (onglet Conception)
+
+Six modèles ajoutés dans `lib/designTemplates.js`, en plus des cinq premiers :
+- cartes : « Recommandation » (prescripteurs), « Parrainage » (avec la facture), « Avis Google » (fin de garde, QR à remplacer par le lien d'avis) ;
+- flyers A5 : « Carnet » (boîtes aux lettres), « Affichette » à languettes (recto vétérinaires et toiletteurs, verso commerces), « Promenades » (campagnes de janvier et de la rentrée).
+
+Chaque QR porte une provenance (`?utm_source=carte`, `parrainage`, `avis`, `flyer`, `affiche`, `flyer-promenades`) pour le bilan par canal. Le SIRET et la mention d'assurance viennent des Réglages (`siret`, `insurance_info`) ; sans SIRET, le flyer affiche « SIRET à compléter ». Aucun de ces modèles n'annonce de soin ni de garde au domicile d'Aurore.
