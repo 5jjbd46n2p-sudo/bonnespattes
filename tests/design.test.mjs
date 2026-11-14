@@ -123,7 +123,11 @@ test("designInfo : réglages remplis", () => {
     site: "auxbonnespattes.fr",
     siteUrl: "https://www.auxbonnespattes.fr",
     fromPrice: 15,
+    siret: "",
+    insured: false,
   });
+  const full = designInfo({ ...SETTINGS, siret: " 123 456 789 00012 ", insurance_info: "Contrat RC pro" }, "");
+  expect([full.siret, full.insured]).toEqual(["123 456 789 00012", true]);
 });
 
 test("designInfo : champs vides → textes d'exemple", () => {
@@ -171,8 +175,11 @@ const INFOS = [
   ["réglages vides", designInfo({}, "")],
 ];
 
-test("cinq modèles, identifiants attendus, formats connus", () => {
-  expect(TEMPLATES.map((t) => t.id)).toEqual(["carte-carnet", "carte-rouille", "a5-balade", "a5-vacances", "a4-affiche"]);
+const CARD_IDS = ["carte-carnet", "carte-rouille", "carte-recommandation", "carte-parrainage", "carte-avis"];
+const A5_IDS = ["a5-balade", "a5-vacances", "a5-carnet", "a5-affichette", "a5-promenades"];
+
+test("onze modèles, identifiants attendus, formats connus", () => {
+  expect(TEMPLATES.map((t) => t.id)).toEqual([...CARD_IDS, ...A5_IDS, "a4-affiche"]);
   for (const t of TEMPLATES) {
     expect(FORMATS[t.format]).toBeDefined();
     expect(t.orientation).toBe(FORMATS[t.format].orientation);
@@ -180,8 +187,8 @@ test("cinq modèles, identifiants attendus, formats connus", () => {
     expect(t.description.length).toBeGreaterThan(10);
     expect(typeof t.build).toBe("function");
   }
-  expect(templatesFor("CARTE").map((t) => t.id)).toEqual(["carte-carnet", "carte-rouille"]);
-  expect(templatesFor("A5").map((t) => t.id)).toEqual(["a5-balade", "a5-vacances"]);
+  expect(templatesFor("CARTE").map((t) => t.id)).toEqual(CARD_IDS);
+  expect(templatesFor("A5").map((t) => t.id)).toEqual(A5_IDS);
   expect(templatesFor("A4").map((t) => t.id)).toEqual(["a4-affiche"]);
   expect(templatesFor("XX")).toEqual([]);
 });
@@ -221,7 +228,9 @@ for (const [label, info] of INFOS) {
           }
           if (o.abpRole === "qr") {
             expect(o.type).toBe("Rect");
-            expect(o.abpQrText).toBe(info.siteUrl);
+            // Site seul (premiers modèles) ou site + provenance (modèles du plan marketing).
+            expect([where, /^(\/\?utm_source=[a-z-]+)?$/.test(o.abpQrText.slice(info.siteUrl.length))]).toEqual([where, true]);
+            expect(o.abpQrText.startsWith(info.siteUrl)).toBe(true);
             expect(o.width).toBe(o.height);
           }
           if (o.abpRole === "photo") {
@@ -269,6 +278,35 @@ test("modèles : contenus de la spec et préremplissage", () => {
   // Affiche : tarif et zone.
   expect(texts("a4-affiche")).toContain("À partir de 15 €");
   expect(texts("a4-affiche")).toContain("Viarmes");
+  // Modèles du plan marketing : provenance du QR, positionnement, prudence.
+  const qrOf = (id) =>
+    TEMPLATES.find((t) => t.id === id)
+      .build(info)
+      .flatMap((p) => p.objects)
+      .filter((o) => o.abpRole === "qr")
+      .map((o) => o.abpQrText);
+  expect(qrOf("carte-recommandation")).toEqual(["https://auxbonnespattes.fr/?utm_source=carte"]);
+  expect(qrOf("carte-parrainage")).toEqual(["https://auxbonnespattes.fr/?utm_source=parrainage"]);
+  expect(qrOf("a5-carnet")).toEqual(Array(2).fill("https://auxbonnespattes.fr/?utm_source=flyer"));
+  expect(qrOf("a5-affichette")).toEqual(Array(2).fill("https://auxbonnespattes.fr/?utm_source=affiche"));
+  expect(qrOf("a5-promenades")).toEqual(["https://auxbonnespattes.fr/?utm_source=flyer-promenades"]);
+  for (const id of ["carte-recommandation", "a5-carnet", "a5-affichette", "a5-promenades"]) {
+    expect([id, texts(id).includes("ancienne assistante vétérinaire") || texts(id).includes("Ancienne assistante vétérinaire")]).toEqual([id, true]);
+    expect([id, texts(id).includes("06 12 34 56 78")]).toEqual([id, true]);
+    expect([id, /garde chez aurore/i.test(texts(id))]).toEqual([id, false]);
+  }
+  expect(texts("a5-carnet")).toContain("Maëva, maman de la belle Roxanne");
+  expect(texts("a5-carnet")).toContain("Ne pas jeter sur la voie publique");
+  expect(texts("a5-carnet")).toContain("SIRET à compléter");
+  expect(texts("a5-carnet")).toMatch(/15\s€/);
+  expect(texts("a5-carnet")).not.toContain("assurée");
+  expect(texts("a5-affichette")).toContain("Sans soin ni diagnostic");
+  expect(texts("a5-affichette").match(/Pet sitter/g).length).toBe(12);
+  expect(texts("carte-avis")).toContain("lien d'avis Google");
+  const assure = designInfo({ ...SETTINGS, siret: "12345678900012", insurance_info: "RC pro" }, "https://auxbonnespattes.fr");
+  const carnet = TEMPLATES.find((t) => t.id === "a5-carnet").build(assure).flatMap((p) => p.objects).map((o) => o.text || "").join("\n");
+  expect(carnet).toContain("SIRET 12345678900012");
+  expect(carnet).toContain("Activité assurée en responsabilité civile pro");
   // Sans tarif : pas de « 0 € » ni « null ».
   const vide = TEMPLATES.flatMap((t) => t.build(designInfo({}, ""))).flatMap((p) => p.objects);
   for (const o of vide.filter((x) => x.type === "Textbox")) {
