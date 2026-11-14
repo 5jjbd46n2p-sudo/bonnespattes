@@ -1,12 +1,64 @@
+import { BADGE_RING, BADGE_DETAIL, ICON_RING, ICON_DETAIL, DISC } from "@/lib/logoPaths";
+
 /**
  * Logo « Aux Bonnes Pattes » (docs/IDENTITE_VISUELLE.md, section Logo).
  *
- * - <PawMark /> : empreinte seule (4 ovales + coussinet), remplissage rouille.
- *   Même dessin que app/icon.svg.
- * - <Logo /> : version horizontale, empreinte + mot-symbole en Fraunces 600.
- *   Le texte prend `currentColor` : sur une barre de navigation encre, passer
- *   className="text-sur-nav" (papier dans les deux modes).
+ * - <LogoMark /> : icône, un « A » cerclé avec une petite empreinte. Pour les
+ *   petits formats (barres de navigation, favicon) où le texte de l'anneau du
+ *   badge serait illisible.
+ * - <LogoBadge /> : badge complet (« Aux Bonnes Pattes » dans l'anneau, « A »,
+ *   deux empreintes), à partir de 72 px environ. variant="plein" : aplat rouille.
+ * - <Logo /> : version horizontale, icône + nom en Fraunces 600. Le texte prend
+ *   `currentColor` : sur une barre encre, passer className="text-sur-nav".
+ * - <PawMark /> : empreinte seule, décor des emplacements photo vides.
  */
+
+function Svg({ size, className, title, children }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      className={className}
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : true}
+      aria-label={title}
+      focusable="false"
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function LogoMark({ size = 28, className = "", title, variant = "contour" }) {
+  return (
+    <Svg size={size} className={`shrink-0 ${className}`} title={title}>
+      {variant === "plein" ? (
+        <>
+          <path d={DISC} fill="var(--color-rouille)" />
+          <path d={ICON_DETAIL} fill="var(--color-sur-rouille)" />
+        </>
+      ) : (
+        <path d={ICON_RING + ICON_DETAIL} fill="var(--color-rouille)" />
+      )}
+    </Svg>
+  );
+}
+
+export function LogoBadge({ size = 96, className = "", title = "Aux Bonnes Pattes", variant = "contour" }) {
+  return (
+    <Svg size={size} className={`shrink-0 ${className}`} title={title}>
+      {variant === "plein" ? (
+        <>
+          <path d={DISC} fill="var(--color-rouille)" />
+          <path d={BADGE_DETAIL} fill="var(--color-sur-rouille)" />
+        </>
+      ) : (
+        <path d={BADGE_RING + BADGE_DETAIL} fill="var(--color-rouille)" />
+      )}
+    </Svg>
+  );
+}
 
 export function PawMark({ size = 28, className = "", title }) {
   return (
@@ -31,10 +83,12 @@ export function PawMark({ size = 28, className = "", title }) {
 }
 
 export default function Logo({ size = 28, className = "", showText = true }) {
-  if (!showText) return <PawMark size={size} className={className} title="Aux Bonnes Pattes" />;
+  // L'icône est un peu plus grande que l'ancienne empreinte : son cercle lui donne moins de présence à taille égale.
+  const mark = Math.round(size * 1.15);
+  if (!showText) return <LogoMark size={mark} className={className} title="Aux Bonnes Pattes" />;
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      <PawMark size={size} />
+      <LogoMark size={mark} />
       <span
         className="font-display font-semibold leading-none whitespace-nowrap"
         style={{ fontSize: Math.round(size * 0.72) }}

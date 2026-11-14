@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Logo from "@/components/Logo";
+import { LogoBadge } from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,7 +53,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Logo size={36} className="text-encre" />
+          <LogoBadge size={104} className="mx-auto mb-4" />
+          <p className="font-display font-semibold text-3xl leading-none text-encre">Aux Bonnes Pattes</p>
+          <p className="font-display italic text-rouille mt-1">Par Aurore</p>
           <p className="text-pierre mt-3">
             Les nouvelles de vos compagnons, après chaque visite.
           </p>
