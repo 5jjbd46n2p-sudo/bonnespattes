@@ -43,15 +43,152 @@ function chunk(arr, size) {
   return out;
 }
 
+const VIEWS = [
+  ["month", "Mois"],
+  ["week", "Semaine"],
+  ["list", "Liste"],
+];
+
+function ViewToggle({ view, month, date }) {
+  return (
+    <div className="inline-flex rounded-lg border border-trait p-0.5 bg-sable text-sm">
+      {VIEWS.map(([id, label]) => (
+        <Link
+          key={id}
+          href={`/admin/planning?view=${id}&month=${month}&date=${date}`}
+          aria-current={view === id ? "page" : undefined}
+          className={`px-4 py-1 rounded-md font-bold transition-colors ${
+            view === id ? "bg-rouille text-sur-rouille" : "text-pierre"
+          }`}
+        >
+          {label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+const LIST_LIMIT = 400;
+const VISIT_LIST_SQL = `SELECT v.*, v.date::text AS date_text, p.name AS pet_name, c.first_name, c.last_name, c.address, i.status AS invoice_status,
+      (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id) AS task_count,
+      (SELECT COUNT(*) FROM tasks t WHERE t.visit_id = v.id AND t.done) AS task_done_count,
+      (SELECT COUNT(*) FROM photos ph WHERE ph.visit_id = v.id) AS photo_count
+     FROM visits v JOIN pets p ON p.id = v.pet_id JOIN clients c ON c.id = v.client_id
+     LEFT JOIN invoices i ON i.id = v.invoice_id`;
+const EVENT_LIST_SQL = `SELECT e.*, e.date::text AS date_text, NULLIF(TRIM(c.first_name || ' ' || c.last_name), '') AS client_name
+       FROM admin_events e LEFT JOIN clients c ON c.id = e.client_id`;
+
+const timeKey = (t) => (t ? String(t).slice(0, 5) : "99:99");
+const cleanEvent = ({ created_at: _c, date_text, ...rest }) => ({ ...rest, date: date_text });
+
+// Vue liste : tout ce qui est à venir (visites, rendez-vous et tâches), jour par
+// jour, précédé des tâches passées qui ne sont pas encore cochées.
+async function PlanningList({ today, month, date }) {
+  const [lateRes, eventsRes, visitsRes, clientsRes] = await Promise.all([
+    query(`${EVENT_LIST_SQL} WHERE e.date < $1 AND NOT e.done ORDER BY e.date, e.start_time ASC NULLS LAST, e.created_at LIMIT ${LIST_LIMIT}`, [today]),
+    query(`${EVENT_LIST_SQL} WHERE e.date >= $1 ORDER BY e.date, e.start_time ASC NULLS LAST, e.created_at LIMIT ${LIST_LIMIT}`, [today]),
+    query(`${VISIT_LIST_SQL} WHERE v.date >= $1 ORDER BY v.date, v.start_time ASC NULLS LAST LIMIT ${LIST_LIMIT}`, [today]),
+    query(
+      "SELECT id, first_name, last_name, address, distance_km, travel_minutes FROM clients WHERE anonymized_at IS NULL ORDER BY last_name, first_name"
+    ),
+  ]);
+  const clients = clientsRes.rows;
+  const late = lateRes.rows.map(cleanEvent);
+  const events = eventsRes.rows.map(cleanEvent);
+
+  // Regroupement par jour, visites et tâches mêlées dans l'ordre des horaires.
+  const byDay = new Map();
+  const push = (day, item) => {
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push(item);
+  };
+  for (const v of visitsRes.rows) push(v.date_text, { type: "visit", v, t: timeKey(v.start_time) });
+  for (const e of events) push(e.date, { type: "admin", e, t: timeKey(e.start_time) });
+  const days = [...byDay.keys()].sort();
+  for (const d of days) byDay.get(d).sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+
+  const todo = events.filter((e) => !e.done).length;
+  const truncated = eventsRes.rows.length === LIST_LIMIT || visitsRes.rows.length === LIST_LIMIT;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="font-display text-3xl font-semibold text-encre">Planning</h1>
+        <Link href={`/admin/visits/new?date=${today}`} className="btn-primary gap-2 shrink-0">
+          <Plus size={20} aria-hidden="true" />
+          Planifier
+        </Link>
+      </div>
+
+      <div className="card p-3 sm:p-4 flex flex-col items-center gap-2">
+        <ViewToggle view="list" month={month} date={date} />
+        <p className="text-sm text-pierre text-center">
+          {visitsRes.rows.length} visite{visitsRes.rows.length > 1 ? "s" : ""} à venir, {todo} tâche{todo > 1 ? "s" : ""} à faire
+          {late.length > 0 ? `, ${late.length} en retard` : ""}.
+        </p>
+      </div>
+
+      {late.length > 0 && (
+        <section>
+          <h2 className="font-display text-xl font-semibold mb-1 text-brique">En retard</h2>
+          <p className="text-sm text-pierre mb-3">Tâches passées qui ne sont pas cochées.</p>
+          <div className="list-group">
+            {late.map((e) => (
+              <div key={`l-${e.id}-${e.done}`}>
+                <p className="px-3 pt-2 text-xs font-bold text-pierre capitalize">{formatDateLongFR(e.date)}</p>
+                <AdminEventRow event={e} clients={clients} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {days.length === 0 ? (
+        <div className="card p-8 text-center text-pierre">
+          Rien de prévu pour le moment.{" "}
+          <Link href={`/admin/visits/new?date=${today}`} className="text-rouille underline">
+            Planifier une visite
+          </Link>
+        </div>
+      ) : (
+        days.map((d) => (
+          <section key={d}>
+            <h2 className="font-display text-lg font-semibold mb-2 capitalize">
+              <Link href={`/admin/planning?view=month&month=${d.slice(0, 7)}&date=${d}`} className="hover:underline">
+                {d === today ? `Aujourd'hui, ${formatDateLongFR(d)}` : formatDateLongFR(d)}
+              </Link>
+            </h2>
+            <div className="list-group">
+              {byDay.get(d).map((item) =>
+                item.type === "visit" ? (
+                  <div key={`v-${item.v.id}-${item.v.status}-${item.v.photo_count}`} className="border-l-4" style={{ borderLeftColor: VISIT_COLOR }}>
+                    <VisitCard visit={toCardVisit(item.v)} />
+                  </div>
+                ) : (
+                  <AdminEventRow key={`e-${item.e.id}-${item.e.done}`} event={item.e} clients={clients} />
+                )
+              )}
+            </div>
+          </section>
+        ))
+      )}
+      {truncated && (
+        <p className="text-sm text-pierre text-center">Liste limitée aux {LIST_LIMIT} prochains éléments de chaque type.</p>
+      )}
+    </div>
+  );
+}
+
 export default async function PlanningPage({ searchParams }) {
   await adminPageGuard();
   const sp = await searchParams;
   const today = todayISO();
   const selected = /^\d{4}-\d{2}-\d{2}$/.test(sp.date || "") ? sp.date : today;
   const selectedDate = new Date(selected + "T00:00:00");
-  const view = sp.view === "week" ? "week" : "month";
+  const view = sp.view === "week" ? "week" : sp.view === "list" ? "list" : "month";
 
   const monthKey = /^\d{4}-\d{2}$/.test(sp.month || "") ? sp.month : ymKey(selectedDate);
+  if (view === "list") return <PlanningList today={today} month={monthKey} date={selected} />;
   const monthDate = parseYM(monthKey);
 
   // Construit la liste des jours à afficher dans la grille : un mois complet
@@ -121,7 +258,6 @@ export default async function PlanningPage({ searchParams }) {
   );
 
   const adminEvents = adminEventsRes.rows.map(({ created_at: _c, date_text, ...rest }) => ({ ...rest, date: date_text }));
-  const timeKey = (t) => (t ? String(t).slice(0, 5) : "99:99");
   const agenda = [
     ...visitsRes.rows.map((v) => ({ type: "visit", v, t: timeKey(v.start_time) })),
     ...adminEvents.map((e) => ({ type: "admin", e, t: timeKey(e.start_time) })),
@@ -190,24 +326,7 @@ export default async function PlanningPage({ searchParams }) {
         </div>
 
         <div className="flex justify-center mb-3">
-          <div className="inline-flex rounded-lg border border-trait p-0.5 bg-sable text-sm">
-            <Link
-              href={hrefFor({ v: "month" })}
-              className={`px-4 py-1 rounded-md font-bold transition-colors ${
-                view === "month" ? "bg-rouille text-sur-rouille" : "text-pierre"
-              }`}
-            >
-              Mois
-            </Link>
-            <Link
-              href={hrefFor({ v: "week" })}
-              className={`px-4 py-1 rounded-md font-bold transition-colors ${
-                view === "week" ? "bg-rouille text-sur-rouille" : "text-pierre"
-              }`}
-            >
-              Semaine
-            </Link>
-          </div>
+          <ViewToggle view={view} month={monthKey} date={selected} />
         </div>
 
         {/* En-têtes des jours de la semaine */}
