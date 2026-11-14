@@ -25,6 +25,7 @@ import {
   UNITS_PER_PT,
   getMainColor,
   getPhotoCrop,
+  getPhotoFrame,
   isGroup,
   isImage,
   isRect,
@@ -227,6 +228,8 @@ export default function Toolbar({ active, refresh, resolver, actions }) {
     const img = single;
     const crop = getPhotoCrop(img);
     const setCrop = (patch) => change(() => setPhotoCrop(img, { ...crop, ...patch }), true);
+    const frame = getPhotoFrame(img);
+    const maxRadiusMm = Math.max(0.5, Math.floor(Math.min(frame.Fw, frame.Fh) / 10) / 2);
     specific = (
       <>
         <RangeField
@@ -254,15 +257,25 @@ export default function Toolbar({ active, refresh, resolver, actions }) {
           value={crop.panY}
           onChange={(v) => setCrop({ panY: v })}
         />
-        <NumberField
-          label="Coins arrondis (mm)"
-          value={fmtNum(crop.radius / 10)}
+        <Sep />
+        {/* Curseur visible : de l'angle droit (0) au cadre entièrement arrondi
+            (moitié du petit côté, un cadre carré devient un rond). */}
+        <RangeField
+          label="Coins arrondis"
           min={0}
-          max={100}
+          max={maxRadiusMm}
           step={0.5}
-          suffix="mm"
+          value={Math.min(maxRadiusMm, round(crop.radius / 10, 0.5))}
+          display={`${fmtNum(Math.min(maxRadiusMm, round(crop.radius / 10, 0.5)))} mm`}
           onChange={(mm) => setCrop({ radius: mm * 10 })}
         />
+        <button
+          type="button"
+          className="h-9 px-3 rounded-lg border border-trait bg-lin text-sm text-encre hover:bg-sable"
+          onClick={() => setCrop({ radius: crop.radius >= maxRadiusMm * 10 - 1 ? 0 : maxRadiusMm * 10 })}
+        >
+          {crop.radius >= maxRadiusMm * 10 - 1 ? "Angles droits" : "Tout arrondir"}
+        </button>
       </>
     );
   } else if (single && role === "qr") {
